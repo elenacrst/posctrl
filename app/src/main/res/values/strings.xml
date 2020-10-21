@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">PosCtrl-Android</string>
     <string name="no_data_connection">Connection failure</string>
+    <string name="hint_user_id">User ID</string>
+    <string name="action_login">Login</string>
+    <string name="hint_password">Password</string>
 </resources>
