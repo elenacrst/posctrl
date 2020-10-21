@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">PosCtrl-Android</string>
+    <string name="no_data_connection">Connection failure</string>
+</resources>
