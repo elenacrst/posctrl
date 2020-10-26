@@ -21,7 +21,7 @@ class PosCtrlApplication : Application() {
         super.onCreate()
 
         _appComponent = DaggerPosCtrlComponent.builder()
-            .appModule(AppModule(this)).build()
+                .appModule(AppModule(this)).build()
         appComponent.inject(this)
 
         if (BuildConfig.DEBUG) {

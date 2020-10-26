@@ -26,6 +26,7 @@
                 style="@style/textInputGeneral"
                 android:hint="@string/hint_user_id"
                 android:imeOptions="flagNoExtractUi|actionNext"
+                android:inputType="textAutoComplete"
                 tools:text="aron" />
         </com.google.android.material.textfield.TextInputLayout>
 

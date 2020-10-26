@@ -29,7 +29,6 @@ open class BaseFragment : Fragment() {
         return Observer { result ->
             when (val value = result.getContentIfNotHandled()) {
                 is ResultWrapper.Success -> {
-                    hideLoading()
                     successListener(value)
                 }
                 is ResultWrapper.Loading -> showLoading()
@@ -55,7 +54,7 @@ open class BaseFragment : Fragment() {
         (activity as? MainActivity)?.showLoading()
     }
 
-    private fun hideLoading() {
+    fun hideLoading() {
         (activity as? MainActivity)?.hideLoading()
     }
 

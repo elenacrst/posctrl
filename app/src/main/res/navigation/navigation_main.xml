@@ -13,11 +13,36 @@
         <action
             android:id="@+id/toDatabaseSettingsFragment"
             app:destination="@id/databaseSettingsFragment" />
-
+        <action
+            android:id="@+id/toStoresFragment"
+            app:destination="@id/storesFragment" />
+        <action
+            android:id="@+id/toRegistersFragment"
+            app:destination="@id/registersFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/databaseSettingsFragment"
         android:name="is.posctrl.posctrl_android.ui.settings.DatabaseSettingsFragment"
         android:label="Database settings" />
+
+    <fragment
+        android:id="@+id/storesFragment"
+        android:name="is.posctrl.posctrl_android.ui.stores.StoresFragment"
+        android:label="Stores">
+        <argument
+            android:name="stores"
+            app:argType="is.posctrl.posctrl_android.data.model.StoreResponse[]"
+            app:nullable="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registersFragment"
+        android:name="is.posctrl.posctrl_android.ui.registers.RegistersFragment"
+        android:label="Registers">
+        <argument
+            android:name="storeNumber"
+            app:argType="long"
+            app:nullable="false" />
+    </fragment>
 </navigation>

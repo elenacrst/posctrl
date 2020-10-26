@@ -59,4 +59,7 @@
     <string name="key_server_password">keyServerPassword</string>
     <string name="key_server_snapshot_path">keyServerSnapshotPath</string>
     <string name="message_success_login">Successfully logged in</string>
+    <string name="error_no_stores">No stores found for this user</string>
+    <string name="key_logged_user">keyLoggedInUser</string>
+    <string name="message_store_value">Detected store %1$d %2$s</string>
 </resources>

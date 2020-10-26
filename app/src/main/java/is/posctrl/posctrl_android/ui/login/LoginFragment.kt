@@ -20,6 +20,7 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
@@ -47,9 +48,33 @@ class LoginFragment : BaseFragment() {
                         prefs.customPrefs()[getString(R.string.key_server_domain)] = it.serverUserDomain
                         prefs.customPrefs()[getString(R.string.key_server_password)] = it.serverUserPassword
                         prefs.customPrefs()[getString(R.string.key_server_snapshot_path)] = it.serverSnapshotPath
+                        prefs.customPrefs()[getString(R.string.key_logged_user)] = loginBinding.etUser.text.toString()
                     }
-                    requireContext().toast(getString(R.string.message_success_login))
-                    //todo get stores, if 1 store navigate to registers, else to stores screen findNavController().navigate()
+                    loginViewModel.getStores(
+                            prefs.customPrefs()[getString(R.string.key_database_server)] ?: "",
+                            prefs.customPrefs()[getString(R.string.key_database_port)] ?: "",
+                            prefs.customPrefs()[getString(R.string.key_database_user)] ?: "",
+                            prefs.customPrefs()[getString(R.string.key_database_password)] ?: "",
+                            prefs.customPrefs()[getString(R.string.key_logged_user)] ?: ""
+                    )
+                }
+        )
+    }
+
+    private fun getStoresObserver(): Observer<Event<ResultWrapper<*>>> {
+        return createLoadingObserver(
+                successListener = {
+                    hideLoading()
+                    loginViewModel.stores.value?.let {
+                        if (it.size > 1) {
+                            findNavController().navigate(LoginFragmentDirections.toStoresFragment(it.toTypedArray()))
+                        } else {
+                            requireContext().getString(R.string.message_store_value, it[0].storeNumber
+                                    ?: -1, it[0].storeName)
+                            findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it[0].storeNumber
+                                    ?: -1))
+                        }
+                    }
                 }
         )
     }
@@ -69,6 +94,7 @@ class LoginFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         loginViewModel.loginEvent.observe(viewLifecycleOwner, getLoginObserver())
+        loginViewModel.storesEvent.observe(viewLifecycleOwner, getStoresObserver())
 
         loginBinding.clBase.setOnSwipeListener(onSwipeBottom = {
             requireContext().showInputDialog(R.string.insert_security_code) {
@@ -82,6 +108,13 @@ class LoginFragment : BaseFragment() {
 
         loginBinding.btLogin.setOnClickListener {
             validateLogin()
+        }
+        loginBinding.etPassword.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                validateLogin()
+                return@setOnEditorActionListener false
+            }
+            return@setOnEditorActionListener false
         }
         setupTextChangeListeners()
     }
