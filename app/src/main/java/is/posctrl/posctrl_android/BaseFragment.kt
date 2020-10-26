@@ -2,8 +2,9 @@ package `is`.posctrl.posctrl_android
 
 import `is`.posctrl.posctrl_android.data.ErrorCode
 import `is`.posctrl.posctrl_android.data.ResultWrapper
+import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.util.Event
-import `is`.posctrl.posctrl_android.util.toast
+import `is`.posctrl.posctrl_android.util.extensions.toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import timber.log.Timber
@@ -22,25 +23,25 @@ open class BaseFragment : Fragment() {
     }
 
     protected fun createLoadingObserver(
-        progressListener: () -> Unit = {},
-        successListener: (ResultWrapper<*>?) -> Unit = { },
-        errorListener: () -> Unit = { }
+            successListener: (ResultWrapper<*>?) -> Unit = { },
+            errorListener: () -> Unit = { }
     ): Observer<Event<ResultWrapper<*>>> {
         return Observer { result ->
             when (val value = result.getContentIfNotHandled()) {
                 is ResultWrapper.Success -> {
+                    hideLoading()
                     successListener(value)
                 }
-                is ResultWrapper.Loading -> progressListener()
+                is ResultWrapper.Loading -> showLoading()
                 is ResultWrapper.Error -> {
+                    hideLoading()
                     val resultError =
-                        result.peekContent() as ResultWrapper.Error
+                            result.peekContent() as ResultWrapper.Error
                     val resultHandled = handleError(resultError)
-
                     if (!resultHandled) {
                         requireActivity().toast(
-                            message = (result.peekContent() as
-                                    ResultWrapper.Error).message.toString()
+                                message = (result.peekContent() as
+                                        ResultWrapper.Error).message.toString()
                         )
                         errorListener()
                     }
@@ -48,5 +49,17 @@ open class BaseFragment : Fragment() {
                 else -> Timber.d("Nothing to do here")
             }
         }
+    }
+
+    private fun showLoading() {
+        (activity as? MainActivity)?.showLoading()
+    }
+
+    private fun hideLoading() {
+        (activity as? MainActivity)?.hideLoading()
+    }
+
+    companion object {
+        const val SECURITY_CODE = "2020"
     }
 }

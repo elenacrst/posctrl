@@ -8,10 +8,8 @@ sealed class ResultWrapper<out T> {
 
     data class Success<out T>(val data: T) : ResultWrapper<T>()
     data class Error(
-        val exception: Exception? = null,
-        val message: String? = null,
-        val code: Int = ErrorCode.DEFAULT.code,
-        val errorId: String? = null
+            val message: String? = null,
+            val code: Int = ErrorCode.DEFAULT.code
     ) : ResultWrapper<Nothing>()
 
     object Loading : ResultWrapper<Nothing>()
@@ -21,7 +19,7 @@ sealed class ResultWrapper<out T> {
     override fun toString(): String {
         return when (this) {
             is Success<*> -> "Success[data=$data]"
-            is Error -> "Error[exception=$exception]"
+            is Error -> "Error[message=$message]"
             Loading -> "Loading"
             None -> "None"
         }

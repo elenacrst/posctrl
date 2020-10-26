@@ -4,4 +4,59 @@
     <string name="hint_user_id">User ID</string>
     <string name="action_login">Login</string>
     <string name="hint_password">Password</string>
+    <string name="hint_database_server">Database server address</string>
+    <string name="key_database_server">keyDatabaseServer</string>
+    <string name="title_database_server">Server address</string>
+    <string name="dialog_database_server">Database server address</string>
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+    <string name="header_sql_server">SQL Server</string>
+    <string name="key_database_user">keyDatabaseUser</string>
+    <string name="title_database_user">Database user</string>
+    <string name="dialog_database_user">Database user</string>
+    <string name="key_database_password">keyDatabasePassword</string>
+    <string name="title_database_password">Database password</string>
+    <string name="dialog_database_password">Database password</string>
+    <string name="action_save">Save</string>
+    <string name="key_0">0</string>
+    <string name="key_1">1</string>
+    <string name="key_2">2</string>
+    <string name="key_3">3</string>
+    <string name="key_4">4</string>
+    <string name="key_5">5</string>
+    <string name="key_6">6</string>
+    <string name="key_7">7</string>
+    <string name="key_8">8</string>
+    <string name="key_9">9</string>
+    <string name="insert_number">Insert code</string>
+    <string name="insert_security_code">Security code</string>
+    <string name="message_saved">Saved</string>
+    <string name="action_ok">OK</string>
+    <string name="error_wrong_code">Wrong security code</string>
+    <string name="error_empty_user">Username can\'t be empty</string>
+    <string name="error_empty_password">Password can\'t be empty</string>
+    <string name="key_database_port">keyDatabasePort</string>
+    <string name="title_server_port">Server port</string>
+    <string name="dialog_server_port">Server port</string>
+    <string name="key_server_path">keyServerPath</string>
+    <string name="key_server_port">keyServerPort</string>
+    <string name="key_filter_respond_time">keyFilterRespondTime</string>
+    <string name="key_version">keyVersion</string>
+    <string name="key_server_user">keyServerUser</string>
+    <string name="key_server_domain">keyServerDomain</string>
+    <string name="key_server_password">keyServerPassword</string>
+    <string name="key_server_snapshot_path">keyServerSnapshotPath</string>
+    <string name="message_success_login">Successfully logged in</string>
 </resources>

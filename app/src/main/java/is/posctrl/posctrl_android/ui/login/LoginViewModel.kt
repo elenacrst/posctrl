@@ -4,6 +4,7 @@ import `is`.posctrl.posctrl_android.data.ErrorCode
 import `is`.posctrl.posctrl_android.data.NoNetworkConnectionException
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.ResultWrapper
+import `is`.posctrl.posctrl_android.data.model.LoginResponse
 import `is`.posctrl.posctrl_android.util.Event
 import androidx.lifecycle.*
 import kotlinx.coroutines.launch
@@ -12,30 +13,30 @@ import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
 class LoginViewModel @Inject constructor(private val repository: PosCtrlRepository) :
-    ViewModel() {
+        ViewModel() {
 
-    /* todo define models private var _loginResponse: MutableLiveData<...> = MutableLiveData()
-     val loginResponse: LiveData<...>
-         get() = _loginResponse*/
+    private var _loginResponse = MutableLiveData<LoginResponse>()
+    val loginResponse: LiveData<LoginResponse>
+        get() = _loginResponse
     private var _loginEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-        MutableLiveData(Event(ResultWrapper.None))
+            MutableLiveData(Event(ResultWrapper.None))
     val loginEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _loginEvent
 
-    fun login() {
+    fun login(server: String = "", port: String = "", databaseUser: String = "", databasePassword: String = "", user: String = "", password: String = "") {
         viewModelScope.launch {
             _loginEvent.value = Event(ResultWrapper.Loading)
             var result: ResultWrapper<*>
             val time = measureTimeMillis {
                 result = try {
-                    repository.login()
+                    repository.login(server, port, databaseUser, databasePassword, user, password)
                 } catch (e: NoNetworkConnectionException) {
                     e.printStackTrace()
                     ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
                 }
-                /*if (result is ResultWrapper.Success) {
-                    _loginResponse.value = values
-                }*/
+                if (result is ResultWrapper.Success) {
+                    _loginResponse.value = (result as ResultWrapper.Success).data as LoginResponse
+                }
 
             }
 

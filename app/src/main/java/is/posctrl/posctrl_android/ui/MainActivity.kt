@@ -5,18 +5,17 @@ import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.databinding.ActivityMainBinding
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
-import `is`.posctrl.posctrl_android.di.AppModule
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.NavController
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 
-class MainActivity : AppCompatActivity(){
+class MainActivity : AppCompatActivity() {
 
     private lateinit var mainBinding: ActivityMainBinding
-    lateinit var navController: NavController
+    private lateinit var navController: NavController
     private lateinit var activityComponent: ActivityComponent
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,8 +31,16 @@ class MainActivity : AppCompatActivity(){
     }
 
     private fun initializeActivityComponent() {
-            activityComponent = (application as PosCtrlApplication).appComponent
-                    .activityComponent(ActivityModule(this))
+        activityComponent = (application as PosCtrlApplication).appComponent
+                .activityComponent(ActivityModule(this))
+    }
+
+    fun showLoading() {
+        mainBinding.pbLoading.visibility = View.VISIBLE
+    }
+
+    fun hideLoading() {
+        mainBinding.pbLoading.visibility = View.GONE
     }
 
 }

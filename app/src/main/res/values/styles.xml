@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="textInputGeneral">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+
+    </style>
+
+    <style name="buttonGeneral">
+        <item name="android:layout_marginTop">@dimen/margin_medium</item>
+        <item name="android:paddingTop">@dimen/margin_small</item>
+        <item name="android:paddingBottom">@dimen/margin_small</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="textInputLayoutGeneral" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+          <item name="boxStrokeColor">@color/purple_700</item>
+        <item name="boxStrokeWidth">1dp</item>
+    </style>
+</resources>

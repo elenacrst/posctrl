@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory app:title="@string/header_sql_server" />
+    <EditTextPreference
+        android:dialogLayout="@layout/dialog_et"
+        android:dialogTitle="@string/dialog_database_server"
+        android:inputType="text"
+        android:key="@string/key_database_server"
+        android:title="@string/title_database_server"
+        app:useSimpleSummaryProvider="true">
+
+    </EditTextPreference>
+    <EditTextPreference
+        android:dialogLayout="@layout/dialog_et"
+        android:dialogTitle="@string/dialog_server_port"
+        android:inputType="number"
+        android:key="@string/key_database_port"
+        android:title="@string/title_server_port"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:dialogLayout="@layout/dialog_et"
+        android:dialogTitle="@string/dialog_database_user"
+        android:inputType="text"
+        android:key="@string/key_database_user"
+        android:title="@string/title_database_user"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:dialogLayout="@layout/dialog_et"
+        android:dialogTitle="@string/dialog_database_password"
+        android:inputType="textPassword"
+        android:key="@string/key_database_password"
+        android:title="@string/title_database_password"
+        app:useSimpleSummaryProvider="true" />
+</androidx.preference.PreferenceScreen>
