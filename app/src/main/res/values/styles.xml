@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="textInputGeneral">
+    <style name="TextInputGeneral">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
 
     </style>
 
-    <style name="buttonGeneral">
+    <style name="ButtonGeneral">
         <item name="android:layout_marginTop">@dimen/margin_medium</item>
         <item name="android:paddingTop">@dimen/margin_small</item>
         <item name="android:paddingBottom">@dimen/margin_small</item>
@@ -15,8 +15,17 @@
         <item name="android:textSize">20sp</item>
     </style>
 
-    <style name="textInputLayoutGeneral" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-          <item name="boxStrokeColor">@color/purple_700</item>
+    <style name="TextInputLayoutGeneral" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+        <item name="boxStrokeColor">@color/purple_700</item>
         <item name="boxStrokeWidth">1dp</item>
+    </style>
+
+    <style name="Cell" parent="Widget.MaterialComponents.CardView">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="cardElevation">@dimen/elevation_medium</item>
+        <item name="cardCornerRadius">12dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
     </style>
 </resources>

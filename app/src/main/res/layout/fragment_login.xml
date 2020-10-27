@@ -14,7 +14,7 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_user"
-            style="@style/textInputLayoutGeneral"
+            style="@style/TextInputLayoutGeneral"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_medium"
@@ -23,7 +23,7 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_user"
-                style="@style/textInputGeneral"
+                style="@style/TextInputGeneral"
                 android:hint="@string/hint_user_id"
                 android:imeOptions="flagNoExtractUi|actionNext"
                 android:inputType="textAutoComplete"
@@ -32,7 +32,7 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_password"
-            style="@style/textInputLayoutGeneral"
+            style="@style/TextInputLayoutGeneral"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_extra_small"
@@ -41,7 +41,7 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_password"
-                style="@style/textInputGeneral"
+                style="@style/TextInputGeneral"
                 android:hint="@string/hint_password"
                 android:imeOptions="flagNoExtractUi|actionDone"
                 android:inputType="textPassword" />
@@ -49,7 +49,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/bt_login"
-            style="@style/buttonGeneral"
+            style="@style/ButtonGeneral"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/action_login"
