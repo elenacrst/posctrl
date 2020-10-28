@@ -7,11 +7,11 @@
 
         <variable
             name="clickListener"
-            type="is.posctrl.posctrl_android.ui.stores.StoreCellListener" />
+            type="is.posctrl.posctrl_android.ui.registers.RegisterCellListener" />
 
         <variable
             name="item"
-            type="is.posctrl.posctrl_android.data.model.StoreResponse" />
+            type="is.posctrl.posctrl_android.data.model.RegisterResponse" />
 
     </data>
 
@@ -30,7 +30,7 @@
             android:padding="@dimen/margin_extra_small">
 
             <TextView
-                android:id="@+id/tv_store"
+                android:id="@+id/tv_register"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
@@ -39,12 +39,14 @@
                 android:layout_alignParentBottom="true"
                 android:breakStrategy="simple"
                 android:gravity="center"
-                android:lines="3"
-                android:text="@{String.format(@string/store_value, item.storeNumber, item.storeName)}"
+                android:lines="1"
+                android:paddingTop="@dimen/margin_small"
+                android:paddingBottom="@dimen/margin_small"
+                android:text="@{Integer.toString(item.registerNumber)}"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
                 android:textSize="@dimen/text_size_large"
-                tools:text="22, Mega Image" />
+                tools:text="2" />
         </RelativeLayout>
     </com.google.android.material.card.MaterialCardView>
 </layout>

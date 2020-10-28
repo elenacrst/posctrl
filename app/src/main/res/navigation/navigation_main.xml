@@ -34,6 +34,9 @@
             android:name="stores"
             app:argType="is.posctrl.posctrl_android.data.model.StoreResponse[]"
             app:nullable="false" />
+        <action
+            android:id="@+id/toRegistersFragment"
+            app:destination="@id/registersFragment" />
     </fragment>
 
     <fragment
@@ -41,8 +44,8 @@
         android:name="is.posctrl.posctrl_android.ui.registers.RegistersFragment"
         android:label="Registers">
         <argument
-            android:name="storeNumber"
-            app:argType="long"
+            android:name="store"
+            app:argType="is.posctrl.posctrl_android.data.model.StoreResponse"
             app:nullable="false" />
     </fragment>
 </navigation>

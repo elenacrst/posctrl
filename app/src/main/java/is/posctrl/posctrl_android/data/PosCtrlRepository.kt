@@ -3,6 +3,7 @@ package `is`.posctrl.posctrl_android.data
 
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.model.LoginResponse
+import `is`.posctrl.posctrl_android.data.model.RegisterResponse
 import `is`.posctrl.posctrl_android.data.model.StoreResponse
 import android.content.Context
 import kotlinx.coroutines.CoroutineDispatcher
@@ -96,6 +97,37 @@ class PosCtrlRepository @Inject constructor() {
         }
     }
 
+    @Throws(Exception::class)
+    suspend fun getRegisters(server: String, port: String, databaseUser: String, databasePassword: String, storeNumber: Int, loggedInUser: String): ResultWrapper<*> {
+        val registers = arrayListOf<RegisterResponse>()
+        withContext(ioDispatcher) {
+            try {
+                val connectionURL = "jdbc:jtds:sqlserver://$server:$port/$DATABASE_NAME;instance=POSCTRL;user=$databaseUser;password=$databasePassword"
+                Timber.e("connection url is $connectionURL")
+                val connection = DriverManager.getConnection(connectionURL)
+                val statement = connection.prepareCall("{call [PosCtrl-SelfService].dbo.[Settings.usp_UsersStoreRegisters] $storeNumber, \'$loggedInUser\'}")//called the procedure
+                val result = statement.executeQuery()
+                while (result.next()) {
+                    val response = RegisterResponse(
+                            result.getInt(COL_REGISTER_NUMBER)
+                    )
+                    Timber.e("get registers result item $response")
+                    registers.add(response)
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                throw NoNetworkConnectionException()
+            }
+        }
+
+        return if (registers.isNotEmpty()) {
+            ResultWrapper.Success(registers)
+        } else {
+            ResultWrapper.Error(message = context.applicationContext.getString(R.string.error_no_registers))
+        }
+    }
+
     companion object {
         const val DATABASE_NAME = "PosCtrl-SelfService"
         const val COL_ERROR_MESSAGE = "ErrorMessage"
@@ -109,6 +141,7 @@ class PosCtrlRepository @Inject constructor() {
         const val COL_SERVER_SNAPSHOT_PATH = "SnapShotPath"
         const val COL_STORE_NUMBER = "StoreNumber"
         const val COL_STORE_NAME = "StoreName"
+        const val COL_REGISTER_NUMBER = "RegisterNumber"
     }
 
 

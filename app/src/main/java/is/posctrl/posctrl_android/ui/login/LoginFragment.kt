@@ -67,12 +67,15 @@ class LoginFragment : BaseFragment() {
                     hideLoading()
                     loginViewModel.stores.value?.let {
                         if (it.size > 1) {
+                            findNavController().popBackStack()
                             findNavController().navigate(LoginFragmentDirections.toStoresFragment(it.toTypedArray()))
                         } else {
+                            prefs.customPrefs()[getString(R.string.key_store_number)] = it[0].storeNumber
+                            prefs.customPrefs()[getString(R.string.key_store_name)] = it[0].storeName
+                            findNavController().popBackStack()
                             requireContext().getString(R.string.message_store_value, it[0].storeNumber
                                     ?: -1, it[0].storeName)
-                            findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it[0].storeNumber
-                                    ?: -1))
+                            findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it[0]))
                         }
                     }
                 }

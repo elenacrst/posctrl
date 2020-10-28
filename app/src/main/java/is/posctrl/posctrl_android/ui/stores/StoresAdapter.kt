@@ -8,11 +8,11 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 
 class StoresAdapter(private val clickListener: StoreCellListener) :
-        RecyclerView.Adapter<CategoryCellViewHolder>() {
+        RecyclerView.Adapter<StoreCellViewHolder>() {
 
     private var data = ArrayList<StoreResponse>()
 
-    fun setData(data: List<StoreResponse>?) {
+    fun setData(data: Array<StoreResponse>?) {
         this.data = ArrayList()
         if (data != null) {
             this.data.addAll(data)
@@ -25,24 +25,24 @@ class StoresAdapter(private val clickListener: StoreCellListener) :
         return data.size
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryCellViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StoreCellViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val binding = ItemStoreBinding.inflate(layoutInflater, parent, false)
 
-        return CategoryCellViewHolder(binding)
+        return StoreCellViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: CategoryCellViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: StoreCellViewHolder, position: Int) {
         val currentItem = data[position]
         holder.bind(clickListener, currentItem)
     }
 }
 
-class StoreCellListener(val clickListener: (id: Long?) -> Unit) {
-    fun onClick(id: Long?) = clickListener(id)
+open class StoreCellListener(val clickListener: (store: StoreResponse) -> Unit) {
+    fun onClick(store: StoreResponse) = clickListener(store)
 }
 
-class CategoryCellViewHolder(private val binding: ItemStoreBinding) :
+class StoreCellViewHolder(private val binding: ItemStoreBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
     fun bind(clickListener: StoreCellListener, item: StoreResponse) {
