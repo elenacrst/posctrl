@@ -22,6 +22,12 @@ inline fun SharedPreferences.edit(operation: (SharedPreferences.Editor) -> Unit)
     editor.apply()
 }
 
+fun SharedPreferences.clear() {
+    edit {
+        it.clear()
+    }
+}
+
 /**
  * puts a key value pair in shared prefs if doesn't exists,
  * otherwise updates value on given [key]

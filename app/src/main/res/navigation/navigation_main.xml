@@ -15,10 +15,12 @@
             app:destination="@id/databaseSettingsFragment" />
         <action
             android:id="@+id/toStoresFragment"
-            app:destination="@id/storesFragment" />
+            app:destination="@id/storesFragment"
+            app:popUpTo="@id/navigation_main_container" />
         <action
             android:id="@+id/toRegistersFragment"
-            app:destination="@id/registersFragment" />
+            app:destination="@id/registersFragment"
+            app:popUpTo="@id/navigation_main_container" />
     </fragment>
 
     <fragment
@@ -48,4 +50,21 @@
             app:argType="is.posctrl.posctrl_android.data.model.StoreResponse"
             app:nullable="false" />
     </fragment>
+
+    <fragment
+        android:id="@+id/appOptionsFragment"
+        android:name="is.posctrl.posctrl_android.ui.settings.AppOptionsFragment"
+        android:label="App options">
+        <argument
+            android:name="register"
+            app:argType="is.posctrl.posctrl_android.data.model.RegisterResponse"
+            app:nullable="true" />
+    </fragment>
+    <action
+        android:id="@+id/toAppOptionsFragment"
+        app:destination="@id/appOptionsFragment" />
+    <action
+        android:id="@+id/toLoginFragment"
+        app:destination="@id/loginFragment"
+        app:popUpTo="@id/navigation_main_container" />
 </navigation>

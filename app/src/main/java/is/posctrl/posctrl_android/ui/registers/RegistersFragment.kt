@@ -1,6 +1,7 @@
 package `is`.posctrl.posctrl_android.ui.registers
 
 import `is`.posctrl.posctrl_android.BaseFragment
+import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.ResultWrapper
@@ -9,15 +10,20 @@ import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.StoreResponse
 import `is`.posctrl.posctrl_android.databinding.FragmentRegistersBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
+import `is`.posctrl.posctrl_android.service.UdpReceiverService
 import `is`.posctrl.posctrl_android.util.Event
+import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import javax.inject.Inject
+
 
 //todo show semitransparent overlay with the progress bar whenever loading
 class RegistersFragment : BaseFragment() {
@@ -82,11 +88,20 @@ class RegistersFragment : BaseFragment() {
         registersViewModel.registersEvent.observe(viewLifecycleOwner, getRegistersObserver())
 
         adapter = RegistersAdapter(RegisterCellListener {
-            //todo
+            startUdpReceiverService()
         })
         registersBinding.rvRegisters.adapter = adapter
         adapter.setData(arrayOf())
         registersBinding.store = store
+
+        registersBinding.clBase.setOnSwipeListener(onSwipeLeft = {
+            findNavController().navigate(NavigationMainContainerDirections.toAppOptionsFragment(null))
+        })
+    }
+
+    private fun startUdpReceiverService() {
+        val intent = Intent(requireContext(), UdpReceiverService::class.java)
+        UdpReceiverService.enqueueWork(requireContext(), intent)
     }
 
     override fun onAttach(context: Context) {

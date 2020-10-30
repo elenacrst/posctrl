@@ -1,6 +1,7 @@
 package `is`.posctrl.posctrl_android.ui.stores
 
 import `is`.posctrl.posctrl_android.BaseFragment
+import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
@@ -8,6 +9,7 @@ import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.StoreResponse
 import `is`.posctrl.posctrl_android.databinding.FragmentStoresBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
+import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -50,11 +52,14 @@ class StoresFragment : BaseFragment() {
         adapter = StoresAdapter(StoreCellListener { store ->
             prefs.customPrefs()[getString(R.string.key_store_number)] = store.storeNumber
             prefs.customPrefs()[getString(R.string.key_store_name)] = store.storeName
-            findNavController().popBackStack()
             findNavController().navigate(StoresFragmentDirections.toRegistersFragment(store))
         })
         storesBinding.rvStores.adapter = adapter
         adapter.setData(stores)
+
+        storesBinding.llBase.setOnSwipeListener(onSwipeLeft = {
+            findNavController().navigate(NavigationMainContainerDirections.toAppOptionsFragment(null))
+        })
     }
 
     override fun onAttach(context: Context) {

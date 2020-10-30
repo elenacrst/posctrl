@@ -3,6 +3,7 @@ package `is`.posctrl.posctrl_android.di
 import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.ui.login.LoginFragment
 import `is`.posctrl.posctrl_android.ui.registers.RegistersFragment
+import `is`.posctrl.posctrl_android.ui.settings.AppOptionsFragment
 import `is`.posctrl.posctrl_android.ui.stores.StoresFragment
 import dagger.Subcomponent
 import javax.inject.Scope
@@ -23,4 +24,5 @@ interface ActivityComponent {
     fun inject(fragment: LoginFragment)
     fun inject(registersFragment: RegistersFragment)
     fun inject(storesFragment: StoresFragment)
+    fun inject(appOptionsFragment: AppOptionsFragment)
 }
