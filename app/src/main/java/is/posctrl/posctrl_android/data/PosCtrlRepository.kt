@@ -5,11 +5,17 @@ import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.model.LoginResponse
 import `is`.posctrl.posctrl_android.data.model.RegisterResponse
 import `is`.posctrl.posctrl_android.data.model.StoreResponse
+import `is`.posctrl.posctrl_android.ui.receipt.ReceiptAction
 import android.content.Context
+import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
+import java.net.InetSocketAddress
 import java.sql.DriverManager
 import javax.inject.Inject
 
@@ -20,13 +26,18 @@ class PosCtrlRepository @Inject constructor() {
     @Inject
     lateinit var context: Context
 
+    @Inject
+    lateinit var xmlMapper: XmlMapper
+
     /*
     server: String = "192.168.0.110", port: String = "1433",databaseUser: String = "sa", databasePassword: String = "PosCtrl.1234",
         loginUser: String = "aron", loginPassword: String = "foot.1234"
      */
     @Throws(Exception::class)
-    suspend fun login(server: String, port: String, databaseUser: String, databasePassword: String,
-                      loginUser: String, loginPassword: String): ResultWrapper<*> {
+    suspend fun login(
+            server: String, port: String, databaseUser: String, databasePassword: String,
+            loginUser: String, loginPassword: String
+    ): ResultWrapper<*> {
         var response: LoginResponse? = null
         withContext(ioDispatcher) {
             try {
@@ -48,7 +59,13 @@ class PosCtrlRepository @Inject constructor() {
                             result.getString(COL_SERVER_USER_PASSWORD),
                             result.getString(COL_SERVER_SNAPSHOT_PATH)
                     )
-                    Timber.e("login result error message=${result.getString(COL_ERROR_MESSAGE)} , server path=${result.getString(COL_SERVER_PATH)}")
+                    Timber.e(
+                            "login result error message=${result.getString(COL_ERROR_MESSAGE)} , server path=${
+                                result.getString(
+                                        COL_SERVER_PATH
+                                )
+                            }"
+                    )
                 }
                 connection.close()
 
@@ -66,7 +83,13 @@ class PosCtrlRepository @Inject constructor() {
     }
 
     @Throws(Exception::class)
-    suspend fun getStores(server: String, port: String, databaseUser: String, databasePassword: String, loggedInUser: String): ResultWrapper<*> {
+    suspend fun getStores(
+            server: String,
+            port: String,
+            databaseUser: String,
+            databasePassword: String,
+            loggedInUser: String
+    ): ResultWrapper<*> {
         val storesList = arrayListOf<StoreResponse>()
         withContext(ioDispatcher) {
             try {
@@ -98,7 +121,14 @@ class PosCtrlRepository @Inject constructor() {
     }
 
     @Throws(Exception::class)
-    suspend fun getRegisters(server: String, port: String, databaseUser: String, databasePassword: String, storeNumber: Int, loggedInUser: String): ResultWrapper<*> {
+    suspend fun getRegisters(
+            server: String,
+            port: String,
+            databaseUser: String,
+            databasePassword: String,
+            storeNumber: Int,
+            loggedInUser: String
+    ): ResultWrapper<*> {
         val registers = arrayListOf<RegisterResponse>()
         withContext(ioDispatcher) {
             try {
@@ -127,6 +157,39 @@ class PosCtrlRepository @Inject constructor() {
             ResultWrapper.Error(message = context.applicationContext.getString(R.string.error_no_registers))
         }
     }
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    @Throws(Exception::class)
+    suspend fun sendReceiptInfoMessage(
+            loggedInUser: String = "",
+            action: ReceiptAction = ReceiptAction.ALIFE,
+            storeNumber: Int = -1,
+            registerNumber: Int = -1/*, hostName: String, listeningPort: Int*/
+    ): ResultWrapper<*> {
+        withContext(Dispatchers.Default) {
+            try {
+                val message = "message"
+                val bytes = message.toByteArray()
+                val broadcastIp = "255.255.255.255"
+                val port = 20000
+                val sendSocket = DatagramSocket(null)
+                sendSocket.reuseAddress = true
+                sendSocket.bind(InetSocketAddress(port))
+                sendSocket.broadcast = true
+                val sendPacket = DatagramPacket(
+                        bytes,
+                        bytes.size, InetAddress.getByName(broadcastIp), port
+                )
+                sendSocket.send(sendPacket)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return@withContext ResultWrapper.Error()//todo connection failure
+            }
+        }
+
+        return ResultWrapper.Success("")
+    }
+    //todo move get from prefs logic here instead of fragments/ view models
 
     companion object {
         const val DATABASE_NAME = "PosCtrl-SelfService"

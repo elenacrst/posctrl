@@ -49,6 +49,9 @@
             android:name="store"
             app:argType="is.posctrl.posctrl_android.data.model.StoreResponse"
             app:nullable="false" />
+        <action
+            android:id="@+id/toReceiptFragment"
+            app:destination="@id/receiptFragment" />
     </fragment>
 
     <fragment
@@ -67,4 +70,15 @@
         android:id="@+id/toLoginFragment"
         app:destination="@id/loginFragment"
         app:popUpTo="@id/navigation_main_container" />
+    <fragment
+        android:id="@+id/receiptFragment"
+        android:name="is.posctrl.posctrl_android.ui.receipt.ReceiptFragment"
+        android:label="Receipt">
+        <argument
+            android:name="register"
+            app:argType="is.posctrl.posctrl_android.data.model.RegisterResponse" />
+        <argument
+            android:name="store"
+            app:argType="is.posctrl.posctrl_android.data.model.StoreResponse" />
+    </fragment>
 </navigation>

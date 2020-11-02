@@ -87,8 +87,9 @@ class RegistersFragment : BaseFragment() {
 
         registersViewModel.registersEvent.observe(viewLifecycleOwner, getRegistersObserver())
 
-        adapter = RegistersAdapter(RegisterCellListener {
+        adapter = RegistersAdapter(RegisterCellListener { register ->
             startUdpReceiverService()
+            findNavController().navigate(RegistersFragmentDirections.toReceiptFragment(register, store))
         })
         registersBinding.rvRegisters.adapter = adapter
         adapter.setData(arrayOf())
