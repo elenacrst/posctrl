@@ -73,4 +73,6 @@
     <string name="action_settings">Settings</string>
     <string name="action_suspend_register">Suspend register</string>
     <string name="title_app_options">App options</string>
+    <string name="key_listen_port">keyListenPort</string>
+    <string name="key_last_txn">keyLastTxn</string>
 </resources>

@@ -1,15 +1,23 @@
 package `is`.posctrl.posctrl_android.service
 
+import `is`.posctrl.posctrl_android.PosCtrlApplication
+import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.JobIntentService
+import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import timber.log.Timber
 import java.io.IOException
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.SocketTimeoutException
+import javax.inject.Inject
+
 
 class UdpReceiverService : JobIntentService() {
+
+    @Inject
+    lateinit var xmlMapper: XmlMapper
 
     private var socket: DatagramSocket? = null
 
@@ -23,13 +31,14 @@ class UdpReceiverService : JobIntentService() {
                     socket!!.broadcast = false
                 }
                 socket!!.reuseAddress = true
-                socket!!.soTimeout = 10 * 1000
+                socket!!.soTimeout = 3 * 1000
                 Timber.d("waiting to receive data via udp")
                 try {
                     val message = ByteArray(512 * 8) //8bytes x n params for a profile
                     p = DatagramPacket(message, message.size)
                     socket!!.receive(p)
                     Timber.d("received ${String(message).substring(0, p.length)}")
+                    publishResults(String(message).substring(0, p.length))
 
                 } catch (e: SocketTimeoutException) {
                     e.printStackTrace()
@@ -50,6 +59,7 @@ class UdpReceiverService : JobIntentService() {
 
     override fun onCreate() {
         super.onCreate()
+        (applicationContext as PosCtrlApplication).appComponent.inject(this)
         Timber.d("created udp receiver service")
     }
 
@@ -62,8 +72,18 @@ class UdpReceiverService : JobIntentService() {
         Timber.d("destroyed udp receiver service")
     }
 
+    private fun publishResults(output: String) {
+        val result = xmlMapper.readValue(output, ReceiptResponse::class.java)
+        val intent = Intent(ACTION_RECEIVE_RECEIPT)
+        intent.putExtra(EXTRA_RECEIPT, result)
+        sendBroadcast(intent)
+    }
+
     companion object {
         private const val UDP_RECEIVER_JOB = 1
+        const val ACTION_RECEIVE_RECEIPT = "RECEIVE_RECEIPT"
+        const val EXTRA_RECEIPT = "RECEIPT"
+
         fun enqueueWork(context: Context, intent: Intent) {
             enqueueWork(context, UdpReceiverService::class.java, UDP_RECEIVER_JOB, intent)
         }

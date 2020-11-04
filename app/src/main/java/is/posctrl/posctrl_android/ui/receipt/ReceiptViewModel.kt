@@ -12,7 +12,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
-enum class ReceiptAction(val action: String){
+enum class ReceiptAction(val actionValue: String){
     OPEN("Open"),
     CLOSE("Close"),
     ALIFE("ALife")
@@ -26,20 +26,20 @@ class ReceiptViewModel @Inject constructor(private val repository: PosCtrlReposi
     val receiptInfoRequestEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _receiptInfoRequestEvent
 
-    fun sendReceiptInfoMessage() {
+    fun sendReceiptInfoMessage(action: ReceiptAction, storeNumber: Int, registerNumber: Int) {
         viewModelScope.launch {
             _receiptInfoRequestEvent.value = Event(ResultWrapper.Loading)
             var result: ResultWrapper<*>
             val time = measureTimeMillis {
                 result = try {
-                    repository.sendReceiptInfoMessage()//todo args
+                    repository.sendReceiptInfoMessage(action, storeNumber, registerNumber)
                 } catch (e: NoNetworkConnectionException) {
                     e.printStackTrace()
                     ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
                 }
             }
 
-            Timber.d("Get registers duration $time")
+            Timber.d("Receipt info send duration $time")
             _receiptInfoRequestEvent.value = Event(result)
         }
     }
