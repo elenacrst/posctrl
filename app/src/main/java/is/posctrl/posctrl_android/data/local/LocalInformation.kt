@@ -18,7 +18,7 @@ class LocalInformation @Inject constructor(private val preferencesSource: Prefer
     }
 
     companion object {
-        // const val PREFERENCES_FILE_NAME = "preferences"
+        const val PREFERENCES_FILE_NAME = "logged_in_preferences"
         const val KEY_USER_ID = "userId"
     }
 }

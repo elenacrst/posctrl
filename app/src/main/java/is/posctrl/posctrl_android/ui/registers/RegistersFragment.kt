@@ -53,10 +53,10 @@ class RegistersFragment : BaseFragment() {
         )
         store = args.store
         registersViewModel.getRegisters(
-                prefs.customPrefs()[getString(R.string.key_database_server)] ?: "",
-                prefs.customPrefs()[getString(R.string.key_database_port)] ?: "",
-                prefs.customPrefs()[getString(R.string.key_database_user)] ?: "",
-                prefs.customPrefs()[getString(R.string.key_database_password)] ?: "",
+                prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
+                prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
+                prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
+                prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
                 store.storeNumber!!.toInt(),
                 prefs.customPrefs()[getString(R.string.key_logged_user)] ?: ""
         )

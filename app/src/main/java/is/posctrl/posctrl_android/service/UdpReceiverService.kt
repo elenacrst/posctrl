@@ -1,7 +1,12 @@
 package `is`.posctrl.posctrl_android.service
 
 import `is`.posctrl.posctrl_android.PosCtrlApplication
+import `is`.posctrl.posctrl_android.R
+import `is`.posctrl.posctrl_android.data.PosCtrlRepository
+import `is`.posctrl.posctrl_android.data.local.PreferencesSource
+import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
+import android.app.Application
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.JobIntentService
@@ -19,19 +24,26 @@ class UdpReceiverService : JobIntentService() {
     @Inject
     lateinit var xmlMapper: XmlMapper
 
+    @Inject
+    lateinit var prefs: PreferencesSource
+
+    @Inject
+    lateinit var appContext: Application
+
     private var socket: DatagramSocket? = null
 
     private fun receiveUdp() {
         var p: DatagramPacket
         try {
             while (true) {
-                val serverPort = 20000//todo change to get from prefs
+                val serverPort = (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
+                        ?: PosCtrlRepository.DEFAULT_LISTENING_PORT).toInt()
                 if (socket == null) {
                     socket = DatagramSocket(serverPort)
                     socket!!.broadcast = false
                 }
                 socket!!.reuseAddress = true
-                socket!!.soTimeout = 3 * 1000
+                socket!!.soTimeout = 60 * 1000
                 Timber.d("waiting to receive data via udp")
                 try {
                     val message = ByteArray(512 * 8) //8bytes x n params for a profile
@@ -41,7 +53,6 @@ class UdpReceiverService : JobIntentService() {
                     publishResults(String(message).substring(0, p.length))
 
                 } catch (e: SocketTimeoutException) {
-                    e.printStackTrace()
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }

@@ -45,12 +45,12 @@ class AppOptionsFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        /*if (register == null){//todo use on suspend listener
-        }else{
-        }*/
         appOptionsBinding.tvLogout.setOnClickListener {
             preferencesSource.customPrefs().clear()
             findNavController().navigate(NavigationMainContainerDirections.toLoginFragment())
+        }
+        appOptionsBinding.tvSuspend.setOnClickListener {
+
         }
     }
 

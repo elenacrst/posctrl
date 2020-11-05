@@ -51,11 +51,11 @@ class LoginFragment : BaseFragment() {
                         prefs.customPrefs()[getString(R.string.key_logged_user)] = loginBinding.etUser.text.toString()
                     }
                     loginViewModel.getStores(
-                            prefs.customPrefs()[getString(R.string.key_database_server)] ?: "",
-                            prefs.customPrefs()[getString(R.string.key_database_port)] ?: "",
-                            prefs.customPrefs()[getString(R.string.key_database_user)] ?: "",
-                            prefs.customPrefs()[getString(R.string.key_database_password)] ?: "",
-                            prefs.customPrefs()[getString(R.string.key_logged_user)] ?: ""
+                            prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
+                            prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
+                            prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
+                            prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
+                            prefs.defaultPrefs()[getString(R.string.key_logged_user)] ?: ""
                     )
                 }
         )
@@ -161,10 +161,10 @@ class LoginFragment : BaseFragment() {
         }
         if (valid) {
             loginViewModel.login(
-                    prefs.customPrefs()[getString(R.string.key_database_server)] ?: "",
-                    prefs.customPrefs()[getString(R.string.key_database_port)] ?: "",
-                    prefs.customPrefs()[getString(R.string.key_database_user)] ?: "",
-                    prefs.customPrefs()[getString(R.string.key_database_password)] ?: "",
+                    prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
+                    prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
+                    prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
+                    prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
                     loginBinding.etUser.text!!.toString(),
                     loginBinding.etPassword.text!!.toString()
             )

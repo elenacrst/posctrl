@@ -7,12 +7,12 @@ import javax.inject.Inject
 
 class PreferencesSource @Inject constructor(private val context: Context) {
 
-    internal fun customPrefs(): SharedPreferences =
-            PreferenceManager.getDefaultSharedPreferences(context)
-    /*context.getSharedPreferences(a
-        LocalInformation.PREFERENCES_FILE_NAME,
-        Context.MODE_PRIVATE
-    )*/
+    internal fun customPrefs(): SharedPreferences = context.getSharedPreferences(
+            LocalInformation.PREFERENCES_FILE_NAME,
+            Context.MODE_PRIVATE
+    )
+
+    internal fun defaultPrefs(): SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
 }
 
