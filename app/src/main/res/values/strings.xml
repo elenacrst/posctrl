@@ -76,4 +76,8 @@
     <string name="key_listen_port">keyListenPort</string>
     <string name="key_last_txn">keyLastTxn</string>
     <string name="key_send_alife">keySendALife-store%1$d-register%2$d</string>
+    <string name="title_select_suspend">Select register to suspend</string>
+    <string name="action_yes">Yes</string>
+    <string name="action_no">No</string>
+    <string name="confirm_suspend_register">Are you sure you want to suspend activity of register %d</string>
 </resources>

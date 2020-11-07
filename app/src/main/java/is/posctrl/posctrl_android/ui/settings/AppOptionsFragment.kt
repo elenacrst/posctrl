@@ -7,8 +7,10 @@ import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.clear
 import `is`.posctrl.posctrl_android.data.model.RegisterResponse
+import `is`.posctrl.posctrl_android.data.model.StoreResponse
 import `is`.posctrl.posctrl_android.databinding.FragmentAppOptionsBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
+import `is`.posctrl.posctrl_android.util.extensions.showConfirmDialog
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -22,6 +24,7 @@ class AppOptionsFragment : BaseFragment() {
 
     private lateinit var appOptionsBinding: FragmentAppOptionsBinding
     private var register: RegisterResponse? = null
+    private var store: StoreResponse? = null
 
     @Inject
     lateinit var preferencesSource: PreferencesSource
@@ -38,6 +41,7 @@ class AppOptionsFragment : BaseFragment() {
                 requireArguments()
         )
         register = args.register
+        store = args.store
 
         return appOptionsBinding.root
     }
@@ -50,8 +54,18 @@ class AppOptionsFragment : BaseFragment() {
             findNavController().navigate(NavigationMainContainerDirections.toLoginFragment())
         }
         appOptionsBinding.tvSuspend.setOnClickListener {
-
+            if (register == null) {
+                //show registers list first
+                findNavController().navigate(AppOptionsFragmentDirections.toRegisterSelectionFragment(store!!))
+            } else {
+                //show confirm dialog
+                requireContext().showConfirmDialog(getString(R.string.confirm_suspend_register, register!!.registerNumber
+                        ?: -1)) {
+                    //todo call suspend on register
+                }
+            }
         }
+        appOptionsBinding.store = store
     }
 
     override fun onAttach(context: Context) {

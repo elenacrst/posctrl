@@ -74,7 +74,7 @@ class ReceiptFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         receiptBinding.svBase.setOnSwipeListener(onSwipeLeft = {
-            findNavController().navigate(NavigationMainContainerDirections.toAppOptionsFragment(register))
+            findNavController().navigate(NavigationMainContainerDirections.toAppOptionsFragment(register, store))
         })
     }
 
@@ -136,64 +136,13 @@ class ReceiptFragment : BaseFragment() {
 
     private fun generateFormattedTextView(it: ReceiptResponse, text: String): TextView {
         val textView = TextView(requireContext())
-        when (it.color) {
-            "Black" -> {
-                textView.setTextColor(
-                        ContextCompat.getColor(
-                                requireContext(),
-                                android.R.color.black
-                        )
+        val color = getCSharpColor(it.color)
+        textView.setTextColor(
+                ContextCompat.getColor(
+                        requireContext(),
+                        color
                 )
-            }
-            "Blue" -> {
-                textView.setTextColor(
-                        ContextCompat.getColor(
-                                requireContext(),
-                                android.R.color.holo_blue_dark
-                        )
-                )
-            }
-            "Gray" -> {
-                textView.setTextColor(
-                        ContextCompat.getColor(
-                                requireContext(),
-                                android.R.color.darker_gray
-                        )
-                )
-            }
-            "Green" -> {
-                textView.setTextColor(
-                        ContextCompat.getColor(
-                                requireContext(),
-                                android.R.color.holo_green_dark
-                        )
-                )
-            }
-            "Orange" -> {
-                textView.setTextColor(
-                        ContextCompat.getColor(
-                                requireContext(),
-                                android.R.color.holo_orange_dark
-                        )
-                )
-            }
-            "Purple" -> {
-                textView.setTextColor(
-                        ContextCompat.getColor(
-                                requireContext(),
-                                android.R.color.holo_purple
-                        )
-                )
-            }
-            "Red" -> {
-                textView.setTextColor(
-                        ContextCompat.getColor(
-                                requireContext(),
-                                android.R.color.holo_red_dark
-                        )
-                )
-            }
-        }
+        )
         textView.text = text
         if (it.bold == 1) {
             if (it.italic == 1) {
@@ -205,6 +154,35 @@ class ReceiptFragment : BaseFragment() {
             textView.setTypeface(textView.typeface, Typeface.ITALIC)
         }
         return textView
+    }
+
+    private fun getCSharpColor(color: String): Int {
+        return when (color) {
+            "Black" -> {
+                android.R.color.black
+            }
+            "Blue" -> {
+                android.R.color.holo_blue_dark
+            }
+            "Gray" -> {
+                android.R.color.darker_gray
+            }
+            "Green" -> {
+                android.R.color.holo_green_dark
+            }
+            "Orange" -> {
+                android.R.color.holo_orange_dark
+            }
+            "Purple" -> {
+                android.R.color.holo_purple
+            }
+            "Red" -> {
+                android.R.color.holo_red_dark
+            }
+            else -> {
+                android.R.color.black
+            }
+        }
     }
 
     override fun onResume() {

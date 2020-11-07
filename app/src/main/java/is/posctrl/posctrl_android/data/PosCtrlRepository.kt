@@ -47,12 +47,11 @@ class PosCtrlRepository @Inject constructor(
             loginUser: String, loginPassword: String
     ): ResultWrapper<*> {
         var response: LoginResponse? = null
-        withContext(ioDispatcher) {
+        val connectionURL =
+                "jdbc:jtds:sqlserver://$server:$port/$DATABASE_NAME;instance=POSCTRL;user=$databaseUser;password=$databasePassword"
+        Timber.e("connection url is $connectionURL")
+        withContext(Dispatchers.Default) {//todo set all coroutines to dispatchers default as it s faster
             try {
-                Class.forName("net.sourceforge.jtds.jdbc.Driver")
-                val connectionURL =
-                        "jdbc:jtds:sqlserver://$server:$port/$DATABASE_NAME;instance=POSCTRL;user=$databaseUser;password=$databasePassword"
-                Timber.e("connection url is $connectionURL")
                 val connection = DriverManager.getConnection(connectionURL)
                 val statement =
                         connection.prepareCall("{call [PosCtrl-SelfService].dbo.[Settings.usp_UserLogin] \'$loginUser\', \'$loginPassword\'}")//called the procedure
@@ -250,7 +249,6 @@ class PosCtrlRepository @Inject constructor(
             registerNumber: Int,
     ) {
         withContext(Dispatchers.Default) {
-
             try {
                 val hostName = Settings.Secure.getString(
                         appContext.contentResolver,

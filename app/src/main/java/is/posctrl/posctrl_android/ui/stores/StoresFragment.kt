@@ -58,7 +58,7 @@ class StoresFragment : BaseFragment() {
         adapter.setData(stores)
 
         storesBinding.llBase.setOnSwipeListener(onSwipeLeft = {
-            findNavController().navigate(NavigationMainContainerDirections.toAppOptionsFragment(null))
+            findNavController().navigate(NavigationMainContainerDirections.toAppOptionsFragment(null, null))
         })
     }
 

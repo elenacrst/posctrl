@@ -1,4 +1,4 @@
-package `is`.posctrl.posctrl_android.ui.registers
+package `is`.posctrl.posctrl_android.ui.settings
 
 import `is`.posctrl.posctrl_android.BaseFragment
 import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
@@ -10,11 +10,11 @@ import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.StoreResponse
 import `is`.posctrl.posctrl_android.databinding.FragmentRegistersBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
-import `is`.posctrl.posctrl_android.service.UdpReceiverService
+import `is`.posctrl.posctrl_android.ui.registers.*
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
+import `is`.posctrl.posctrl_android.util.extensions.showConfirmDialog
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -26,7 +26,7 @@ import javax.inject.Inject
 
 
 //todo show semitransparent overlay with the progress bar whenever loading
-class RegistersFragment : BaseFragment() {
+class RegisterSelectionFragment : BaseFragment() {
 
     private lateinit var registersBinding: FragmentRegistersBinding
     private lateinit var adapter: RegistersAdapter
@@ -60,6 +60,7 @@ class RegistersFragment : BaseFragment() {
                 store.storeNumber!!.toInt(),
                 prefs.customPrefs()[getString(R.string.key_logged_user)] ?: ""
         )
+        registersBinding.tvTitle.text = getString(R.string.title_select_suspend)
 
         return registersBinding.root
     }
@@ -88,8 +89,11 @@ class RegistersFragment : BaseFragment() {
         registersViewModel.registersEvent.observe(viewLifecycleOwner, getRegistersObserver())
 
         adapter = RegistersAdapter(RegisterCellListener { register ->
-            startUdpReceiverService()
-            findNavController().navigate(RegistersFragmentDirections.toReceiptFragment(register, store))
+            requireContext().showConfirmDialog(getString(R.string.confirm_suspend_register, register.registerNumber
+                    ?: -1)) {
+                //todo call suspend on register
+                findNavController().navigateUp()
+            }
         })
         registersBinding.rvRegisters.adapter = adapter
         adapter.setData(arrayOf())
@@ -98,11 +102,6 @@ class RegistersFragment : BaseFragment() {
         registersBinding.clBase.setOnSwipeListener(onSwipeLeft = {
             findNavController().navigate(NavigationMainContainerDirections.toAppOptionsFragment(null, store))
         })
-    }
-
-    private fun startUdpReceiverService() {
-        val intent = Intent(requireContext(), UdpReceiverService::class.java)
-        UdpReceiverService.enqueueWork(requireContext(), intent)
     }
 
     override fun onAttach(context: Context) {

@@ -3,6 +3,11 @@
 
     <data>
 
+        <import type="android.view.View" />
+
+        <variable
+            name="store"
+            type="is.posctrl.posctrl_android.data.model.StoreResponse" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -58,6 +63,7 @@
             android:focusable="true"
             android:padding="@dimen/margin_small"
             android:text="@string/action_suspend_register"
+            android:visibility="@{store==null?View.GONE:View.VISIBLE}"
             app:layout_constraintTop_toBottomOf="@+id/tv_settings" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -62,6 +62,13 @@
             android:name="register"
             app:argType="is.posctrl.posctrl_android.data.model.RegisterResponse"
             app:nullable="true" />
+        <argument
+            android:name="store"
+            app:argType="is.posctrl.posctrl_android.data.model.StoreResponse"
+            app:nullable="true" />
+        <action
+            android:id="@+id/toRegisterSelectionFragment"
+            app:destination="@id/registerSelectionFragment" />
     </fragment>
     <action
         android:id="@+id/toAppOptionsFragment"
@@ -81,4 +88,13 @@
             android:name="store"
             app:argType="is.posctrl.posctrl_android.data.model.StoreResponse" />
     </fragment>
+    <fragment
+        android:id="@+id/registerSelectionFragment"
+        android:name="is.posctrl.posctrl_android.ui.settings.RegisterSelectionFragment"
+        android:label="Register selection">
+        <argument
+            android:name="store"
+            app:argType="is.posctrl.posctrl_android.data.model.StoreResponse" />
+    </fragment>
+
 </navigation>

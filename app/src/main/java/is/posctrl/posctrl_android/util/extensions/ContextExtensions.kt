@@ -1,6 +1,7 @@
 package `is`.posctrl.posctrl_android.util.extensions
 
 import `is`.posctrl.posctrl_android.R
+import `is`.posctrl.posctrl_android.databinding.DialogConfirmBinding
 import `is`.posctrl.posctrl_android.databinding.DialogEtBinding
 import android.content.Context
 import android.text.InputType
@@ -28,5 +29,27 @@ fun Context.showInputDialog(titleRes: Int, positiveCallback: (input: String) -> 
                 positiveCallback(binding.edit.text.toString())
             }
             .create()
+    dialog.show()
+}
+
+fun Context.showConfirmDialog(title: String, positiveCallback: () -> Unit) {
+    val binding: DialogConfirmBinding = DataBindingUtil.inflate(
+            LayoutInflater.from(this),
+            R.layout.dialog_confirm,
+            null,
+            false
+    )
+    binding.tvTitle.text = title
+
+    val dialog = MaterialAlertDialogBuilder(this)
+            .setView(binding.root)
+            .create()
+    binding.btYes.setOnClickListener {
+        dialog.dismiss()
+        positiveCallback()
+    }
+    binding.btNo.setOnClickListener {
+        dialog.dismiss()
+    }
     dialog.show()
 }
