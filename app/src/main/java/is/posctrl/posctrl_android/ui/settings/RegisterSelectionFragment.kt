@@ -11,6 +11,7 @@ import `is`.posctrl.posctrl_android.data.model.StoreResponse
 import `is`.posctrl.posctrl_android.databinding.FragmentRegistersBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.ui.registers.*
+import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsViewModel
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import `is`.posctrl.posctrl_android.util.extensions.showConfirmDialog
@@ -33,6 +34,9 @@ class RegisterSelectionFragment : BaseFragment() {
 
     @Inject
     lateinit var registersViewModel: RegistersViewModel
+
+    @Inject
+    lateinit var appOptionsViewModel: AppOptionsViewModel
 
     @Inject
     lateinit var prefs: PreferencesSource
@@ -91,7 +95,8 @@ class RegisterSelectionFragment : BaseFragment() {
         adapter = RegistersAdapter(RegisterCellListener { register ->
             requireContext().showConfirmDialog(getString(R.string.confirm_suspend_register, register.registerNumber
                     ?: -1)) {
-                //todo call suspend on register
+                appOptionsViewModel.suspendRegister(store.storeNumber?.toInt()
+                        ?: -1, register.registerNumber ?: -1)
                 findNavController().navigateUp()
             }
         })

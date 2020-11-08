@@ -5,16 +5,12 @@ import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.local.set
-import `is`.posctrl.posctrl_android.data.model.LoginResponse
-import `is`.posctrl.posctrl_android.data.model.ReceiptInfoBody
-import `is`.posctrl.posctrl_android.data.model.RegisterResponse
-import `is`.posctrl.posctrl_android.data.model.StoreResponse
+import `is`.posctrl.posctrl_android.data.model.*
 import `is`.posctrl.posctrl_android.ui.receipt.ReceiptAction
 import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -34,8 +30,6 @@ class PosCtrlRepository @Inject constructor(
         private val appContext: Context,
         private val xmlMapper: XmlMapper
 ) {
-
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
     /*
     server: String = "192.168.0.110", port: String = "1433",databaseUser: String = "sa", databasePassword: String = "PosCtrl.1234",
@@ -100,7 +94,7 @@ class PosCtrlRepository @Inject constructor(
             loggedInUser: String
     ): ResultWrapper<*> {
         val storesList = arrayListOf<StoreResponse>()
-        withContext(ioDispatcher) {
+        withContext(Dispatchers.Default) {
             try {
                 val connectionURL =
                         "jdbc:jtds:sqlserver://$server:$port/$DATABASE_NAME;instance=POSCTRL;user=$databaseUser;password=$databasePassword"
@@ -141,7 +135,7 @@ class PosCtrlRepository @Inject constructor(
             loggedInUser: String
     ): ResultWrapper<*> {
         val registers = arrayListOf<RegisterResponse>()
-        withContext(ioDispatcher) {
+        withContext(Dispatchers.Default) {
             try {
                 val connectionURL =
                         "jdbc:jtds:sqlserver://$server:$port/$DATABASE_NAME;instance=POSCTRL;user=$databaseUser;password=$databasePassword"
@@ -301,6 +295,41 @@ class PosCtrlRepository @Inject constructor(
                     }
                     sendSocket.send(sendPacket)
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    suspend fun sendSuspendRegisterMessage(
+            storeNumber: Int,
+            registerNumber: Int,
+    ) {
+        withContext(Dispatchers.Default) {
+            try {
+                val registerSuspendedBody = RegisterSuspendedBody(
+                        message = "test-message",
+                        storeNumber = storeNumber,
+                        registerNumber = registerNumber,
+                )
+                Timber.d("register suspended body: $registerSuspendedBody")
+                val xmlMessage = xmlMapper.writeValueAsString(registerSuspendedBody)
+                val bytes = xmlMessage.toByteArray()
+                val broadcastIp = "255.255.255.255"
+                val port: String =
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port)]
+                                ?: DEFAULT_SERVER_PORT
+                val sendSocket = DatagramSocket(null)
+                sendSocket.reuseAddress = true
+                sendSocket.bind(InetSocketAddress(port.toInt()))
+                sendSocket.broadcast = true
+                val sendPacket = DatagramPacket(
+                        bytes,
+                        bytes.size, InetAddress.getByName(broadcastIp),
+                        port.toInt()
+                )
+                sendSocket.send(sendPacket)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

@@ -56,7 +56,7 @@
 
     <fragment
         android:id="@+id/appOptionsFragment"
-        android:name="is.posctrl.posctrl_android.ui.settings.AppOptionsFragment"
+        android:name="is.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsFragment"
         android:label="App options">
         <argument
             android:name="register"

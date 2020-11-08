@@ -1,4 +1,4 @@
-package `is`.posctrl.posctrl_android.ui.settings
+package `is`.posctrl.posctrl_android.ui.settings.appoptions
 
 import `is`.posctrl.posctrl_android.BaseFragment
 import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
@@ -28,6 +28,9 @@ class AppOptionsFragment : BaseFragment() {
 
     @Inject
     lateinit var preferencesSource: PreferencesSource
+
+    @Inject
+    lateinit var appOptionsViewModel: AppOptionsViewModel
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -61,7 +64,8 @@ class AppOptionsFragment : BaseFragment() {
                 //show confirm dialog
                 requireContext().showConfirmDialog(getString(R.string.confirm_suspend_register, register!!.registerNumber
                         ?: -1)) {
-                    //todo call suspend on register
+                    appOptionsViewModel.suspendRegister(store!!.storeNumber?.toInt()
+                            ?: -1, register!!.registerNumber ?: -1)
                 }
             }
         }
