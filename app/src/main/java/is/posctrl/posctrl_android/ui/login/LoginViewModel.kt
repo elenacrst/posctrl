@@ -14,13 +14,13 @@ import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
 class LoginViewModel @Inject constructor(private val repository: PosCtrlRepository) :
-        ViewModel() {
+    ViewModel() {
 
     private var _loginResponse = MutableLiveData<LoginResponse>()
     val loginResponse: LiveData<LoginResponse>
         get() = _loginResponse
     private var _loginEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-            MutableLiveData(Event(ResultWrapper.None))
+        MutableLiveData(Event(ResultWrapper.None))
     val loginEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _loginEvent
 
@@ -28,11 +28,22 @@ class LoginViewModel @Inject constructor(private val repository: PosCtrlReposito
     val stores: LiveData<List<StoreResponse>>
         get() = _stores
     private var _storesEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-            MutableLiveData(Event(ResultWrapper.None))
+        MutableLiveData(Event(ResultWrapper.None))
     val storesEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _storesEvent
+    private var _sendFilterProcessEvent: MutableLiveData<Event<ResultWrapper<*>>> =
+        MutableLiveData(Event(ResultWrapper.None))
+    val sendFilterProcessEvent: LiveData<Event<ResultWrapper<*>>>
+        get() = _sendFilterProcessEvent
 
-    fun login(server: String = "", port: String = "", databaseUser: String = "", databasePassword: String = "", user: String = "", password: String = "") {
+    fun login(
+        server: String = "",
+        port: String = "",
+        databaseUser: String = "",
+        databasePassword: String = "",
+        user: String = "",
+        password: String = ""
+    ) {
         viewModelScope.launch {
             _loginEvent.value = Event(ResultWrapper.Loading)
             var result: ResultWrapper<*>
@@ -46,7 +57,6 @@ class LoginViewModel @Inject constructor(private val repository: PosCtrlReposito
                 if (result is ResultWrapper.Success) {
                     _loginResponse.value = (result as ResultWrapper.Success).data as LoginResponse
                 }
-
             }
 
             Timber.d("Login duration $time")
@@ -54,7 +64,13 @@ class LoginViewModel @Inject constructor(private val repository: PosCtrlReposito
         }
     }
 
-    fun getStores(server: String = "", port: String = "", databaseUser: String = "", databasePassword: String = "", loggedInUser: String = "") {
+    fun getStores(
+        server: String = "",
+        port: String = "",
+        databaseUser: String = "",
+        databasePassword: String = "",
+        loggedInUser: String = ""
+    ) {
         viewModelScope.launch {
             _storesEvent.value = Event(ResultWrapper.Loading)
             var result: ResultWrapper<*>
@@ -66,13 +82,32 @@ class LoginViewModel @Inject constructor(private val repository: PosCtrlReposito
                     ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
                 }
                 if (result is ResultWrapper.Success) {
-                    _stores.value = ((result as ResultWrapper.Success).data as List<*>).filterIsInstance(StoreResponse::class.java)
+                    _stores.value =
+                        ((result as ResultWrapper.Success).data as List<*>).filterIsInstance(
+                            StoreResponse::class.java
+                        )
                 }
-
             }
 
             Timber.d("Get stores duration $time")
             _storesEvent.value = Event(result)
+        }
+    }
+
+    fun sendFilterProcessMessage() {
+        viewModelScope.launch {
+            _sendFilterProcessEvent.value = Event(ResultWrapper.Loading)
+            val time = measureTimeMillis {
+                try {
+                    repository.sendFilterProcessMessage()
+                } catch (e: NoNetworkConnectionException) {
+                    e.printStackTrace()
+                    ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
+                }
+            }
+
+            Timber.d("Send filter process message duration $time")
+            _sendFilterProcessEvent.value = Event(ResultWrapper.Success(""))
         }
     }
 }

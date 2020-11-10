@@ -8,11 +8,12 @@ import javax.inject.Inject
 class PreferencesSource @Inject constructor(private val context: Context) {
 
     internal fun customPrefs(): SharedPreferences = context.getSharedPreferences(
-            LocalInformation.PREFERENCES_FILE_NAME,
-            Context.MODE_PRIVATE
+        LocalInformation.PREFERENCES_FILE_NAME,
+        Context.MODE_PRIVATE
     )
 
-    internal fun defaultPrefs(): SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+    internal fun defaultPrefs(): SharedPreferences =
+        PreferenceManager.getDefaultSharedPreferences(context)
 
 }
 
@@ -50,11 +51,11 @@ operator fun SharedPreferences.set(key: String, value: Any?) {
  * false for bool and -1 for numeric values if [defaultValue] is not specified
  */
 inline operator fun <reified T : Any> SharedPreferences.get(
-        key: String,
-        defaultValue: T? = null
+    key: String,
+    defaultValue: T? = null
 ): T? {
     return when (T::class) {
-        String::class -> getString(key, defaultValue as? String) as T?
+        String::class -> getString(key, defaultValue as? String?) as T?
         Int::class -> getInt(key, defaultValue as? Int ?: -1) as T?
         Boolean::class -> getBoolean(key, defaultValue as? Boolean ?: false) as T?
         Float::class -> getFloat(key, defaultValue as? Float ?: -1f) as T?

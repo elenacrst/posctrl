@@ -96,5 +96,11 @@
             android:name="store"
             app:argType="is.posctrl.posctrl_android.data.model.StoreResponse" />
     </fragment>
+    <fragment
+        android:id="@+id/filterFragment"
+        android:name="is.posctrl.posctrl_android.ui.filter.FilterFragment"
+        android:label="Filter">
+
+    </fragment>
 
 </navigation>

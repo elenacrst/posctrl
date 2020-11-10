@@ -12,7 +12,7 @@ import `is`.posctrl.posctrl_android.data.model.RegisterResponse
 import `is`.posctrl.posctrl_android.data.model.StoreResponse
 import `is`.posctrl.posctrl_android.databinding.FragmentReceiptBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
-import `is`.posctrl.posctrl_android.service.UdpReceiverService
+import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -46,26 +46,28 @@ class ReceiptFragment : BaseFragment() {
     private var broadcastReceiver = createReceiptReceiver()
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
 
         receiptBinding = DataBindingUtil
-                .inflate(inflater, R.layout.fragment_receipt, container, false)
+            .inflate(inflater, R.layout.fragment_receipt, container, false)
 
         val args = ReceiptFragmentArgs.fromBundle(
-                requireArguments()
+            requireArguments()
         )
         store = args.store
         register = args.register
         receiptViewModel.sendReceiptInfoMessage(
-                ReceiptAction.OPEN,
-                (store.storeNumber ?: 0).toInt(),
-                register.registerNumber ?: 0
+            ReceiptAction.OPEN,
+            (store.storeNumber ?: 0).toInt(),
+            register.registerNumber ?: 0
         )
-        receiptViewModel.sendReceiptInfoALife((store.storeNumber ?: 0).toInt(),
-                register.registerNumber ?: 0)
+        receiptViewModel.sendReceiptInfoALife(
+            (store.storeNumber ?: 0).toInt(),
+            register.registerNumber ?: 0
+        )
 
         return receiptBinding.root
     }
@@ -74,13 +76,18 @@ class ReceiptFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         receiptBinding.svBase.setOnSwipeListener(onSwipeLeft = {
-            findNavController().navigate(NavigationMainContainerDirections.toAppOptionsFragment(register, store))
+            findNavController().navigate(
+                NavigationMainContainerDirections.toAppOptionsFragment(
+                    register,
+                    store
+                )
+            )
         })
     }
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
-                ActivityModule(requireActivity())
+            ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
     }
@@ -91,7 +98,7 @@ class ReceiptFragment : BaseFragment() {
                 val bundle = intent.extras
                 if (bundle != null) {
                     val result =
-                            bundle.getParcelable<ReceiptResponse>(UdpReceiverService.EXTRA_RECEIPT)
+                        bundle.getParcelable<ReceiptResponse>(ReceiptReceiverService.EXTRA_RECEIPT)
                     handleReceipt(result)
                 }
             }
@@ -114,9 +121,11 @@ class ReceiptFragment : BaseFragment() {
                 val lineLayout = LinearLayout(requireContext())
                 lineLayout.orientation = LinearLayout.HORIZONTAL
                 lineLayout.weightSum = 4f
-                val largeViewParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT)
+                val largeViewParams =
+                    LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT)
                 largeViewParams.weight = 2f
-                val smallerViewParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT)
+                val smallerViewParams =
+                    LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT)
                 smallerViewParams.weight = 1f
                 val productNameText = generateFormattedTextView(it, values[0])
                 val quantityText = generateFormattedTextView(it, values[1])
@@ -138,10 +147,10 @@ class ReceiptFragment : BaseFragment() {
         val textView = TextView(requireContext())
         val color = getCSharpColor(it.color)
         textView.setTextColor(
-                ContextCompat.getColor(
-                        requireContext(),
-                        color
-                )
+            ContextCompat.getColor(
+                requireContext(),
+                color
+            )
         )
         textView.text = text
         if (it.bold == 1) {
@@ -188,8 +197,8 @@ class ReceiptFragment : BaseFragment() {
     override fun onResume() {
         super.onResume()
         requireActivity().registerReceiver(
-                broadcastReceiver,
-                IntentFilter(UdpReceiverService.ACTION_RECEIVE_RECEIPT)
+            broadcastReceiver,
+            IntentFilter(ReceiptReceiverService.ACTION_RECEIVE_RECEIPT)
         )
     }
 
@@ -200,9 +209,11 @@ class ReceiptFragment : BaseFragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        receiptViewModel.sendReceiptInfoMessage(ReceiptAction.CLOSE, (store.storeNumber
+        receiptViewModel.sendReceiptInfoMessage(
+            ReceiptAction.CLOSE, (store.storeNumber
                 ?: 0).toInt(),
-                register.registerNumber ?: 0)
+            register.registerNumber ?: 0
+        )
     }
 }
 

@@ -2,10 +2,10 @@ package `is`.posctrl.posctrl_android.service
 
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
-import `is`.posctrl.posctrl_android.data.PosCtrlRepository
+import `is`.posctrl.posctrl_android.data.PosCtrlRepository.Companion.DEFAULT_FILTER_PORT
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.get
-import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
+import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import android.app.Application
 import android.content.Context
 import android.content.Intent
@@ -19,7 +19,7 @@ import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 
-class UdpReceiverService : JobIntentService() {
+class FilterReceiverService : JobIntentService() {
 
     @Inject
     lateinit var xmlMapper: XmlMapper
@@ -36,20 +36,21 @@ class UdpReceiverService : JobIntentService() {
         var p: DatagramPacket
         try {
             while (true) {
-                val serverPort = (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
-                        ?: PosCtrlRepository.DEFAULT_LISTENING_PORT).toInt()
+                val serverPort =
+                    prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
+                        ?: DEFAULT_FILTER_PORT
                 if (socket == null) {
                     socket = DatagramSocket(serverPort)
                     socket!!.broadcast = false
                 }
                 socket!!.reuseAddress = true
                 socket!!.soTimeout = 60 * 1000
-                Timber.d("waiting to receive data via udp")
+                Timber.d("waiting to receive filter via udp")
                 try {
-                    val message = ByteArray(512 * 8) //8bytes x n params for a profile
+                    val message = ByteArray(512)
                     p = DatagramPacket(message, message.size)
                     socket!!.receive(p)
-                    Timber.d("received ${String(message).substring(0, p.length)}")
+                    Timber.d("received filter ${String(message).substring(0, p.length)}")
                     publishResults(String(message).substring(0, p.length))
 
                 } catch (e: SocketTimeoutException) {
@@ -71,32 +72,27 @@ class UdpReceiverService : JobIntentService() {
     override fun onCreate() {
         super.onCreate()
         (applicationContext as PosCtrlApplication).appComponent.inject(this)
-        Timber.d("created udp receiver service")
     }
 
     override fun onHandleWork(intent: Intent) {
         receiveUdp()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        Timber.d("destroyed udp receiver service")
-    }
-
     private fun publishResults(output: String) {
-        val result = xmlMapper.readValue(output, ReceiptResponse::class.java)
-        val intent = Intent(ACTION_RECEIVE_RECEIPT)
-        intent.putExtra(EXTRA_RECEIPT, result)
+        val result = xmlMapper.readValue(output, FilteredInfoResponse::class.java)
+        Timber.d("parsed filter $result")
+        val intent = Intent(ACTION_RECEIVE_FILTER)
+        intent.putExtra(EXTRA_FILTER, result)
         sendBroadcast(intent)
     }
 
     companion object {
-        private const val UDP_RECEIVER_JOB = 1
-        const val ACTION_RECEIVE_RECEIPT = "RECEIVE_RECEIPT"
-        const val EXTRA_RECEIPT = "RECEIPT"
+        private const val FILTER_RECEIVER_JOB = 2
+        const val ACTION_RECEIVE_FILTER = "RECEIVE_FILTER"
+        const val EXTRA_FILTER = "FILTER"
 
         fun enqueueWork(context: Context, intent: Intent) {
-            enqueueWork(context, UdpReceiverService::class.java, UDP_RECEIVER_JOB, intent)
+            enqueueWork(context, FilterReceiverService::class.java, FILTER_RECEIVER_JOB, intent)
         }
     }
 

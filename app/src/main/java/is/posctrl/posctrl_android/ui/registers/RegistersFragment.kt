@@ -10,7 +10,7 @@ import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.StoreResponse
 import `is`.posctrl.posctrl_android.databinding.FragmentRegistersBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
-import `is`.posctrl.posctrl_android.service.UdpReceiverService
+import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import android.content.Context
@@ -40,25 +40,25 @@ class RegistersFragment : BaseFragment() {
     private lateinit var store: StoreResponse
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
 
         registersBinding = DataBindingUtil
-                .inflate(inflater, R.layout.fragment_registers, container, false)
+            .inflate(inflater, R.layout.fragment_registers, container, false)
 
         val args = RegistersFragmentArgs.fromBundle(
-                requireArguments()
+            requireArguments()
         )
         store = args.store
         registersViewModel.getRegisters(
-                prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
-                store.storeNumber!!.toInt(),
-                prefs.customPrefs()[getString(R.string.key_logged_user)] ?: ""
+            prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
+            prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
+            prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
+            prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
+            store.storeNumber!!.toInt(),
+            prefs.customPrefs()[getString(R.string.key_logged_user)] ?: ""
         )
 
         return registersBinding.root
@@ -66,19 +66,19 @@ class RegistersFragment : BaseFragment() {
 
     private fun getRegistersObserver(): Observer<Event<ResultWrapper<*>>> {
         return createLoadingObserver(
-                successListener = {
-                    hideLoading()
-                    registersViewModel.registers.value?.let {
-                        if (it.isNotEmpty()) {
-                            adapter.setData(it.toTypedArray())
-                            registersBinding.registers.visibility = View.VISIBLE
-                            registersBinding.tvEmptyView.visibility = View.GONE
-                        } else {
-                            registersBinding.registers.visibility = View.GONE
-                            registersBinding.tvEmptyView.visibility = View.VISIBLE
-                        }
+            successListener = {
+                hideLoading()
+                registersViewModel.registers.value?.let {
+                    if (it.isNotEmpty()) {
+                        adapter.setData(it.toTypedArray())
+                        registersBinding.registers.visibility = View.VISIBLE
+                        registersBinding.tvEmptyView.visibility = View.GONE
+                    } else {
+                        registersBinding.registers.visibility = View.GONE
+                        registersBinding.tvEmptyView.visibility = View.VISIBLE
                     }
                 }
+            }
         )
     }
 
@@ -88,25 +88,37 @@ class RegistersFragment : BaseFragment() {
         registersViewModel.registersEvent.observe(viewLifecycleOwner, getRegistersObserver())
 
         adapter = RegistersAdapter(RegisterCellListener { register ->
-            startUdpReceiverService()
-            findNavController().navigate(RegistersFragmentDirections.toReceiptFragment(register, store))
+            startReceiptReceiverService()
+            findNavController().navigate(
+                RegistersFragmentDirections.toReceiptFragment(
+                    register,
+                    store
+                )
+            )
         })
         registersBinding.rvRegisters.adapter = adapter
         adapter.setData(arrayOf())
         registersBinding.store = store
 
         registersBinding.clBase.setOnSwipeListener(onSwipeLeft = {
-            findNavController().navigate(NavigationMainContainerDirections.toAppOptionsFragment(null, store))
+            findNavController().navigate(
+                NavigationMainContainerDirections.toAppOptionsFragment(
+                    null,
+                    store
+                )
+            )
         })
     }
 
-    private fun startUdpReceiverService() {
-        val intent = Intent(requireContext(), UdpReceiverService::class.java)
-        UdpReceiverService.enqueueWork(requireContext(), intent)
+    private fun startReceiptReceiverService() {
+        val intent = Intent(requireContext(), ReceiptReceiverService::class.java)
+        ReceiptReceiverService.enqueueWork(requireContext(), intent)
     }
 
     override fun onAttach(context: Context) {
-        (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(ActivityModule(requireActivity())).inject(this)
+        (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
+            ActivityModule(requireActivity())
+        ).inject(this)
         super.onAttach(context)
     }
 }

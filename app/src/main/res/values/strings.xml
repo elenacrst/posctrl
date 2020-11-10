@@ -80,4 +80,5 @@
     <string name="action_yes">Yes</string>
     <string name="action_no">No</string>
     <string name="confirm_suspend_register">Are you sure you want to suspend activity of register %d</string>
+    <string name="key_filter_port">keyFilterPort</string>
 </resources>

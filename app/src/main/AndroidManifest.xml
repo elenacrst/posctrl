@@ -30,8 +30,16 @@
         </activity>
 
         <service
-            android:name=".service.UdpReceiverService"
+            android:name=".service.ReceiptReceiverService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+        <service
+            android:name=".service.FilterReceiverService"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <meta-data
+            android:name="is.posctrl.posctrl_android.util.glide.BaseGlideModule"
+            android:value="GlideModule"
+            tools:node="remove" />
     </application>
 
 </manifest>
