@@ -388,35 +388,39 @@ class PosCtrlRepository @Inject constructor(
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun downloadBitmaps(fileNames: List<String>): ResultWrapper<*> {
         val bitmaps = mutableListOf<Bitmap>()
-        withContext(Dispatchers.IO) {
-            val client = SMBClient()
+        try {
+            withContext(Dispatchers.IO) {
+                val client = SMBClient()
 
-            client.connect("192.168.0.110")
-                .use { connection ->//todo set ip from prefs with some split, set user and password from prefs, set snapshot path from prefs
-                    val ac = AuthenticationContext(
-                        "PosCtrlSnapShot",
-                        "foot.1234".toCharArray(),
-                        ""
-                    )
-                    val session: Session = connection.authenticate(ac)
-                    (session.connectShare("SnapShot") as? DiskShare?)?.let { share ->
-                        for (f in fileNames) {//share.list("", "*.jpg"
-                            val s: MutableSet<SMB2ShareAccess> = HashSet()
-                            s.add(SMB2ShareAccess.FILE_SHARE_READ)
-                            val file = share.openFile(
-                                f,//filename
-                                EnumSet.of(AccessMask.GENERIC_READ), null, s,
-                                SMB2CreateDisposition.FILE_OPEN, null
-                            )
-                            val inputStream = file.inputStream
-                            val bitmap = BitmapFactory.decodeStream(inputStream)
-                            bitmap?.let {
-                                bitmaps += it
+                client.connect("192.168.0.110")
+                    .use { connection ->//todo set ip from prefs with some split, set user and password from prefs, set snapshot path from prefs
+                        val ac = AuthenticationContext(
+                            "PosCtrlSnapShot",
+                            "foot.1234".toCharArray(),
+                            ""
+                        )
+                        val session: Session = connection.authenticate(ac)
+                        (session.connectShare("SnapShot") as? DiskShare?)?.let { share ->
+                            for (f in fileNames) {//share.list("", "*.jpg"
+                                val s: MutableSet<SMB2ShareAccess> = HashSet()
+                                s.add(SMB2ShareAccess.FILE_SHARE_READ)
+                                val file = share.openFile(
+                                    f,//filename
+                                    EnumSet.of(AccessMask.GENERIC_READ), null, s,
+                                    SMB2CreateDisposition.FILE_OPEN, null
+                                )
+                                val inputStream = file.inputStream
+                                val bitmap = BitmapFactory.decodeStream(inputStream)
+                                bitmap?.let {
+                                    bitmaps += it
+                                }
                             }
                         }
                     }
-                }
-
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return ResultWrapper.Error(message = appContext.applicationContext.getString(R.string.error_no_snapshots))
         }
         return ResultWrapper.Success(bitmaps)
     }

@@ -5,10 +5,11 @@ import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
+import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.databinding.FragmentFilterBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
+import `is`.posctrl.posctrl_android.ui.FilterHandler
 import `is`.posctrl.posctrl_android.util.Event
-import `is`.posctrl.posctrl_android.util.glide.load
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -22,6 +23,8 @@ import javax.inject.Inject
 class FilterFragment : BaseFragment() {
 
     private lateinit var filterBinding: FragmentFilterBinding
+    private var filterHandler: FilterHandler? = null
+    private var filter: FilteredInfoResponse? = null
 
     @Inject
     lateinit var prefs: PreferencesSource
@@ -29,23 +32,23 @@ class FilterFragment : BaseFragment() {
     @Inject
     lateinit var filterViewModel: FilterViewModel
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        filterViewModel.downloadBitmaps(arrayListOf("22-3-85-7-2.jpg", "22-3-85-7-1.jpg"))
-    }
+    @Inject
+    lateinit var picturesAdapter: SnapshotsAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         filterViewModel.bitmapsEvent.observe(viewLifecycleOwner, getBitmapsLoadingObserver())
+
+        filterBinding.rvSnapshots.adapter = picturesAdapter
+        filterBinding.filter = filter
     }
 
     private fun getBitmapsLoadingObserver(): Observer<Event<ResultWrapper<*>>> {
         return createLoadingObserver(successListener = {
             hideLoading()
             if (!filterViewModel.bitmaps.value.isNullOrEmpty()) {
-                filterBinding.ivSnapshot.load(requireContext(), filterViewModel.bitmaps.value!![0])
+                picturesAdapter.setData(filterViewModel.bitmaps.value?.toTypedArray())
             }
         })
     }
@@ -57,6 +60,7 @@ class FilterFragment : BaseFragment() {
             )
         ).inject(this)
         super.onAttach(context)
+        filterHandler = context as? FilterHandler
     }
 
     override fun onCreateView(
@@ -67,6 +71,19 @@ class FilterFragment : BaseFragment() {
 
         filterBinding = DataBindingUtil
             .inflate(inflater, R.layout.fragment_filter, container, false)
+
+        val args = FilterFragmentArgs.fromBundle(requireArguments())
+        filter = args.filter
+        filter?.let {
+            filterViewModel.downloadBitmaps(it.pictures.map { picture -> picture.imageAddress })
+        } ?: run {
+            filterViewModel.downloadBitmaps(
+                arrayListOf(
+                    "22-3-85-7-2.jpg",
+                    "22-3-85-7-1.jpg"
+                )
+            )//todo remove after testing
+        }
 
         return filterBinding.root
     }

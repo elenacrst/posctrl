@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/navigation_main_container"
-    app:startDestination="@id/loginFragment">
+    app:startDestination="@id/filterFragment">
 
     <fragment
         android:id="@+id/loginFragment"
@@ -31,7 +31,8 @@
     <fragment
         android:id="@+id/storesFragment"
         android:name="is.posctrl.posctrl_android.ui.stores.StoresFragment"
-        android:label="Stores">
+        android:label="Stores"
+        tools:layout="@layout/fragment_stores">
         <argument
             android:name="stores"
             app:argType="is.posctrl.posctrl_android.data.model.StoreResponse[]"
@@ -44,7 +45,8 @@
     <fragment
         android:id="@+id/registersFragment"
         android:name="is.posctrl.posctrl_android.ui.registers.RegistersFragment"
-        android:label="Registers">
+        android:label="Registers"
+        tools:layout="@layout/fragment_registers">
         <argument
             android:name="store"
             app:argType="is.posctrl.posctrl_android.data.model.StoreResponse"
@@ -57,7 +59,8 @@
     <fragment
         android:id="@+id/appOptionsFragment"
         android:name="is.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsFragment"
-        android:label="App options">
+        android:label="App options"
+        tools:layout="@layout/fragment_app_options">
         <argument
             android:name="register"
             app:argType="is.posctrl.posctrl_android.data.model.RegisterResponse"
@@ -80,7 +83,8 @@
     <fragment
         android:id="@+id/receiptFragment"
         android:name="is.posctrl.posctrl_android.ui.receipt.ReceiptFragment"
-        android:label="Receipt">
+        android:label="Receipt"
+        tools:layout="@layout/fragment_receipt">
         <argument
             android:name="register"
             app:argType="is.posctrl.posctrl_android.data.model.RegisterResponse" />
@@ -99,8 +103,15 @@
     <fragment
         android:id="@+id/filterFragment"
         android:name="is.posctrl.posctrl_android.ui.filter.FilterFragment"
-        android:label="Filter">
-
+        android:label="Filter"
+        tools:layout="@layout/fragment_filter">
+        <argument
+            android:name="filter"
+            android:defaultValue="@null"
+            app:argType="is.posctrl.posctrl_android.data.model.FilteredInfoResponse"
+            app:nullable="true" />
     </fragment>
-
+    <action
+        android:id="@+id/toFilterFragment"
+        app:destination="@id/filterFragment" />
 </navigation>

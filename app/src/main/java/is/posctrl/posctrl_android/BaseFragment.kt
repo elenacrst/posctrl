@@ -23,8 +23,8 @@ open class BaseFragment : Fragment() {
     }
 
     protected fun createLoadingObserver(
-            successListener: (ResultWrapper<*>?) -> Unit = { },
-            errorListener: () -> Unit = { }
+        successListener: (ResultWrapper<*>?) -> Unit = { },
+        errorListener: () -> Unit = { }
     ): Observer<Event<ResultWrapper<*>>> {
         return Observer { result ->
             when (val value = result.getContentIfNotHandled()) {
@@ -35,12 +35,12 @@ open class BaseFragment : Fragment() {
                 is ResultWrapper.Error -> {
                     hideLoading()
                     val resultError =
-                            result.peekContent() as ResultWrapper.Error
+                        result.peekContent() as ResultWrapper.Error
                     val resultHandled = handleError(resultError)
                     if (!resultHandled) {
                         requireActivity().toast(
-                                message = (result.peekContent() as
-                                        ResultWrapper.Error).message.toString()
+                            message = (result.peekContent() as
+                                    ResultWrapper.Error).message.toString()
                         )
                         errorListener()
                     }
