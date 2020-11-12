@@ -76,4 +76,6 @@
     <string name="error_no_snapshots">No snapshots available</string>
     <string name="action_accept">Accept</string>
     <string name="action_reject">Reject</string>
+    <string name="key_notification_sound">keyNotificationSound</string>
+    <string name="title_notification_sound">Notification sound</string>
 </resources>
