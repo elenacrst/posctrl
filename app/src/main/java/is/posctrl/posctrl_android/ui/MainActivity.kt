@@ -35,17 +35,19 @@ class MainActivity : AppCompatActivity(), FilterHandler {
         mainBinding.lifecycleOwner = this
 
         val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
+                supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.storesFragment, R.id.registersFragment, R.id.receiptFragment -> {
-                    navController.navigate(
-                        NavigationMainContainerDirections.toFilterFragment(
-                            filterItemMessages[0]
+                    if (filterItemMessages.isNotEmpty()) {
+                        navController.navigate(
+                                NavigationMainContainerDirections.toFilterFragment(
+                                        filterItemMessages[0]
+                                )
                         )
-                    )
-                    filterItemMessages = filterItemMessages - filterItemMessages[0]
+                        filterItemMessages = filterItemMessages - filterItemMessages[0]
+                    }
                 }
             }
         }
@@ -56,7 +58,7 @@ class MainActivity : AppCompatActivity(), FilterHandler {
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-            .activityComponent(ActivityModule(this))
+                .activityComponent(ActivityModule(this))
     }
 
     fun showLoading() {
@@ -73,7 +75,7 @@ class MainActivity : AppCompatActivity(), FilterHandler {
                 val bundle = intent.extras
                 if (bundle != null) {
                     val result =
-                        bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
+                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
                     handleFilter(result)
                 }
             }
@@ -84,15 +86,15 @@ class MainActivity : AppCompatActivity(), FilterHandler {
         result?.let {
             filterItemMessages = filterItemMessages + result
             if (navController.currentDestination?.id in arrayOf(
-                    R.id.storesFragment,
-                    R.id.registersFragment,
-                    R.id.receiptFragment
-                )
+                            R.id.storesFragment,
+                            R.id.registersFragment,
+                            R.id.receiptFragment
+                    )
             ) {
                 navController.navigate(
-                    NavigationMainContainerDirections.toFilterFragment(
-                        filterItemMessages[0]
-                    )
+                        NavigationMainContainerDirections.toFilterFragment(
+                                filterItemMessages[0]
+                        )
                 )
                 filterItemMessages = filterItemMessages - filterItemMessages[0]
             }
@@ -102,8 +104,8 @@ class MainActivity : AppCompatActivity(), FilterHandler {
     override fun onResume() {
         super.onResume()
         registerReceiver(
-            broadcastReceiver,
-            IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
+                broadcastReceiver,
+                IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
         )
     }
 

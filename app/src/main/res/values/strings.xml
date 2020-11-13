@@ -78,4 +78,6 @@
     <string name="action_reject">Reject</string>
     <string name="key_notification_sound">keyNotificationSound</string>
     <string name="title_notification_sound">Notification sound</string>
+    <string name="title_receive_notifications">Receive notifications</string>
+    <string name="key_receive_notifications">keyReceiveNotifications</string>
 </resources>

@@ -13,20 +13,19 @@ import `is`.posctrl.posctrl_android.ui.FilterHandler
 import `is`.posctrl.posctrl_android.util.Event
 import android.content.Context
 import android.media.MediaPlayer
-import android.os.Build
-import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
+import android.os.*
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
 class FilterFragment : BaseFragment() {
 
+    private lateinit var vibrationPauseTimer: CountDownTimer
     private lateinit var filterBinding: FragmentFilterBinding
     private lateinit var vibrator: Vibrator
     private lateinit var mediaPlayer: MediaPlayer
@@ -51,20 +50,34 @@ class FilterFragment : BaseFragment() {
         filterBinding.filter = filter
 
         vibrator = requireActivity().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        if (vibrator.hasVibrator()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0L, 100L, 400L), 0))
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator.vibrate(longArrayOf(0L, 100L, 400L), 0)
+        startVibration()
+        vibrationPauseTimer = object : CountDownTimer(TimeUnit.SECONDS.toMillis(16), 1000) {
+            override fun onFinish() {
+                startVibration()
+                vibrationPauseTimer.start()
+            }
+
+            override fun onTick(millisUntilFinished: Long) {
             }
         }
 
+
         mediaPlayer = MediaPlayer.create(requireContext(), R.raw.dingaling)
-        if (prefs.customPrefs()[getString(R.string.key_notification_sound), true] as Boolean) {
+        if (prefs.customPrefs()[getString(R.string.key_notification_sound), true] == true) {
             mediaPlayer.start()
             mediaPlayer.setOnCompletionListener {
                 mediaPlayer.start()
+            }
+        }
+    }
+
+    private fun startVibration() {
+        if (vibrator.hasVibrator()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0L, 200L, 500L), 0))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator.vibrate(longArrayOf(0L, 200L, 500L), 0)
             }
         }
     }
@@ -100,7 +113,7 @@ class FilterFragment : BaseFragment() {
         val args = FilterFragmentArgs.fromBundle(requireArguments())
         filter = args.filter
         filter?.let {
-            filterViewModel.downloadBitmaps(it.pictures.map { picture -> picture.imageAddress })
+            filterViewModel.downloadBitmaps(it.pictures.map { picture -> picture.imageAddress.split('\\').last() })
         } ?: run {
             filterViewModel.downloadBitmaps(
                     arrayListOf(
@@ -117,6 +130,7 @@ class FilterFragment : BaseFragment() {
         super.onDetach()
         vibrator.cancel()
         mediaPlayer.release()
+        vibrationPauseTimer.cancel()
     }
 }
 

@@ -10,7 +10,9 @@
         android:id="@+id/cl_base"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="@dimen/margin_medium">
+        android:padding="@dimen/margin_medium"
+        android:visibility="gone"
+        tools:visibility="visible">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_user"
@@ -44,7 +46,7 @@
                 style="@style/TextInputGeneral"
                 android:hint="@string/hint_password"
                 android:imeOptions="flagNoExtractUi|actionDone"
-                android:inputType="textPassword" />
+                android:inputType="numberPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton

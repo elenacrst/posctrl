@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+<layout xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
 
@@ -42,31 +41,29 @@
             android:text="@string/action_logout"
             app:layout_constraintTop_toBottomOf="@id/tv_title" />
 
-        <!--todo settings screen with settings for udp connection-->
-        <TextView
-            android:id="@+id/tv_settings"
-            style="@style/TitleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:padding="@dimen/margin_small"
-            android:text="@string/action_settings"
-            app:layout_constraintTop_toBottomOf="@id/tv_logout" />
-
-
-        <!--todo persistence-->
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/sw_sound"
             style="@style/TitleText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:clickable="true"
+            android:enabled="true"
+            android:focusable="true"
             android:padding="@dimen/margin_small"
             android:text="@string/title_notification_sound"
-            android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/tv_settings"
-            tools:visibility="visible" />
+            app:layout_constraintTop_toBottomOf="@id/sw_receive_notifications" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/sw_receive_notifications"
+            style="@style/TitleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:enabled="true"
+            android:focusable="true"
+            android:padding="@dimen/margin_small"
+            android:text="@string/title_receive_notifications"
+            app:layout_constraintTop_toBottomOf="@id/tv_logout" />
 
         <TextView
             android:id="@+id/tv_suspend"

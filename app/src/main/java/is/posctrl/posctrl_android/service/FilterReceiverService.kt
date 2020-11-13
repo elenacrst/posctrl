@@ -36,16 +36,16 @@ class FilterReceiverService : JobIntentService() {
         var p: DatagramPacket
         try {
             while (true) {
-                val serverPort =
-                    prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
-                        ?: DEFAULT_FILTER_PORT
+                val serverPort: Int =
+                        prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
+                                ?: DEFAULT_FILTER_PORT
                 if (socket == null) {
                     socket = DatagramSocket(serverPort)
                     socket!!.broadcast = false
                 }
                 socket!!.reuseAddress = true
                 socket!!.soTimeout = 60 * 1000
-                Timber.d("waiting to receive filter via udp")
+                Timber.d("waiting to receive filter via udp on port $serverPort")
                 try {
                     val message = ByteArray(512)
                     p = DatagramPacket(message, message.size)
@@ -84,6 +84,11 @@ class FilterReceiverService : JobIntentService() {
         val intent = Intent(ACTION_RECEIVE_FILTER)
         intent.putExtra(EXTRA_FILTER, result)
         sendBroadcast(intent)
+    }
+
+    override fun onDestroy() {
+        closeSocket()
+        super.onDestroy()
     }
 
     companion object {

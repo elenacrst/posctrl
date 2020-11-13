@@ -6,12 +6,16 @@ import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.clear
+import `is`.posctrl.posctrl_android.data.local.get
+import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.RegisterResponse
 import `is`.posctrl.posctrl_android.data.model.StoreResponse
 import `is`.posctrl.posctrl_android.databinding.FragmentAppOptionsBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
+import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.util.extensions.showConfirmDialog
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -55,6 +59,7 @@ class AppOptionsFragment : BaseFragment() {
         appOptionsBinding.tvLogout.setOnClickListener {
             preferencesSource.customPrefs().clear()
             findNavController().navigate(NavigationMainContainerDirections.toLoginFragment())
+            //todo stop services here
         }
         appOptionsBinding.tvSuspend.setOnClickListener {
             if (register == null) {
@@ -70,11 +75,40 @@ class AppOptionsFragment : BaseFragment() {
             }
         }
         appOptionsBinding.store = store
+
+        appOptionsBinding.swSound.isChecked = preferencesSource.customPrefs()[getString(R.string.key_notification_sound), true]
+                ?: true
+        appOptionsBinding.swSound.setOnCheckedChangeListener { _, isChecked ->
+            preferencesSource.customPrefs()[getString(R.string.key_notification_sound)] = isChecked
+        }
+
+        appOptionsBinding.swReceiveNotifications.isChecked = preferencesSource.customPrefs()[getString(R.string.key_receive_notifications), true]
+                ?: true
+        appOptionsBinding.swReceiveNotifications.setOnCheckedChangeListener { _, isChecked ->
+            preferencesSource.customPrefs()[getString(R.string.key_receive_notifications)] = isChecked
+            if (isChecked) {
+                //start service
+                startFilterReceiverService()
+            } else {
+                //stop service
+                stopFilterReceiverService()
+            }
+        }
     }
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(ActivityModule(requireActivity())).inject(this)
         super.onAttach(context)
+    }
+
+    private fun startFilterReceiverService() {
+        val intent = Intent(requireContext(), FilterReceiverService::class.java)
+        FilterReceiverService.enqueueWork(requireContext(), intent)
+    }
+
+    private fun stopFilterReceiverService() {
+        val intent = Intent(requireContext(), FilterReceiverService::class.java)
+        requireActivity().stopService(intent)
     }
 }
 
