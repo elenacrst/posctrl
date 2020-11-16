@@ -13,6 +13,7 @@ import `is`.posctrl.posctrl_android.data.model.StoreResponse
 import `is`.posctrl.posctrl_android.databinding.FragmentAppOptionsBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
+import `is`.posctrl.posctrl_android.ui.login.LoginViewModel
 import `is`.posctrl.posctrl_android.util.extensions.showConfirmDialog
 import android.content.Context
 import android.content.Intent
@@ -35,6 +36,9 @@ class AppOptionsFragment : BaseFragment() {
 
     @Inject
     lateinit var appOptionsViewModel: AppOptionsViewModel
+
+    @Inject
+    lateinit var loginViewModel: LoginViewModel
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -87,9 +91,13 @@ class AppOptionsFragment : BaseFragment() {
         appOptionsBinding.swReceiveNotifications.setOnCheckedChangeListener { _, isChecked ->
             preferencesSource.customPrefs()[getString(R.string.key_receive_notifications)] = isChecked
             if (isChecked) {
+                loginViewModel.sendFilterProcessOpenMessage()
+
                 //start service
                 startFilterReceiverService()
             } else {
+                appOptionsViewModel.closeFilterNotifications()
+
                 //stop service
                 stopFilterReceiverService()
             }
@@ -102,8 +110,7 @@ class AppOptionsFragment : BaseFragment() {
     }
 
     private fun startFilterReceiverService() {
-        val intent = Intent(requireContext(), FilterReceiverService::class.java)
-        FilterReceiverService.enqueueWork(requireContext(), intent)
+        FilterReceiverService.enqueueWork(requireContext())
     }
 
     private fun stopFilterReceiverService() {

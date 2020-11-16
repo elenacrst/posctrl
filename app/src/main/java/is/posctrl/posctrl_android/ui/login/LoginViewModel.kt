@@ -4,6 +4,7 @@ import `is`.posctrl.posctrl_android.data.ErrorCode
 import `is`.posctrl.posctrl_android.data.NoNetworkConnectionException
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.ResultWrapper
+import `is`.posctrl.posctrl_android.data.model.FilterAction
 import `is`.posctrl.posctrl_android.data.model.LoginResponse
 import `is`.posctrl.posctrl_android.data.model.StoreResponse
 import `is`.posctrl.posctrl_android.util.Event
@@ -14,13 +15,13 @@ import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
 class LoginViewModel @Inject constructor(private val repository: PosCtrlRepository) :
-    ViewModel() {
+        ViewModel() {
 
     private var _loginResponse = MutableLiveData<LoginResponse>()
     val loginResponse: LiveData<LoginResponse>
         get() = _loginResponse
     private var _loginEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-        MutableLiveData(Event(ResultWrapper.None))
+            MutableLiveData(Event(ResultWrapper.None))
     val loginEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _loginEvent
 
@@ -28,21 +29,21 @@ class LoginViewModel @Inject constructor(private val repository: PosCtrlReposito
     val stores: LiveData<List<StoreResponse>>
         get() = _stores
     private var _storesEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-        MutableLiveData(Event(ResultWrapper.None))
+            MutableLiveData(Event(ResultWrapper.None))
     val storesEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _storesEvent
     private var _sendFilterProcessEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-        MutableLiveData(Event(ResultWrapper.None))
+            MutableLiveData(Event(ResultWrapper.None))
     val sendFilterProcessEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _sendFilterProcessEvent
 
     fun login(
-        server: String = "",
-        port: String = "",
-        databaseUser: String = "",
-        databasePassword: String = "",
-        user: String = "",
-        password: String = ""
+            server: String = "",
+            port: String = "",
+            databaseUser: String = "",
+            databasePassword: String = "",
+            user: String = "",
+            password: String = ""
     ) {
         viewModelScope.launch {
             _loginEvent.value = Event(ResultWrapper.Loading)
@@ -65,11 +66,11 @@ class LoginViewModel @Inject constructor(private val repository: PosCtrlReposito
     }
 
     fun getStores(
-        server: String = "",
-        port: String = "",
-        databaseUser: String = "",
-        databasePassword: String = "",
-        loggedInUser: String = ""
+            server: String = "",
+            port: String = "",
+            databaseUser: String = "",
+            databasePassword: String = "",
+            loggedInUser: String = ""
     ) {
         viewModelScope.launch {
             _storesEvent.value = Event(ResultWrapper.Loading)
@@ -83,9 +84,9 @@ class LoginViewModel @Inject constructor(private val repository: PosCtrlReposito
                 }
                 if (result is ResultWrapper.Success) {
                     _stores.value =
-                        ((result as ResultWrapper.Success).data as List<*>).filterIsInstance(
-                            StoreResponse::class.java
-                        )
+                            ((result as ResultWrapper.Success).data as List<*>).filterIsInstance(
+                                    StoreResponse::class.java
+                            )
                 }
             }
 
@@ -94,12 +95,12 @@ class LoginViewModel @Inject constructor(private val repository: PosCtrlReposito
         }
     }
 
-    fun sendFilterProcessMessage() {
+    fun sendFilterProcessOpenMessage() {
         viewModelScope.launch {
             _sendFilterProcessEvent.value = Event(ResultWrapper.Loading)
             val time = measureTimeMillis {
                 try {
-                    repository.sendFilterProcessMessage()
+                    repository.sendFilterProcessMessage(FilterAction.OPEN)
                 } catch (e: NoNetworkConnectionException) {
                     e.printStackTrace()
                     ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)

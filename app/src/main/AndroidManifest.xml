@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name=".PosCtrlApplication"
@@ -41,6 +42,10 @@
             android:name="is.posctrl.posctrl_android.util.glide.BaseGlideModule"
             android:value="GlideModule"
             tools:node="remove" />
+
+        <service
+            android:name=".service.AppClosingService"
+            android:stopWithTask="false" />
     </application>
 
 </manifest>

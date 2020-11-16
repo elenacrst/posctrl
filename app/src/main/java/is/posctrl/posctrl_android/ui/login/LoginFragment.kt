@@ -15,7 +15,6 @@ import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import `is`.posctrl.posctrl_android.util.extensions.showInputDialog
 import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -63,7 +62,7 @@ class LoginFragment : BaseFragment() {
                             prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
                             prefs.defaultPrefs()[getString(R.string.key_logged_user)] ?: ""
                     )
-                    loginViewModel.sendFilterProcessMessage()
+                    loginViewModel.sendFilterProcessOpenMessage()
                     startFilterReceiverService()
                 }
         )
@@ -87,6 +86,9 @@ class LoginFragment : BaseFragment() {
                             findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it[0]))
                         }
                     }
+                },
+                errorListener = {
+                    loginBinding.clBase.visibility = View.VISIBLE
                 }
         )
     }
@@ -144,7 +146,7 @@ class LoginFragment : BaseFragment() {
                 prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
                 prefs.defaultPrefs()[getString(R.string.key_logged_user)] ?: ""
         )
-        loginViewModel.sendFilterProcessMessage()
+        loginViewModel.sendFilterProcessOpenMessage()
         startFilterReceiverService()
     }
 
@@ -207,8 +209,7 @@ class LoginFragment : BaseFragment() {
     }
 
     private fun startFilterReceiverService() {
-        val intent = Intent(requireContext(), FilterReceiverService::class.java)
-        FilterReceiverService.enqueueWork(requireContext(), intent)
+        FilterReceiverService.enqueueWork(requireContext())
     }
 }
 

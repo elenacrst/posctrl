@@ -23,5 +23,6 @@ data class FilterProcessBody(
 ) : Parcelable
 
 enum class FilterAction(val actionValue: String) {
-    OPEN("Open")
+    OPEN("Open"), CLOSE("Close"), ALIFE("ALife")
 }
+//todo show filter notification inside onResume only if setting is enabled

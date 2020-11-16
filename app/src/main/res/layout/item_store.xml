@@ -21,6 +21,7 @@
         android:layout_marginStart="@dimen/margin_extra_small"
         android:layout_marginTop="@dimen/margin_extra_small"
         android:layout_marginEnd="@dimen/margin_extra_small"
+        android:keepScreenOn="true"
         android:onClick="@{() -> clickListener.onClick(item)}"
         app:cardBackgroundColor="@color/purple_700"
         app:cardPreventCornerOverlap="false">

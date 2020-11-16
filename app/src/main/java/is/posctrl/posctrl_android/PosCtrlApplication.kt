@@ -4,7 +4,9 @@ import `is`.posctrl.posctrl_android.data.local.LocalInformation
 import `is`.posctrl.posctrl_android.di.AppModule
 import `is`.posctrl.posctrl_android.di.DaggerPosCtrlComponent
 import `is`.posctrl.posctrl_android.di.PosCtrlComponent
+import `is`.posctrl.posctrl_android.service.AppClosingService
 import android.app.Application
+import android.content.Intent
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -28,6 +30,12 @@ class PosCtrlApplication : Application() {
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
+        }
+
+        try {
+            startService(Intent(baseContext, AppClosingService::class.java))
+        } catch (e: IllegalStateException) {
+            e.printStackTrace()
         }
     }
 }
