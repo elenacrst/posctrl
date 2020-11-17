@@ -7,13 +7,16 @@ import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.local.set
+import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
 import `is`.posctrl.posctrl_android.data.model.RegisterResponse
 import `is`.posctrl.posctrl_android.data.model.StoreResponse
 import `is`.posctrl.posctrl_android.databinding.FragmentReceiptBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
+import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
+import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -23,7 +26,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
@@ -97,9 +99,17 @@ class ReceiptFragment : BaseFragment() {
             override fun onReceive(context: Context, intent: Intent) {
                 val bundle = intent.extras
                 if (bundle != null) {
-                    val result =
-                        bundle.getParcelable<ReceiptResponse>(ReceiptReceiverService.EXTRA_RECEIPT)
-                    handleReceipt(result)
+                    if (intent.action == FilterReceiverService.ACTION_RECEIVE_FILTER) {
+                        val result =
+                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
+                        requireContext().toast("received filter $result")
+                        baseFragmentHandler?.handleFilter(result)
+                    } else if (intent.action == ReceiptReceiverService.ACTION_RECEIVE_RECEIPT) {
+                        val result =
+                            bundle.getParcelable<ReceiptResponse>(ReceiptReceiverService.EXTRA_RECEIPT)
+                        handleReceipt(result)
+                    }
+
                 }
             }
         }
@@ -112,34 +122,18 @@ class ReceiptFragment : BaseFragment() {
             }
 
             val lastTxn: Int = prefs.customPrefs()[getString(R.string.key_last_txn)] ?: -1
-            if (lastTxn != it.clearTextFlag && lastTxn != -1 || result.endFlag == 1) {
+            if (lastTxn != it.clearTextFlag && lastTxn != -1) {
                 receiptBinding.llReceipt.removeAllViews()
             }
 
-            val values = it.line.split(Regex("\\s{2,}"))
-            if (values.size == 3) {//alignment for rows of type name - qty - price
-                val lineLayout = LinearLayout(requireContext())
-                lineLayout.orientation = LinearLayout.HORIZONTAL
-                lineLayout.weightSum = 4f
-                val largeViewParams =
-                    LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT)
-                largeViewParams.weight = 2f
-                val smallerViewParams =
-                    LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT)
-                smallerViewParams.weight = 1f
-                val productNameText = generateFormattedTextView(it, values[0])
-                val quantityText = generateFormattedTextView(it, values[1])
-                val priceText = generateFormattedTextView(it, values[2])
-                lineLayout.addView(productNameText, largeViewParams)
-                lineLayout.addView(quantityText, smallerViewParams)
-                lineLayout.addView(priceText, smallerViewParams)
-
-                receiptBinding.llReceipt.addView(lineLayout)
-            } else {
-                receiptBinding.llReceipt.addView(generateFormattedTextView(it, it.line))
-            }
+            val view = generateFormattedTextView(it, it.line)
+            receiptBinding.llReceipt.addView(view)
+            view.isFocusable = true
+            view.isFocusableInTouchMode = true
+            view.requestFocus()
 
             prefs.customPrefs()[getString(R.string.key_last_txn)] = it.clearTextFlag
+
         }
     }
 
@@ -196,9 +190,11 @@ class ReceiptFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
+        val intentFilter = IntentFilter(ReceiptReceiverService.ACTION_RECEIVE_RECEIPT)
+        intentFilter.addAction(FilterReceiverService.ACTION_RECEIVE_FILTER)
         requireActivity().registerReceiver(
             broadcastReceiver,
-            IntentFilter(ReceiptReceiverService.ACTION_RECEIVE_RECEIPT)
+            intentFilter
         )
     }
 

@@ -10,6 +10,8 @@ import kotlinx.android.parcel.Parcelize
 data class FilterProcessBody(
         @field:JacksonXmlProperty(localName = "AppName")
         val appName: String,
+        @field:JacksonXmlProperty(localName = "AppVer")
+        val appVersion: String,
         @field:JacksonXmlProperty(localName = "UserID")
         val userId: String,
         @field:JacksonXmlProperty(localName = "Action")

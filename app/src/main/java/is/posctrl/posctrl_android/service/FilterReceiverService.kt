@@ -6,6 +6,7 @@ import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository.Companion.DEFAULT_FILTER_PORT
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.get
+import `is`.posctrl.posctrl_android.data.model.FilterResults
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import android.annotation.SuppressLint
 import android.app.*
@@ -47,13 +48,14 @@ class FilterReceiverService : Service() {
 
     private var socket: DatagramSocket? = null
 
-    private fun receiveUdp() {
+    @Suppress("BlockingMethodInNonBlockingContext")
+    private suspend fun receiveUdp() {
         var p: DatagramPacket
         try {
             while (true) {
                 val serverPort: Int =
-                        prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
-                                ?: DEFAULT_FILTER_PORT
+                    prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
+                        ?: DEFAULT_FILTER_PORT
                 if (socket == null) {
                     socket = DatagramSocket(serverPort)
                     socket!!.broadcast = false
@@ -67,7 +69,6 @@ class FilterReceiverService : Service() {
                     socket!!.receive(p)
                     Timber.d("received filter ${String(message).substring(0, p.length)}")
                     publishResults(String(message).substring(0, p.length))
-
                 } catch (e: SocketTimeoutException) {
                 } catch (e: IOException) {
                     e.printStackTrace()
@@ -78,6 +79,10 @@ class FilterReceiverService : Service() {
             e.printStackTrace()
         }
         closeSocket()
+    }
+
+    private suspend fun sendFilterResultReceived(itemLineId: Int) {
+        repository.sendFilterResultMessage(itemLineId, FilterResults.FILTER_INFO_RECEIVED)
     }
 
     private fun closeSocket() {
@@ -99,11 +104,12 @@ class FilterReceiverService : Service() {
         // depending on the Android API that we're dealing with we will have
         // to use a specific method to create the notification
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val channel = NotificationChannel(
-                    notificationChannelId,
-                    "Filter notifications channel",
-                    NotificationManager.IMPORTANCE_HIGH
+                notificationChannelId,
+                "Filter notifications channel",
+                NotificationManager.IMPORTANCE_HIGH
             ).let {
                 it.description = "Filter notifications service channel"
                 it
@@ -111,20 +117,23 @@ class FilterReceiverService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val builder: Notification.Builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(
+        val builder: Notification.Builder =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(
                 this,
                 notificationChannelId
-        ) else Notification.Builder(this)
+            ) else Notification.Builder(this)
 
         return builder
-                .setContentTitle("Listening for filter notifications")
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setPriority(PRIORITY_HIGH) // for under android 26 compatibility
-                .build()
+            .setContentTitle("Listening for filter notifications")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(PRIORITY_HIGH) // for under android 26 compatibility
+            .build()
     }
 
-    private fun publishResults(output: String) {
+    @Suppress("BlockingMethodInNonBlockingContext")
+    private suspend fun publishResults(output: String) {
         val result = xmlMapper.readValue(output, FilteredInfoResponse::class.java)
+        sendFilterResultReceived(result.itemLineId)
         Timber.d("parsed filter $result")
         val intent = Intent(ACTION_RECEIVE_FILTER)
         intent.putExtra(EXTRA_FILTER, result)
@@ -151,7 +160,7 @@ class FilterReceiverService : Service() {
             }
         } else {
             Timber.d(
-                    "with a null intent. It has been probably restarted by the system."
+                "with a null intent. It has been probably restarted by the system."
             )
         }
         return START_REDELIVER_INTENT
@@ -165,11 +174,11 @@ class FilterReceiverService : Service() {
 
         // we need this lock so our service gets not affected by Doze Mode
         wakeLock =
-                (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
-                    newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService::lock").apply {
-                        acquire()
-                    }
+            (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService::lock").apply {
+                    acquire()
                 }
+            }
 
         //start sending alife filter process message
         GlobalScope.launch {

@@ -2,6 +2,7 @@ package `is`.posctrl.posctrl_android.ui.filter
 
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.ResultWrapper
+import `is`.posctrl.posctrl_android.data.model.FilterResults
 import `is`.posctrl.posctrl_android.util.Event
 import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
@@ -23,18 +24,30 @@ class FilterViewModel @Inject constructor(private val repository: PosCtrlReposit
     val bitmapsEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _bitmapsEvent
 
-    fun downloadBitmaps(
-        fileNames: List<String>
-    ) {
+    private var _filterAnswerEvent: MutableLiveData<Event<ResultWrapper<*>>> =
+        MutableLiveData(Event(ResultWrapper.None))
+    val filterAnswerEvent: LiveData<Event<ResultWrapper<*>>>
+        get() = _filterAnswerEvent//todo message
+
+    fun downloadBitmaps(path: String, fileNames: List<String>) {
         viewModelScope.launch {
+
             _bitmapsEvent.value = Event(ResultWrapper.Loading)
-            val result: ResultWrapper<*> = repository.downloadBitmaps(fileNames)
+            val result: ResultWrapper<*> = repository.downloadBitmaps(path, fileNames)
 
             if (result is ResultWrapper.Success) {
                 _bitmaps.value = (result.data as List<*>).filterIsInstance(Bitmap::class.java)
             }
 
             _bitmapsEvent.value = Event(result)
+        }
+    }
+
+    fun sendFilterMessage(itemLineId: Int, result: FilterResults) {
+        viewModelScope.launch {
+            _filterAnswerEvent.value = Event(ResultWrapper.Loading)
+            repository.sendFilterResultMessage(itemLineId, result)
+            _filterAnswerEvent.value = Event(ResultWrapper.Success(""))
         }
     }
 }

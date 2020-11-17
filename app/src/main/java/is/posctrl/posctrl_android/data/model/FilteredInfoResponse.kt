@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
 import kotlinx.android.parcel.Parcelize
 
-@JacksonXmlRootElement(localName = "Receipt")
+@JacksonXmlRootElement(localName = "FilteredInfo")
 @Parcelize
 data class FilteredInfoResponse(
     private var _storeNumber: Int = -1,

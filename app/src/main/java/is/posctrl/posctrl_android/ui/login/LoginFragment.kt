@@ -39,68 +39,68 @@ class LoginFragment : BaseFragment() {
 
     private fun getLoginObserver(): Observer<Event<ResultWrapper<*>>> {
         return createLoadingObserver(
-                successListener = {
-                    loginViewModel.loginResponse.value?.let {
-                        prefs.customPrefs()[getString(R.string.key_server_path)] = it.serverPath
-                        prefs.customPrefs()[getString(R.string.key_server_port)] = it.serverPort
-                        prefs.customPrefs()[getString(R.string.key_filter_respond_time)] =
-                                it.filterRespondTime
-                        prefs.customPrefs()[getString(R.string.key_version)] = it.appVersion
-                        prefs.customPrefs()[getString(R.string.key_server_user)] = it.serverUser
-                        prefs.customPrefs()[getString(R.string.key_server_domain)] = it.serverUserDomain
-                        prefs.customPrefs()[getString(R.string.key_server_password)] =
-                                it.serverUserPassword
-                        prefs.customPrefs()[getString(R.string.key_server_snapshot_path)] =
-                                it.serverSnapshotPath
-                        prefs.customPrefs()[getString(R.string.key_logged_user)] =
-                                loginBinding.etUser.text.toString()
-                    }
-                    loginViewModel.getStores(
-                            prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
-                            prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
-                            prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
-                            prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
-                            prefs.defaultPrefs()[getString(R.string.key_logged_user)] ?: ""
-                    )
-                    loginViewModel.sendFilterProcessOpenMessage()
-                    startFilterReceiverService()
+            successListener = {
+                loginViewModel.loginResponse.value?.let {
+                    prefs.customPrefs()[getString(R.string.key_server_path)] = it.serverPath
+                    prefs.customPrefs()[getString(R.string.key_server_port)] = it.serverPort
+                    prefs.customPrefs()[getString(R.string.key_filter_respond_time)] =
+                        it.filterRespondTime
+                    prefs.customPrefs()[getString(R.string.key_version)] = it.appVersion
+                    prefs.customPrefs()[getString(R.string.key_server_user)] = it.serverUser
+                    prefs.customPrefs()[getString(R.string.key_server_domain)] = it.serverUserDomain
+                    prefs.customPrefs()[getString(R.string.key_server_password)] =
+                        it.serverUserPassword
+                    prefs.customPrefs()[getString(R.string.key_server_snapshot_path)] =
+                        it.serverSnapshotPath
+                    prefs.customPrefs()[getString(R.string.key_logged_user)] =
+                        loginBinding.etUser.text.toString()
                 }
+                loginViewModel.getStores(
+                    prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
+                    prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
+                    prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
+                    prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
+                    prefs.customPrefs()[getString(R.string.key_logged_user)] ?: ""
+                )
+                loginViewModel.sendFilterProcessOpenMessage()
+                startFilterReceiverService()
+            }
         )
     }
 
     private fun getStoresObserver(): Observer<Event<ResultWrapper<*>>> {
         return createLoadingObserver(
-                successListener = {
-                    hideLoading()
-                    loginViewModel.stores.value?.let {
-                        if (it.size > 1) {
-                            findNavController().navigate(LoginFragmentDirections.toStoresFragment(it.toTypedArray()))
-                        } else {
-                            prefs.customPrefs()[getString(R.string.key_store_number)] =
-                                    it[0].storeNumber
-                            prefs.customPrefs()[getString(R.string.key_store_name)] = it[0].storeName
-                            requireContext().getString(
-                                    R.string.message_store_value, it[0].storeNumber
-                                    ?: -1, it[0].storeName
-                            )
-                            findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it[0]))
-                        }
+            successListener = {
+                hideLoading()
+                loginViewModel.stores.value?.let {
+                    if (it.size > 1) {
+                        findNavController().navigate(LoginFragmentDirections.toStoresFragment(it.toTypedArray()))
+                    } else {
+                        prefs.customPrefs()[getString(R.string.key_store_number)] =
+                            it[0].storeNumber
+                        prefs.customPrefs()[getString(R.string.key_store_name)] = it[0].storeName
+                        requireContext().getString(
+                            R.string.message_store_value, it[0].storeNumber
+                                ?: -1, it[0].storeName
+                        )
+                        findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it[0]))
                     }
-                },
-                errorListener = {
-                    loginBinding.clBase.visibility = View.VISIBLE
                 }
+            },
+            errorListener = {
+                loginBinding.clBase.visibility = View.VISIBLE
+            }
         )
     }
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
 
         loginBinding = DataBindingUtil
-                .inflate(inflater, R.layout.fragment_login, container, false)
+            .inflate(inflater, R.layout.fragment_login, container, false)
 
         return loginBinding.root
     }
@@ -140,11 +140,11 @@ class LoginFragment : BaseFragment() {
             return
         }
         loginViewModel.getStores(
-                prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_logged_user)] ?: ""
+            prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
+            prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
+            prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
+            prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
+            prefs.customPrefs()[getString(R.string.key_logged_user)] ?: ""
         )
         loginViewModel.sendFilterProcessOpenMessage()
         startFilterReceiverService()
@@ -191,19 +191,19 @@ class LoginFragment : BaseFragment() {
         }
         if (valid) {
             loginViewModel.login(
-                    prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
-                    prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
-                    prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
-                    prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
-                    loginBinding.etUser.text!!.toString(),
-                    loginBinding.etPassword.text!!.toString()
+                prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
+                prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
+                prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
+                prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
+                loginBinding.etUser.text!!.toString(),
+                loginBinding.etPassword.text!!.toString()
             )
         }
     }
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
-                ActivityModule(requireActivity())
+            ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
     }

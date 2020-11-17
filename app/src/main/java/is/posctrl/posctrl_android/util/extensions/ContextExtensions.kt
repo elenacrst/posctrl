@@ -11,39 +11,42 @@ import androidx.databinding.DataBindingUtil
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 fun Context.toast(message: String) =
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 
 fun Context.showInputDialog(titleRes: Int, positiveCallback: (input: String) -> Unit) {
     val binding: DialogEtBinding = DataBindingUtil.inflate(
-            LayoutInflater.from(this),
-            R.layout.dialog_et,
-            null,
-            false
+        LayoutInflater.from(this),
+        R.layout.dialog_et,
+        null,
+        false
     )
     binding.edit.inputType = InputType.TYPE_CLASS_NUMBER
 
-    val dialog = MaterialAlertDialogBuilder(this, android.R.style.Theme_Material_Light_NoActionBar_Fullscreen)
-            .setTitle(titleRes)
-            .setView(binding.root)
-            .setPositiveButton(R.string.action_ok) { _, _ ->
-                positiveCallback(binding.edit.text.toString())
-            }
-            .create()
+    val dialog = MaterialAlertDialogBuilder(
+        this,
+        android.R.style.Theme_Material_Light_NoActionBar_Fullscreen
+    )
+        .setTitle(titleRes)
+        .setView(binding.root)
+        .setPositiveButton(R.string.action_ok) { _, _ ->
+            positiveCallback(binding.edit.text.toString())
+        }
+        .create()
     dialog.show()
 }
 
 fun Context.showConfirmDialog(title: String, positiveCallback: () -> Unit) {
     val binding: DialogConfirmBinding = DataBindingUtil.inflate(
-            LayoutInflater.from(this),
-            R.layout.dialog_confirm,
-            null,
-            false
+        LayoutInflater.from(this),
+        R.layout.dialog_confirm,
+        null,
+        false
     )
     binding.tvTitle.text = title
 
     val dialog = MaterialAlertDialogBuilder(this)
-            .setView(binding.root)
-            .create()
+        .setView(binding.root)
+        .create()
     binding.btYes.setOnClickListener {
         dialog.dismiss()
         positiveCallback()

@@ -81,4 +81,5 @@
     <string name="title_receive_notifications">Receive notifications</string>
     <string name="key_receive_notifications">keyReceiveNotifications</string>
     <string name="key_send_alife_filter">keySendALifeFilter</string>
+    <string name="message_timed_out">Timed out</string>
 </resources>

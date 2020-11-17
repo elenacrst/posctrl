@@ -19,7 +19,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 
-class MainActivity : AppCompatActivity(), FilterHandler {
+class MainActivity : AppCompatActivity(), BaseFragmentHandler {
 
     private lateinit var mainBinding: ActivityMainBinding
     private lateinit var navController: NavController
@@ -35,16 +35,16 @@ class MainActivity : AppCompatActivity(), FilterHandler {
         mainBinding.lifecycleOwner = this
 
         val navHostFragment =
-                supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
+            supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                R.id.storesFragment, R.id.registersFragment, R.id.receiptFragment -> {
+                R.id.storesFragment, R.id.registersFragment -> {
                     if (filterItemMessages.isNotEmpty()) {
                         navController.navigate(
-                                NavigationMainContainerDirections.toFilterFragment(
-                                        filterItemMessages[0]
-                                )
+                            NavigationMainContainerDirections.toFilterFragment(
+                                filterItemMessages[0]
+                            )
                         )
                         filterItemMessages = filterItemMessages - filterItemMessages[0]
                     }
@@ -58,14 +58,14 @@ class MainActivity : AppCompatActivity(), FilterHandler {
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-                .activityComponent(ActivityModule(this))
+            .activityComponent(ActivityModule(this))
     }
 
-    fun showLoading() {
+    override fun showLoading() {
         mainBinding.pbLoading.visibility = View.VISIBLE
     }
 
-    fun hideLoading() {
+    override fun hideLoading() {
         mainBinding.pbLoading.visibility = View.GONE
     }
 
@@ -75,37 +75,37 @@ class MainActivity : AppCompatActivity(), FilterHandler {
                 val bundle = intent.extras
                 if (bundle != null) {
                     val result =
-                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
-                    handleFilter(result)
+                        bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
+
+                    if (navController.currentDestination?.id in arrayOf(
+                            R.id.storesFragment,
+                            R.id.registersFragment
+                        )
+                    ) {
+                        handleFilter(result)
+                    }
                 }
             }
         }
     }
 
-    private fun handleFilter(result: FilteredInfoResponse?) {
+    override fun handleFilter(result: FilteredInfoResponse?) {
         result?.let {
             filterItemMessages = filterItemMessages + result
-            if (navController.currentDestination?.id in arrayOf(
-                            R.id.storesFragment,
-                            R.id.registersFragment,
-                            R.id.receiptFragment
-                    )
-            ) {
-                navController.navigate(
-                        NavigationMainContainerDirections.toFilterFragment(
-                                filterItemMessages[0]
-                        )
+            navController.navigate(
+                NavigationMainContainerDirections.toFilterFragment(
+                    filterItemMessages[0]
                 )
-                filterItemMessages = filterItemMessages - filterItemMessages[0]
-            }
+            )
+            filterItemMessages = filterItemMessages - filterItemMessages[0]
         }
     }
 
     override fun onResume() {
         super.onResume()
         registerReceiver(
-                broadcastReceiver,
-                IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
+            broadcastReceiver,
+            IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
         )
     }
 
@@ -113,12 +113,10 @@ class MainActivity : AppCompatActivity(), FilterHandler {
         super.onPause()
         unregisterReceiver(broadcastReceiver)
     }
-
-    override fun getFilters(): List<FilteredInfoResponse> {
-        return filterItemMessages
-    }
 }
 
-interface FilterHandler {
-    fun getFilters(): List<FilteredInfoResponse>
+interface BaseFragmentHandler {
+    fun showLoading()
+    fun hideLoading()
+    fun handleFilter(result: FilteredInfoResponse?)
 }

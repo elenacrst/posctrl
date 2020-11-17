@@ -2,15 +2,18 @@ package `is`.posctrl.posctrl_android
 
 import `is`.posctrl.posctrl_android.data.ErrorCode
 import `is`.posctrl.posctrl_android.data.ResultWrapper
-import `is`.posctrl.posctrl_android.ui.MainActivity
+import `is`.posctrl.posctrl_android.ui.BaseFragmentHandler
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.toast
+import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import timber.log.Timber
 
 
 open class BaseFragment : Fragment() {
+
+    protected var baseFragmentHandler: BaseFragmentHandler? = null
 
     private fun handleError(resultError: ResultWrapper.Error): Boolean {
         return when (resultError.code) {
@@ -23,8 +26,8 @@ open class BaseFragment : Fragment() {
     }
 
     protected fun createLoadingObserver(
-            successListener: (ResultWrapper<*>?) -> Unit = { },
-            errorListener: () -> Unit = { }
+        successListener: (ResultWrapper<*>?) -> Unit = { },
+        errorListener: () -> Unit = { }
     ): Observer<Event<ResultWrapper<*>>> {
         return Observer { result ->
             when (val value = result.getContentIfNotHandled()) {
@@ -35,15 +38,15 @@ open class BaseFragment : Fragment() {
                 is ResultWrapper.Error -> {
                     hideLoading()
                     val resultError =
-                            result.peekContent() as ResultWrapper.Error
+                        result.peekContent() as ResultWrapper.Error
                     val resultHandled = handleError(resultError)
                     if (!resultHandled) {
                         requireActivity().toast(
-                                message = (result.peekContent() as
-                                        ResultWrapper.Error).message.toString()
+                            message = (result.peekContent() as
+                                    ResultWrapper.Error).message.toString()
                         )
-                        errorListener()
                     }
+                    errorListener()
                 }
                 else -> Timber.d("Nothing to do here")
             }
@@ -51,16 +54,24 @@ open class BaseFragment : Fragment() {
     }
 
     private fun showLoading() {
-        (activity as? MainActivity)?.showLoading()
+        baseFragmentHandler?.showLoading()
     }
 
     fun hideLoading() {
-        (activity as? MainActivity)?.hideLoading()
+        baseFragmentHandler?.hideLoading()
     }
 
     override fun onDetach() {
         super.onDetach()
         hideLoading()
+        baseFragmentHandler = null
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        if (context is BaseFragmentHandler) {
+            baseFragmentHandler = context
+        }
     }
 
     companion object {
