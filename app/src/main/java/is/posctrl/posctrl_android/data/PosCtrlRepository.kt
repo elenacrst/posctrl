@@ -52,7 +52,7 @@ class PosCtrlRepository @Inject constructor(
     ): ResultWrapper<*> {
         var response: LoginResponse? = null
         val connectionURL =
-            "jdbc:jtds:sqlserver://$server:$port/$DATABASE_NAME;instance=POSCTRL;user=$databaseUser;password=$databasePassword"
+            "jdbc:jtds:sqlserver://$server:$port/$DATABASE_NAME;instance=POSCTRL;user=$databaseUser;password=$databasePassword;sendStringParametersAsUnicode=false;"
         Timber.e("connection url is $connectionURL")
         withContext(Dispatchers.Default) {//todo set all coroutines to dispatchers default as it s faster
             try {
@@ -107,7 +107,7 @@ class PosCtrlRepository @Inject constructor(
         withContext(Dispatchers.Default) {
             try {
                 val connectionURL =
-                    "jdbc:jtds:sqlserver://$server:$port/$DATABASE_NAME;instance=POSCTRL;user=$databaseUser;password=$databasePassword"
+                    "jdbc:jtds:sqlserver://$server:$port/$DATABASE_NAME;instance=POSCTRL;user=$databaseUser;password=$databasePassword;sendStringParametersAsUnicode=false;"
                 Timber.e("connection url is $connectionURL, user $loggedInUser")
                 val connection = DriverManager.getConnection(connectionURL)
                 val statement =

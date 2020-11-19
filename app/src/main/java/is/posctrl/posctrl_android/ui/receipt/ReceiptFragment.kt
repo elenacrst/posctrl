@@ -88,8 +88,8 @@ class ReceiptFragment : BaseFragment() {
         })
         receiptBinding.tvTitle.text = getString(
             R.string.title_receipt_incomplete_values,
-            store.storeNumber.toString() + " " + store.storeName,
-            register.registerNumber ?: -1
+            store.storeNumber,
+            register.registerNumber
         )
     }
 
@@ -134,9 +134,9 @@ class ReceiptFragment : BaseFragment() {
                 }
                 receiptBinding.tvTitle.text = getString(
                     R.string.title_receipt_values,
-                    store.storeNumber.toString() + " " + store.storeName,
-                    register.registerNumber ?: -1,
-                    it.clearTextFlag.toString()
+                    store.storeNumber,
+                    register.registerNumber,
+                    it.clearTextFlag
                 )
             }
 

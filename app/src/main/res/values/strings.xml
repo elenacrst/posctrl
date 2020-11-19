@@ -82,4 +82,7 @@
     <string name="key_receive_notifications">keyReceiveNotifications</string>
     <string name="key_send_alife_filter">keySendALifeFilter</string>
     <string name="message_timed_out">Timed out</string>
+    <string name="error_partial_download">Partially downloaded</string>
+    <string name="title_receipt_incomplete_values">Store %1$d, Register %2$d</string>
+    <string name="title_receipt_values">Store %1$d, Register %2$d, Txn %3$d</string>
 </resources>
