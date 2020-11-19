@@ -17,6 +17,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.content.ContextCompat.startForegroundService
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -137,7 +138,7 @@ class FilterReceiverService : Service() {
         Timber.d("parsed filter $result")
         val intent = Intent(ACTION_RECEIVE_FILTER)
         intent.putExtra(EXTRA_FILTER, result)
-        sendBroadcast(intent)
+        LocalBroadcastManager.getInstance(appContext).sendBroadcast(intent)
     }
 
     override fun onDestroy() {
@@ -172,14 +173,6 @@ class FilterReceiverService : Service() {
         Timber.d("Starting the foreground service task")
         isServiceStarted = true
 
-        // we need this lock so our service gets not affected by Doze Mode
-        wakeLock =
-            (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
-                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService::lock").apply {
-                    acquire()
-                }
-            }
-
         //start sending alife filter process message
         GlobalScope.launch {
             repository.sendFilterProcessALife()
@@ -208,7 +201,7 @@ class FilterReceiverService : Service() {
     }
 
     companion object {
-        const val ACTION_RECEIVE_FILTER = "RECEIVE_FILTER"
+        const val ACTION_RECEIVE_FILTER = "is.posctrl.posctrl_android.RECEIVE_FILTER"
         const val EXTRA_FILTER = "FILTER"
 
         fun enqueueWork(context: Context) {

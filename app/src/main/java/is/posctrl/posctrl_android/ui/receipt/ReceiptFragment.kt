@@ -16,7 +16,6 @@ import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
-import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -28,7 +27,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.DataBindingUtil
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import javax.inject.Inject
 
@@ -85,6 +86,11 @@ class ReceiptFragment : BaseFragment() {
                 )
             )
         })
+        receiptBinding.tvTitle.text = getString(
+            R.string.title_receipt_incomplete_values,
+            store.storeNumber.toString() + " " + store.storeName,
+            register.registerNumber ?: -1
+        )
     }
 
     override fun onAttach(context: Context) {
@@ -102,7 +108,6 @@ class ReceiptFragment : BaseFragment() {
                     if (intent.action == FilterReceiverService.ACTION_RECEIVE_FILTER) {
                         val result =
                             bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
-                        requireContext().toast("received filter $result")
                         baseFragmentHandler?.handleFilter(result)
                     } else if (intent.action == ReceiptReceiverService.ACTION_RECEIVE_RECEIPT) {
                         val result =
@@ -122,8 +127,17 @@ class ReceiptFragment : BaseFragment() {
             }
 
             val lastTxn: Int = prefs.customPrefs()[getString(R.string.key_last_txn)] ?: -1
+
             if (lastTxn != it.clearTextFlag && lastTxn != -1) {
-                receiptBinding.llReceipt.removeAllViews()
+                if (receiptBinding.llReceipt.childCount > 1) {
+                    receiptBinding.llReceipt.removeViews(1, receiptBinding.llReceipt.childCount - 1)
+                }
+                receiptBinding.tvTitle.text = getString(
+                    R.string.title_receipt_values,
+                    store.storeNumber.toString() + " " + store.storeName,
+                    register.registerNumber ?: -1,
+                    it.clearTextFlag.toString()
+                )
             }
 
             val view = generateFormattedTextView(it, it.line)
@@ -140,6 +154,9 @@ class ReceiptFragment : BaseFragment() {
     private fun generateFormattedTextView(it: ReceiptResponse, text: String): TextView {
         val textView = TextView(requireContext())
         val color = getCSharpColor(it.color)
+        val typeface = ResourcesCompat.getFont(requireContext(), R.font.courier_prime)
+
+
         textView.setTextColor(
             ContextCompat.getColor(
                 requireContext(),
@@ -149,12 +166,14 @@ class ReceiptFragment : BaseFragment() {
         textView.text = text
         if (it.bold == 1) {
             if (it.italic == 1) {
-                textView.setTypeface(textView.typeface, Typeface.BOLD_ITALIC)
+                textView.setTypeface(typeface, Typeface.BOLD_ITALIC)
             } else {
-                textView.setTypeface(textView.typeface, Typeface.BOLD)
+                textView.setTypeface(typeface, Typeface.BOLD)
             }
         } else if (it.italic == 1) {
-            textView.setTypeface(textView.typeface, Typeface.ITALIC)
+            textView.setTypeface(typeface, Typeface.ITALIC)
+        } else {
+            textView.setTypeface(typeface, Typeface.NORMAL)
         }
         return textView
     }
@@ -192,7 +211,7 @@ class ReceiptFragment : BaseFragment() {
         super.onResume()
         val intentFilter = IntentFilter(ReceiptReceiverService.ACTION_RECEIVE_RECEIPT)
         intentFilter.addAction(FilterReceiverService.ACTION_RECEIVE_FILTER)
-        requireActivity().registerReceiver(
+        LocalBroadcastManager.getInstance(requireContext().applicationContext).registerReceiver(
             broadcastReceiver,
             intentFilter
         )
@@ -200,7 +219,8 @@ class ReceiptFragment : BaseFragment() {
 
     override fun onPause() {
         super.onPause()
-        requireActivity().unregisterReceiver(broadcastReceiver)
+        LocalBroadcastManager.getInstance(requireContext().applicationContext)
+            .unregisterReceiver(broadcastReceiver)
     }
 
     override fun onDestroyView() {

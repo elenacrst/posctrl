@@ -13,6 +13,8 @@
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
 
-        <item name="alertDialogTheme">@android:style/Theme.Material.Light.NoActionBar.Fullscreen</item>
+        <item name="alertDialogTheme">@android:style/Theme.Material.Light.NoActionBar.Fullscreen
+        </item>
+        <item name="android:windowFullscreen">true</item>
     </style>
 </resources>

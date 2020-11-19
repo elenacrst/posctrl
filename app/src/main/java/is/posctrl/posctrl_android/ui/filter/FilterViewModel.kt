@@ -2,6 +2,7 @@ package `is`.posctrl.posctrl_android.ui.filter
 
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.ResultWrapper
+import `is`.posctrl.posctrl_android.data.model.BitmapsResult
 import `is`.posctrl.posctrl_android.data.model.FilterResults
 import `is`.posctrl.posctrl_android.util.Event
 import android.graphics.Bitmap
@@ -16,8 +17,8 @@ import javax.inject.Inject
 class FilterViewModel @Inject constructor(private val repository: PosCtrlRepository) :
     ViewModel() {
 
-    private var _bitmaps = MutableLiveData<List<Bitmap>>()
-    val bitmaps: LiveData<List<Bitmap>>
+    private var _bitmaps = MutableLiveData<BitmapsResult>()
+    val bitmaps: LiveData<BitmapsResult>
         get() = _bitmaps
     private var _bitmapsEvent: MutableLiveData<Event<ResultWrapper<*>>> =
         MutableLiveData(Event(ResultWrapper.None))
@@ -36,7 +37,7 @@ class FilterViewModel @Inject constructor(private val repository: PosCtrlReposit
             val result: ResultWrapper<*> = repository.downloadBitmaps(path, fileNames)
 
             if (result is ResultWrapper.Success) {
-                _bitmaps.value = (result.data as List<*>).filterIsInstance(Bitmap::class.java)
+                _bitmaps.value = result.data as BitmapsResult
             }
 
             _bitmapsEvent.value = Event(result)

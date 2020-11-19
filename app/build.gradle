@@ -15,8 +15,8 @@ android {
         applicationId "is.posctrl.posctrl_android"
         minSdkVersion 24
         targetSdkVersion 30
-        versionCode 3
-        versionName "1.2"
+        versionCode 12
+        versionName "1.11"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -68,6 +68,7 @@ dependencies {
     implementation 'androidx.preference:preference:1.1.1'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation files('libs/jtds-1.2.7.jar')
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
     testImplementation 'junit:junit:4.13.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'

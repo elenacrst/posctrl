@@ -10,7 +10,6 @@
         android:id="@+id/cl_base"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:keepScreenOn="true"
         android:padding="@dimen/margin_medium"
         android:visibility="gone"
         tools:visibility="visible">

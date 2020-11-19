@@ -9,7 +9,6 @@
         android:id="@+id/ll_base"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:keepScreenOn="true"
         android:orientation="vertical">
 
         <TextView

@@ -10,6 +10,7 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.JobIntentService
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import timber.log.Timber
 import java.io.IOException
@@ -88,7 +89,8 @@ class ReceiptReceiverService : JobIntentService() {
         val result = xmlMapper.readValue(output, ReceiptResponse::class.java)
         val intent = Intent(ACTION_RECEIVE_RECEIPT)
         intent.putExtra(EXTRA_RECEIPT, result)
-        sendBroadcast(intent)
+        LocalBroadcastManager.getInstance(appContext)
+            .sendBroadcast(intent)//todo use directly application context, no need to inject this, same for other service
     }
 
     companion object {

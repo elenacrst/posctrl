@@ -28,11 +28,12 @@ import javax.inject.Inject
 
 class FilterFragment : BaseFragment() {
 
-    private lateinit var vibrationPauseTimer: CountDownTimer
-    private lateinit var filterReactTimer: CountDownTimer
+    private var vibrationPauseTimer: CountDownTimer? = null
+    private var secondVibrationPauseTimer: CountDownTimer? = null
+    private var filterReactTimer: CountDownTimer? = null
     private lateinit var filterBinding: FragmentFilterBinding
-    private lateinit var vibrator: Vibrator
-    private lateinit var mediaPlayer: MediaPlayer
+    private var vibrator: Vibrator? = null
+    private var mediaPlayer: MediaPlayer? = null
     private var filter: FilteredInfoResponse? = null
 
     @Inject
@@ -83,35 +84,79 @@ class FilterFragment : BaseFragment() {
 
     private fun initializeVibration() {
         vibrator = requireActivity().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        startVibration()
-        vibrationPauseTimer = object : CountDownTimer(TimeUnit.SECONDS.toMillis(16), 1000) {
+        vibrationPauseTimer = object : CountDownTimer(TimeUnit.SECONDS.toMillis(5), 1000) {
             override fun onFinish() {
-                startVibration()
-                vibrationPauseTimer.start()
+                vibrator?.cancel()
+                setupVibrationSoundOnceAWhile()
             }
 
             override fun onTick(millisUntilFinished: Long) {
+                startVibrationIndefinitely()
             }
         }
+        vibrationPauseTimer?.start()
+    }
+
+    private fun setupVibrationSoundOnceAWhile() {
+        secondVibrationPauseTimer = object : CountDownTimer(TimeUnit.SECONDS.toMillis(5L), 1000) {
+            override fun onFinish() {
+                startVibrationOnce()
+                if (prefs.customPrefs()[getString(R.string.key_notification_sound), true] == true) {
+                    mediaPlayer?.start()
+                }
+                secondVibrationPauseTimer?.start()
+            }
+
+            override fun onTick(millisUntilFinished: Long) {
+
+            }
+        }
+        secondVibrationPauseTimer?.start()
     }
 
     private fun initializeMediaPlayer() {
         mediaPlayer = MediaPlayer.create(requireContext(), R.raw.dingaling)
         if (prefs.customPrefs()[getString(R.string.key_notification_sound), true] == true) {
-            mediaPlayer.start()
-            mediaPlayer.setOnCompletionListener {
-                mediaPlayer.start()
+            mediaPlayer?.start()
+        }
+    }
+
+    private fun startVibrationIndefinitely() {
+        if (vibrator?.hasVibrator() == true) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator?.vibrate(
+                    VibrationEffect.createWaveform(
+                        longArrayOf(
+                            200L,
+                            100L,
+                            200L,
+                            100L
+                        ), -1
+                    )
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(longArrayOf(200L, 100L, 200L, 100L), -1)
             }
         }
     }
 
-    private fun startVibration() {
-        if (vibrator.hasVibrator()) {
+    private fun startVibrationOnce() {
+        if (vibrator?.hasVibrator() == true) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0L, 200L, 500L), 0))
+                vibrator?.vibrate(
+                    VibrationEffect.createWaveform(
+                        longArrayOf(
+                            200L,
+                            100L,
+                            200L,
+                            100L
+                        ), -1
+                    )
+                )
             } else {
                 @Suppress("DEPRECATION")
-                vibrator.vibrate(longArrayOf(0L, 200L, 500L), 0)
+                vibrator?.vibrate(longArrayOf(200L, 100L, 200L, 100L), -1)
             }
         }
     }
@@ -119,10 +164,18 @@ class FilterFragment : BaseFragment() {
     private fun getBitmapsLoadingObserver(): Observer<Event<ResultWrapper<*>>> {
         return createLoadingObserver(successListener = {
             hideLoading()
-            if (!filterViewModel.bitmaps.value.isNullOrEmpty()) {
-                picturesAdapter.setData(filterViewModel.bitmaps.value?.toTypedArray())
+            if (!filterViewModel.bitmaps.value?.bitmaps.isNullOrEmpty()) {
+                picturesAdapter.setData(filterViewModel.bitmaps.value?.bitmaps?.toTypedArray())
             }
-            filterReactTimer.start()
+            if (filterViewModel.bitmaps.value?.errors != 0) {
+                requireActivity().toast(getString(R.string.error_partial_download))
+            }
+            filterReactTimer?.start()
+        }, errorListener = {
+            if (!filterViewModel.bitmaps.value?.bitmaps.isNullOrEmpty()) {
+                picturesAdapter.setData(filterViewModel.bitmaps.value?.bitmaps?.toTypedArray())
+            }
+            filterReactTimer?.start()
         })
     }
 
@@ -154,7 +207,10 @@ class FilterFragment : BaseFragment() {
             }
             Timber.d("path $path")
             filterViewModel.downloadBitmaps(path,
-                it.pictures.map { picture -> picture.imageAddress.split('\\').last() })
+                it.pictures.map { picture -> picture.imageAddress }
+                //todo remove testing sub folders code
+                /*"\\\\192.168.0.110\\SnapShot3\\1\\2\\22-3-85-7-1.jpg",listOf( "\\\\192.168.0.110\\SnapShot3\\1\\2\\22-3-85-7-1.jpg")*/
+            )
         }
 
         return filterBinding.root
@@ -162,10 +218,11 @@ class FilterFragment : BaseFragment() {
 
     override fun onDetach() {
         super.onDetach()
-        vibrator.cancel()
-        mediaPlayer.release()
-        vibrationPauseTimer.cancel()
-        filterReactTimer.cancel()
+        vibrator?.cancel()
+        mediaPlayer?.release()
+        vibrationPauseTimer?.cancel()
+        filterReactTimer?.cancel()
+        secondVibrationPauseTimer?.cancel()
     }
 
     companion object {

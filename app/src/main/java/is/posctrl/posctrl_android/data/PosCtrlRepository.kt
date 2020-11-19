@@ -454,16 +454,18 @@ class PosCtrlRepository @Inject constructor(
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun downloadBitmaps(snapshotPath: String, fileNames: List<String>): ResultWrapper<*> {
         val bitmaps = mutableListOf<Bitmap>()
+        var errors = 0
         try {
             withContext(Dispatchers.IO) {
                 val client = SMBClient()
                 val paths = snapshotPath.split("\\").filter { it.isNotEmpty() }
                 Timber.d("paths ${paths.joinToString(",")}")
                 val server = paths[0]
-                val path = paths[1]
+                val sharedFolder = paths[1]
                 val user = prefs.customPrefs()[appContext.getString(R.string.key_server_user), ""]
                 val password =
                     prefs.customPrefs()[appContext.getString(R.string.key_server_password), ""]
+
                 client.connect(server)
                     .use { connection ->
                         val ac = AuthenticationContext(
@@ -472,29 +474,47 @@ class PosCtrlRepository @Inject constructor(
                             ""
                         )
                         val session: Session = connection.authenticate(ac)
-                        (session.connectShare(path) as? DiskShare?)?.let { share ->
-                            for (f in fileNames) {
-                                val s: MutableSet<SMB2ShareAccess> = HashSet()
-                                s.add(SMB2ShareAccess.FILE_SHARE_READ)
-                                val file = share.openFile(
-                                    f,//filename
-                                    EnumSet.of(AccessMask.GENERIC_READ), null, s,
-                                    SMB2CreateDisposition.FILE_OPEN, null
-                                )
-                                val inputStream = file.inputStream
-                                val bitmap = BitmapFactory.decodeStream(inputStream)
-                                bitmap?.let {
-                                    bitmaps += it
+                        fileNames.forEach { fullAddress ->
+                            try {
+                                val fileName = fullAddress.split("\\$sharedFolder\\").last()
+                                (session.connectShare(sharedFolder) as? DiskShare?)?.let { share ->
+                                    val s: MutableSet<SMB2ShareAccess> = HashSet()
+                                    s.add(SMB2ShareAccess.FILE_SHARE_READ)
+                                    val file = share.openFile(
+                                        fileName,
+                                        EnumSet.of(AccessMask.GENERIC_READ), null, s,
+                                        SMB2CreateDisposition.FILE_OPEN, null
+                                    )
+                                    val inputStream = file.inputStream
+                                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                                    bitmap?.let {
+                                        bitmaps += it
+                                    }
                                 }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                errors++
                             }
                         }
                     }
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            return ResultWrapper.Error(message = appContext.applicationContext.getString(R.string.error_no_snapshots))
+            val message =
+                appContext.applicationContext.getString(R.string.error_no_snapshots)
+
+            return ResultWrapper.Error(message = message)
         }
-        return ResultWrapper.Success(bitmaps)
+        if (errors > 0) {
+            return if (bitmaps.isNotEmpty()) {
+                ResultWrapper.Success(BitmapsResult(bitmaps, errors))
+            } else {
+                val message = appContext.applicationContext.getString(R.string.error_no_snapshots)
+                ResultWrapper.Error(message = message)
+            }
+        }
+
+        return ResultWrapper.Success(BitmapsResult(bitmaps, 0))
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
