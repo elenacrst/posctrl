@@ -22,6 +22,7 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
 import javax.inject.Inject
 
 
@@ -70,6 +71,13 @@ class RegistersFragment : BaseFragment() {
                 hideLoading()
                 registersViewModel.registers.value?.let {
                     if (it.isNotEmpty()) {
+                        if (it.size > 6) {
+                            registersBinding.rvRegisters.layoutManager =
+                                GridLayoutManager(requireContext(), 3)
+                        } else {
+                            registersBinding.rvRegisters.layoutManager =
+                                GridLayoutManager(requireContext(), 2)
+                        }
                         adapter.setData(it.toTypedArray())
                         registersBinding.registers.visibility = View.VISIBLE
                         registersBinding.tvEmptyView.visibility = View.GONE

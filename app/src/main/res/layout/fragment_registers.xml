@@ -29,22 +29,19 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_registers"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:layout_marginStart="@dimen/margin_large"
             android:layout_marginTop="@dimen/margin_small"
-            android:layout_marginEnd="@dimen/margin_large"
             android:clipToPadding="false"
             android:orientation="vertical"
             android:paddingBottom="@dimen/margin_large"
             android:scrollIndicators="none"
             android:visibility="visible"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_title"
             app:reverseLayout="false"
-            app:spanCount="2"
             tools:itemCount="20"
             tools:listitem="@layout/item_register" />
 

@@ -66,7 +66,7 @@
     <string name="title_select_suspend">Select register to suspend</string>
     <string name="action_yes">Yes</string>
     <string name="action_no">No</string>
-    <string name="confirm_suspend_register">Are you sure you want to suspend activity of register %d</string>
+    <string name="confirm_suspend_register">Please confirm suspending register %1$d, from store %2$d</string>
     <string name="key_filter_port">keyFilterPort</string>
     <string name="label_store">Store</string>
     <string name="label_register">Register</string>
@@ -85,4 +85,7 @@
     <string name="error_partial_download">Partially downloaded</string>
     <string name="title_receipt_incomplete_values">Store %1$d, Register %2$d</string>
     <string name="title_receipt_values">Store %1$d, Register %2$d, Txn %3$d</string>
+    <string name="login_value">Logged in as %s</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_suspend">Suspend</string>
 </resources>

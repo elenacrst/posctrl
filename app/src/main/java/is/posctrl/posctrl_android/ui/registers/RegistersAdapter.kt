@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 
 class RegistersAdapter(private val clickListener: RegisterCellListener) :
-        RecyclerView.Adapter<RegisterViewHolder>() {
+    RecyclerView.Adapter<RegisterViewHolder>() {
 
     private var data = ArrayList<RegisterResponse>()
 
@@ -19,7 +19,6 @@ class RegistersAdapter(private val clickListener: RegisterCellListener) :
         }
         notifyDataSetChanged()
     }
-
 
     override fun getItemCount(): Int {
         return data.size
@@ -43,7 +42,7 @@ open class RegisterCellListener(val clickListener: (register: RegisterResponse) 
 }
 
 class RegisterViewHolder(private val binding: ItemRegisterBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+    RecyclerView.ViewHolder(binding.root) {
 
     fun bind(clickListener: RegisterCellListener, item: RegisterResponse) {
         binding.clickListener = clickListener

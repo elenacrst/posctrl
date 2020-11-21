@@ -1,32 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
     </data>
 
-    <ScrollView
-        android:id="@+id/sv_base"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:keepScreenOn="true">
+        android:layout_height="match_parent">
 
-        <LinearLayout
-            android:id="@+id/ll_receipt"
+        <TextView
+            android:id="@+id/tv_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/margin_extra_small">
+            android:fontFamily="@font/courier_prime"
+            android:padding="@dimen/margin_extra_small"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Store XX, Register YY, Txn ZZ" />
 
-            <TextView
-                android:id="@+id/tv_title"
+        <ScrollView
+            android:id="@+id/sv_base"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:keepScreenOn="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_title">
+
+            <LinearLayout
+                android:id="@+id/ll_receipt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/courier_prime"
-                android:textColor="@color/black"
-                tools:text="Store: XX, Register: YY, Txn: ZZ" />
-        </LinearLayout>
-    </ScrollView>
+                android:orientation="vertical"
+                android:padding="@dimen/margin_extra_small"/>
+        </ScrollView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

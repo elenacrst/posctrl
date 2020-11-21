@@ -1,7 +1,6 @@
 package `is`.posctrl.posctrl_android.ui.receipt
 
 import `is`.posctrl.posctrl_android.BaseFragment
-import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
@@ -15,7 +14,9 @@ import `is`.posctrl.posctrl_android.databinding.FragmentReceiptBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
+import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsViewModel
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
+import `is`.posctrl.posctrl_android.util.extensions.showConfirmDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -30,7 +31,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.DataBindingUtil
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.navigation.fragment.findNavController
 import javax.inject.Inject
 
 
@@ -40,6 +40,9 @@ class ReceiptFragment : BaseFragment() {
 
     @Inject
     lateinit var receiptViewModel: ReceiptViewModel
+
+    @Inject
+    lateinit var appOptionsViewModel: AppOptionsViewModel
 
     @Inject
     lateinit var prefs: PreferencesSource
@@ -79,12 +82,18 @@ class ReceiptFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         receiptBinding.svBase.setOnSwipeListener(onSwipeLeft = {
-            findNavController().navigate(
-                NavigationMainContainerDirections.toAppOptionsFragment(
-                    register,
-                    store
+            requireContext().showConfirmDialog(
+                getString(
+                    R.string.confirm_suspend_register,
+                    register.registerNumber,
+                    store.storeNumber
                 )
-            )
+            ) {
+                appOptionsViewModel.suspendRegister(
+                    store.storeNumber?.toInt()
+                        ?: -1, register.registerNumber ?: -1
+                )
+            }
         })
         receiptBinding.tvTitle.text = getString(
             R.string.title_receipt_incomplete_values,
@@ -129,9 +138,7 @@ class ReceiptFragment : BaseFragment() {
             val lastTxn: Int = prefs.customPrefs()[getString(R.string.key_last_txn)] ?: -1
 
             if (lastTxn != it.clearTextFlag && lastTxn != -1) {
-                if (receiptBinding.llReceipt.childCount > 1) {
-                    receiptBinding.llReceipt.removeViews(1, receiptBinding.llReceipt.childCount - 1)
-                }
+                receiptBinding.llReceipt.removeAllViews()
                 receiptBinding.tvTitle.text = getString(
                     R.string.title_receipt_values,
                     store.storeNumber,

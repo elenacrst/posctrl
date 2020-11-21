@@ -1,6 +1,5 @@
 package `is`.posctrl.posctrl_android.ui
 
-import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.ResultWrapper
@@ -46,8 +45,8 @@ class MainActivity : BaseActivity() {
         mainBinding.lifecycleOwner = this
 
         LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                broadcastReceiver,
-                IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
+            broadcastReceiver,
+            IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
         )
 
         setupNavController()
@@ -57,18 +56,15 @@ class MainActivity : BaseActivity() {
 
     private fun setupNavController() {
         val navHostFragment =
-                supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
+            supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.storesFragment, R.id.registersFragment -> {
                     mainReceiverDisabled = false
+
                     if (filterItemMessages.isNotEmpty()) {
-                        navController.navigate(
-                                NavigationMainContainerDirections.toFilterFragment(
-                                        filterItemMessages[0]
-                                )
-                        )
+                        navigateToFilter(filterItemMessages[0])
                         filterItemMessages = filterItemMessages - filterItemMessages[0]
                     }
                 }
@@ -91,16 +87,16 @@ class MainActivity : BaseActivity() {
         } else {
             @Suppress("DEPRECATION")
             this.window.addFlags(
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
     }//todo move to base activity
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-                .activityComponent(ActivityModule(this))
+            .activityComponent(ActivityModule(this))
     }
 
     override fun showLoading() {
@@ -119,7 +115,7 @@ class MainActivity : BaseActivity() {
                     Timber.d("received filter 1")
                     if (bundle != null) {
                         val result =
-                                bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
+                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
                         handleFilter(result)
                     }
 
@@ -128,7 +124,7 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun unlockScreenNavigateToFilter(filter: FilteredInfoResponse) {
+    private fun navigateToFilter(filter: FilteredInfoResponse) {
         val intent = Intent(this, FilterActivity::class.java)
 
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -140,7 +136,7 @@ class MainActivity : BaseActivity() {
         result?.let {
             filterItemMessages = filterItemMessages + result
             filterItemMessages = filterItemMessages - filterItemMessages[0]
-            unlockScreenNavigateToFilter(it)
+            navigateToFilter(it)
         }
     }
 }
@@ -150,7 +146,7 @@ interface BaseFragmentHandler {
     fun hideLoading()
     fun handleFilter(result: FilteredInfoResponse?)
     fun createLoadingObserver(
-            successListener: (ResultWrapper<*>?) -> Unit = { },
-            errorListener: () -> Unit = { }
+        successListener: (ResultWrapper<*>?) -> Unit = { },
+        errorListener: () -> Unit = { }
     ): Observer<Event<ResultWrapper<*>>>
 }

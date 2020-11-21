@@ -14,7 +14,6 @@ import `is`.posctrl.posctrl_android.databinding.FragmentAppOptionsBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.ui.login.LoginViewModel
-import `is`.posctrl.posctrl_android.util.extensions.showConfirmDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -41,15 +40,15 @@ class AppOptionsFragment : BaseFragment() {
     lateinit var loginViewModel: LoginViewModel
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
         appOptionsBinding = DataBindingUtil
-                .inflate(inflater, R.layout.fragment_app_options, container, false)
+            .inflate(inflater, R.layout.fragment_app_options, container, false)
 
         val args = AppOptionsFragmentArgs.fromBundle(
-                requireArguments()
+            requireArguments()
         )
         register = args.register
         store = args.store
@@ -66,38 +65,35 @@ class AppOptionsFragment : BaseFragment() {
             //todo stop services here
         }
         appOptionsBinding.tvSuspend.setOnClickListener {
-            if (register == null) {
-                //show registers list first
-                findNavController().navigate(AppOptionsFragmentDirections.toRegisterSelectionFragment(store!!))
-            } else {
-                //show confirm dialog
-                requireContext().showConfirmDialog(getString(R.string.confirm_suspend_register, register!!.registerNumber
-                        ?: -1)) {
-                    appOptionsViewModel.suspendRegister(store!!.storeNumber?.toInt()
-                            ?: -1, register!!.registerNumber ?: -1)
-                }
-            }
+            findNavController().navigate(
+                AppOptionsFragmentDirections.toRegisterSelectionFragment(
+                    store!!
+                )
+            )
         }
         appOptionsBinding.store = store
+        appOptionsBinding.loggedInUser =
+            preferencesSource.customPrefs()[getString(R.string.key_logged_user)]
 
-        appOptionsBinding.swSound.isChecked = preferencesSource.customPrefs()[getString(R.string.key_notification_sound), true]
+        appOptionsBinding.swSound.isChecked =
+            preferencesSource.customPrefs()[getString(R.string.key_notification_sound), true]
                 ?: true
         appOptionsBinding.swSound.setOnCheckedChangeListener { _, isChecked ->
             preferencesSource.customPrefs()[getString(R.string.key_notification_sound)] = isChecked
         }
 
-        appOptionsBinding.swReceiveNotifications.isChecked = preferencesSource.customPrefs()[getString(R.string.key_receive_notifications), true]
+        appOptionsBinding.swReceiveNotifications.isChecked =
+            preferencesSource.customPrefs()[getString(R.string.key_receive_notifications), true]
                 ?: true
         appOptionsBinding.swReceiveNotifications.setOnCheckedChangeListener { _, isChecked ->
-            preferencesSource.customPrefs()[getString(R.string.key_receive_notifications)] = isChecked
+            preferencesSource.customPrefs()[getString(R.string.key_receive_notifications)] =
+                isChecked
             if (isChecked) {
                 loginViewModel.sendFilterProcessOpenMessage()
-
                 //start service
                 startFilterReceiverService()
             } else {
                 appOptionsViewModel.closeFilterNotifications()
-
                 //stop service
                 stopFilterReceiverService()
             }
@@ -105,7 +101,9 @@ class AppOptionsFragment : BaseFragment() {
     }
 
     override fun onAttach(context: Context) {
-        (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(ActivityModule(requireActivity())).inject(this)
+        (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
+            ActivityModule(requireActivity())
+        ).inject(this)
         super.onAttach(context)
     }
 

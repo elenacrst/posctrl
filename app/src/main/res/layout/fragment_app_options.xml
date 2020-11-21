@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto">
+<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -8,12 +9,29 @@
         <variable
             name="store"
             type="is.posctrl.posctrl_android.data.model.StoreResponse" />
+
+        <variable
+            name="loggedInUser"
+            type="String" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/cl_base"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/tv_logged_in"
+            style="@style/TitleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:paddingStart="@dimen/margin_small"
+            android:paddingEnd="@dimen/margin_small"
+            android:text="@{String.format(@string/login_value, loggedInUser)}"
+            android:textColor="@color/teal_700"
+            app:layout_constraintTop_toBottomOf="@id/tv_title"
+            tools:text="Logged in as aron" />
 
         <TextView
             android:id="@+id/tv_title"
@@ -23,11 +41,14 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:padding="@dimen/margin_small"
+            android:paddingStart="@dimen/margin_small"
+            android:paddingTop="@dimen/margin_small"
+            android:paddingEnd="@dimen/margin_small"
             android:text="@string/title_app_options"
             android:textColor="@color/teal_700"
             android:textStyle="bold"
             app:layout_constraintTop_toTopOf="parent" />
+
 
         <TextView
             android:id="@+id/tv_logout"
@@ -39,7 +60,7 @@
             android:focusable="true"
             android:padding="@dimen/margin_small"
             android:text="@string/action_logout"
-            app:layout_constraintTop_toBottomOf="@id/tv_title" />
+            app:layout_constraintTop_toBottomOf="@id/tv_logged_in" />
 
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/sw_sound"

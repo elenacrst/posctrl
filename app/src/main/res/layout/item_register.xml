@@ -18,19 +18,20 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardView"
         style="@style/Cell"
+        android:layout_width="100dp"
+        android:layout_height="72dp"
         android:layout_marginStart="@dimen/margin_extra_small"
         android:layout_marginTop="@dimen/margin_extra_small"
         android:layout_marginEnd="@dimen/margin_extra_small"
         android:onClick="@{() -> clickListener.onClick(item)}"
+        android:padding="0dp"
         app:cardBackgroundColor="@color/purple_700"
         app:cardPreventCornerOverlap="false">
 
         <RelativeLayout
-
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:padding="@dimen/margin_extra_small">
+            android:layout_gravity="center">
 
             <TextView
                 android:id="@+id/tv_register"
@@ -43,12 +44,10 @@
                 android:breakStrategy="simple"
                 android:gravity="center"
                 android:lines="1"
-                android:paddingTop="@dimen/margin_small"
-                android:paddingBottom="@dimen/margin_small"
                 android:text="@{Integer.toString(item.registerNumber)}"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
-                android:textSize="@dimen/text_size_large"
+                android:textSize="@dimen/text_size_extra_large"
                 tools:text="2" />
         </RelativeLayout>
     </com.google.android.material.card.MaterialCardView>

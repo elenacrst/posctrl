@@ -44,15 +44,14 @@ fun Context.showConfirmDialog(title: String, positiveCallback: () -> Unit) {
     )
     binding.tvTitle.text = title
 
-    val dialog = MaterialAlertDialogBuilder(this)
+    val dialog = MaterialAlertDialogBuilder(
+        this
+    )
         .setView(binding.root)
         .create()
     binding.btYes.setOnClickListener {
         dialog.dismiss()
         positiveCallback()
-    }
-    binding.btNo.setOnClickListener {
-        dialog.dismiss()
     }
     dialog.show()
 }

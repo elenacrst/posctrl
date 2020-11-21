@@ -44,25 +44,25 @@ class RegisterSelectionFragment : BaseFragment() {
     private lateinit var store: StoreResponse
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
 
         registersBinding = DataBindingUtil
-                .inflate(inflater, R.layout.fragment_registers, container, false)
+            .inflate(inflater, R.layout.fragment_registers, container, false)
 
         val args = RegistersFragmentArgs.fromBundle(
-                requireArguments()
+            requireArguments()
         )
         store = args.store
         registersViewModel.getRegisters(
-                prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
-                store.storeNumber!!.toInt(),
-                prefs.customPrefs()[getString(R.string.key_logged_user)] ?: ""
+            prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
+            prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
+            prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
+            prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
+            store.storeNumber!!.toInt(),
+            prefs.customPrefs()[getString(R.string.key_logged_user)] ?: ""
         )
         registersBinding.tvTitle.text = getString(R.string.title_select_suspend)
 
@@ -71,19 +71,19 @@ class RegisterSelectionFragment : BaseFragment() {
 
     private fun getRegistersObserver(): Observer<Event<ResultWrapper<*>>> {
         return createLoadingObserver(
-                successListener = {
-                    hideLoading()
-                    registersViewModel.registers.value?.let {
-                        if (it.isNotEmpty()) {
-                            adapter.setData(it.toTypedArray())
-                            registersBinding.registers.visibility = View.VISIBLE
-                            registersBinding.tvEmptyView.visibility = View.GONE
-                        } else {
-                            registersBinding.registers.visibility = View.GONE
-                            registersBinding.tvEmptyView.visibility = View.VISIBLE
-                        }
+            successListener = {
+                hideLoading()
+                registersViewModel.registers.value?.let {
+                    if (it.isNotEmpty()) {
+                        adapter.setData(it.toTypedArray())
+                        registersBinding.registers.visibility = View.VISIBLE
+                        registersBinding.tvEmptyView.visibility = View.GONE
+                    } else {
+                        registersBinding.registers.visibility = View.GONE
+                        registersBinding.tvEmptyView.visibility = View.VISIBLE
                     }
                 }
+            }
         )
     }
 
@@ -93,10 +93,17 @@ class RegisterSelectionFragment : BaseFragment() {
         registersViewModel.registersEvent.observe(viewLifecycleOwner, getRegistersObserver())
 
         adapter = RegistersAdapter(RegisterCellListener { register ->
-            requireContext().showConfirmDialog(getString(R.string.confirm_suspend_register, register.registerNumber
-                    ?: -1)) {
-                appOptionsViewModel.suspendRegister(store.storeNumber?.toInt()
-                        ?: -1, register.registerNumber ?: -1)
+            requireContext().showConfirmDialog(
+                getString(
+                    R.string.confirm_suspend_register,
+                    register.registerNumber,
+                    store.storeNumber
+                )
+            ) {
+                appOptionsViewModel.suspendRegister(
+                    store.storeNumber?.toInt()
+                        ?: -1, register.registerNumber ?: -1
+                )
                 findNavController().navigateUp()
             }
         })
@@ -105,12 +112,19 @@ class RegisterSelectionFragment : BaseFragment() {
         registersBinding.store = store
 
         registersBinding.clBase.setOnSwipeListener(onSwipeLeft = {
-            findNavController().navigate(NavigationMainContainerDirections.toAppOptionsFragment(null, store))
+            findNavController().navigate(
+                NavigationMainContainerDirections.toAppOptionsFragment(
+                    null,
+                    store
+                )
+            )
         })
     }
 
     override fun onAttach(context: Context) {
-        (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(ActivityModule(requireActivity())).inject(this)
+        (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
+            ActivityModule(requireActivity())
+        ).inject(this)
         super.onAttach(context)
     }
 }
