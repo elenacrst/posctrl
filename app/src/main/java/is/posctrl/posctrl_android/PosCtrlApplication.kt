@@ -26,7 +26,7 @@ class PosCtrlApplication : Application() {
                 .appModule(AppModule(this)).build()
         appComponent.inject(this)
 
-        Class.forName("net.sourceforge.jtds.jdbc.Driver")
+        Class.forName("net.sourceforge.jtds.jdbc.Driver").newInstance()
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())

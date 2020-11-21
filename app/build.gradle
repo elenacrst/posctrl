@@ -15,8 +15,8 @@ android {
         applicationId "is.posctrl.posctrl_android"
         minSdkVersion 24
         targetSdkVersion 30
-        versionCode 12
-        versionName "1.11"
+        versionCode 13
+        versionName "1.12"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -103,4 +103,6 @@ dependencies {
     kapt 'com.github.bumptech.glide:compiler:4.11.0'
 
     implementation("com.hierynomus:smbj:0.10.0")
+    implementation group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '8.2.2.jre8'
+
 }

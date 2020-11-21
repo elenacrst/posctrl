@@ -5,7 +5,6 @@ import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.model.BitmapsResult
 import `is`.posctrl.posctrl_android.data.model.FilterResults
 import `is`.posctrl.posctrl_android.util.Event
-import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -15,18 +14,18 @@ import javax.inject.Inject
 
 
 class FilterViewModel @Inject constructor(private val repository: PosCtrlRepository) :
-    ViewModel() {
+        ViewModel() {
 
     private var _bitmaps = MutableLiveData<BitmapsResult>()
     val bitmaps: LiveData<BitmapsResult>
         get() = _bitmaps
     private var _bitmapsEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-        MutableLiveData(Event(ResultWrapper.None))
+            MutableLiveData(Event(ResultWrapper.None))
     val bitmapsEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _bitmapsEvent
 
     private var _filterAnswerEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-        MutableLiveData(Event(ResultWrapper.None))
+            MutableLiveData(Event(ResultWrapper.None))
     val filterAnswerEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _filterAnswerEvent//todo message
 

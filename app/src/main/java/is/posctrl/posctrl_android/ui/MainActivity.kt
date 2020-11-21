@@ -3,11 +3,14 @@ package `is`.posctrl.posctrl_android.ui
 import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
+import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.databinding.ActivityMainBinding
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
+import `is`.posctrl.posctrl_android.ui.filter.FilterActivity
+import `is`.posctrl.posctrl_android.util.Event
 import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -17,16 +20,15 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
-import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import timber.log.Timber
-import java.util.ArrayList
 
 
-class MainActivity : AppCompatActivity(), BaseFragmentHandler {
+class MainActivity : BaseActivity() {
 
     private lateinit var mainBinding: ActivityMainBinding
     private lateinit var navController: NavController
@@ -44,29 +46,18 @@ class MainActivity : AppCompatActivity(), BaseFragmentHandler {
         mainBinding.lifecycleOwner = this
 
         LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-            broadcastReceiver,
-            IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
+                broadcastReceiver,
+                IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
         )
 
         setupNavController()
         initializeActivityComponent()
         activityComponent.inject(this)
-
-        if (intent.hasExtra(EXTRA_FILTER_LIST) && intent.hasExtra(FilterReceiverService.EXTRA_FILTER)) {
-            intent.getParcelableArrayListExtra<FilteredInfoResponse>(
-                EXTRA_FILTER_LIST
-            )?.let {
-                filterItemMessages = it
-            }
-            val filter =
-                intent.getParcelableExtra<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
-            handleFilter(filter)
-        }
     }
 
     private fun setupNavController() {
         val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
+                supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
@@ -74,9 +65,9 @@ class MainActivity : AppCompatActivity(), BaseFragmentHandler {
                     mainReceiverDisabled = false
                     if (filterItemMessages.isNotEmpty()) {
                         navController.navigate(
-                            NavigationMainContainerDirections.toFilterFragment(
-                                filterItemMessages[0]
-                            )
+                                NavigationMainContainerDirections.toFilterFragment(
+                                        filterItemMessages[0]
+                                )
                         )
                         filterItemMessages = filterItemMessages - filterItemMessages[0]
                     }
@@ -100,16 +91,16 @@ class MainActivity : AppCompatActivity(), BaseFragmentHandler {
         } else {
             @Suppress("DEPRECATION")
             this.window.addFlags(
-                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
-    }
+    }//todo move to base activity
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-            .activityComponent(ActivityModule(this))
+                .activityComponent(ActivityModule(this))
     }
 
     override fun showLoading() {
@@ -128,10 +119,8 @@ class MainActivity : AppCompatActivity(), BaseFragmentHandler {
                     Timber.d("received filter 1")
                     if (bundle != null) {
                         val result =
-                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
-                        result?.let {
-                            unlockScreenNavigateToFilter(it)
-                        }
+                                bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
+                        handleFilter(result)
                     }
 
                 }
@@ -140,28 +129,19 @@ class MainActivity : AppCompatActivity(), BaseFragmentHandler {
     }
 
     private fun unlockScreenNavigateToFilter(filter: FilteredInfoResponse) {
-        val intent = Intent(this, MainActivity::class.java)
+        val intent = Intent(this, FilterActivity::class.java)
 
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         intent.putExtra(FilterReceiverService.EXTRA_FILTER, filter)
-        intent.putParcelableArrayListExtra(EXTRA_FILTER_LIST, ArrayList(filterItemMessages))
         startActivity(intent)
     }
 
     override fun handleFilter(result: FilteredInfoResponse?) {
         result?.let {
             filterItemMessages = filterItemMessages + result
-            navController.navigate(
-                NavigationMainContainerDirections.toFilterFragment(
-                    filterItemMessages[0]
-                )
-            )
             filterItemMessages = filterItemMessages - filterItemMessages[0]
+            unlockScreenNavigateToFilter(it)
         }
-    }
-
-    companion object {
-        const val EXTRA_FILTER_LIST = "FILTER_LIST"
     }
 }
 
@@ -169,4 +149,8 @@ interface BaseFragmentHandler {
     fun showLoading()
     fun hideLoading()
     fun handleFilter(result: FilteredInfoResponse?)
+    fun createLoadingObserver(
+            successListener: (ResultWrapper<*>?) -> Unit = { },
+            errorListener: () -> Unit = { }
+    ): Observer<Event<ResultWrapper<*>>>
 }

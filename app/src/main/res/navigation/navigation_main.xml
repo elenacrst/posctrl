@@ -100,18 +100,4 @@
             android:name="store"
             app:argType="is.posctrl.posctrl_android.data.model.StoreResponse" />
     </fragment>
-    <fragment
-        android:id="@+id/filterFragment"
-        android:name="is.posctrl.posctrl_android.ui.filter.FilterFragment"
-        android:label="Filter"
-        tools:layout="@layout/fragment_filter">
-        <argument
-            android:name="filter"
-            android:defaultValue="@null"
-            app:argType="is.posctrl.posctrl_android.data.model.FilteredInfoResponse"
-            app:nullable="true" />
-    </fragment>
-    <action
-        android:id="@+id/toFilterFragment"
-        app:destination="@id/filterFragment" />
 </navigation>
