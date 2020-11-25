@@ -3,11 +3,9 @@ package `is`.posctrl.posctrl_android.service
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
-import `is`.posctrl.posctrl_android.data.PosCtrlRepository.Companion.DEFAULT_FILTER_PORT
+import `is`.posctrl.posctrl_android.data.PosCtrlRepository.Companion.DEFAULT_LOGIN_LISTENING_PORT
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
-import `is`.posctrl.posctrl_android.data.local.get
-import `is`.posctrl.posctrl_android.data.model.FilterResults
-import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
+import `is`.posctrl.posctrl_android.data.model.LoginResult
 import android.annotation.SuppressLint
 import android.app.*
 import android.app.Notification.PRIORITY_HIGH
@@ -30,7 +28,7 @@ import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 
-class FilterReceiverService : Service() {
+class LoginResultReceiverService : Service() {
 
     private var isServiceStarted = false
     private var wakeLock: PowerManager.WakeLock? = null
@@ -50,27 +48,24 @@ class FilterReceiverService : Service() {
     private var socket: DatagramSocket? = null
 
     @Suppress("BlockingMethodInNonBlockingContext")
-    private suspend fun receiveUdp() {
+    private fun receiveUdp() {
         var p: DatagramPacket
         try {
             while (true) {
-                val serverPort: Int =
-                        prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
-                                ?: DEFAULT_FILTER_PORT
+                val serverPort: Int = DEFAULT_LOGIN_LISTENING_PORT
                 if (socket == null) {
                     socket = DatagramSocket(serverPort)
                     socket!!.broadcast = false
                 }
                 socket!!.reuseAddress = true
                 socket!!.soTimeout = 60 * 1000
-                Timber.d("waiting to receive filter via udp on port $serverPort")
+                Timber.d("waiting to receive login result via udp on port $serverPort")
                 try {
-                    val message = ByteArray(512)
+                    val message = ByteArray(1024)
                     p = DatagramPacket(message, message.size)
                     socket!!.receive(p)
-                    val msg = String(message).substring(0, p.length)
-                    Timber.d("received filter $msg ${msg.length}")
-                    publishResults(msg)
+                    Timber.d("received login result ${String(message).substring(0, p.length)}")
+                    publishResults(String(message).substring(0, p.length))
                 } catch (e: SocketTimeoutException) {
                 } catch (e: IOException) {
                     e.printStackTrace()
@@ -81,10 +76,6 @@ class FilterReceiverService : Service() {
             e.printStackTrace()
         }
         closeSocket()
-    }
-
-    private suspend fun sendFilterResultReceived(itemLineId: Int) {
-        repository.sendFilterResultMessage(itemLineId, FilterResults.FILTER_INFO_RECEIVED)
     }
 
     private fun closeSocket() {
@@ -101,7 +92,7 @@ class FilterReceiverService : Service() {
 
     @Suppress("DEPRECATION")
     private fun createNotification(): Notification {
-        val notificationChannelId = "ENDLESS SERVICE CHANNEL"
+        val notificationChannelId = "LOGIN_SERVICE_CHANNEL"
 
         // depending on the Android API that we're dealing with we will have
         // to use a specific method to create the notification
@@ -110,10 +101,10 @@ class FilterReceiverService : Service() {
                     getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val channel = NotificationChannel(
                     notificationChannelId,
-                    "Filter notifications channel",
+                    "Login channel",
                     NotificationManager.IMPORTANCE_HIGH
             ).let {
-                it.description = "Filter notifications service channel"
+                it.description = "Login service channel"
                 it
             }
             notificationManager.createNotificationChannel(channel)
@@ -126,19 +117,18 @@ class FilterReceiverService : Service() {
                 ) else Notification.Builder(this)
 
         return builder
-                .setContentTitle("Listening for filter notifications")
+                .setContentTitle("Waiting for login")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setPriority(PRIORITY_HIGH) // for under android 26 compatibility
                 .build()
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
-    private suspend fun publishResults(output: String) {
-        val result = xmlMapper.readValue(output, FilteredInfoResponse::class.java)
-        sendFilterResultReceived(result.itemLineId)
-        Timber.d("parsed filter $result")
-        val intent = Intent(ACTION_RECEIVE_FILTER)
-        intent.putExtra(EXTRA_FILTER, result)
+    private fun publishResults(output: String) {
+        val result = xmlMapper.readValue(output, LoginResult::class.java)
+        Timber.d("parsed login result $result")
+        val intent = Intent(ACTION_RECEIVE_LOGIN)
+        intent.putExtra(EXTRA_LOGIN, result)
         LocalBroadcastManager.getInstance(appContext).sendBroadcast(intent)
     }
 
@@ -173,12 +163,6 @@ class FilterReceiverService : Service() {
         if (isServiceStarted) return
         Timber.d("Starting the foreground service task")
         isServiceStarted = true
-
-        //start sending alife filter process message
-        GlobalScope.launch {
-            repository.sendFilterProcessALife()
-        }
-
         GlobalScope.launch(Dispatchers.Default) {
             receiveUdp()
         }
@@ -202,11 +186,11 @@ class FilterReceiverService : Service() {
     }
 
     companion object {
-        const val ACTION_RECEIVE_FILTER = "is.posctrl.posctrl_android.RECEIVE_FILTER"
-        const val EXTRA_FILTER = "FILTER"
+        const val ACTION_RECEIVE_LOGIN = "is.posctrl.posctrl_android.RECEIVE_LOGIN"
+        const val EXTRA_LOGIN = "LOGIN"
 
         fun enqueueWork(context: Context) {
-            Intent(context, FilterReceiverService::class.java).also {
+            Intent(context, LoginResultReceiverService::class.java).also {
                 it.action = Actions.START.name
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     Timber.d("Starting the service in >=26 Mode")

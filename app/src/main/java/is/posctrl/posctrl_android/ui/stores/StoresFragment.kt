@@ -6,7 +6,7 @@ import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.set
-import `is`.posctrl.posctrl_android.data.model.StoreResponse
+import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.FragmentStoresBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
@@ -23,7 +23,7 @@ class StoresFragment : BaseFragment() {
 
     private lateinit var storesBinding: FragmentStoresBinding
     private lateinit var adapter: StoresAdapter
-    private var stores = arrayOf<StoreResponse>()
+    private var stores = arrayOf<StoreResult>()
 
     @Inject
     lateinit var prefs: PreferencesSource

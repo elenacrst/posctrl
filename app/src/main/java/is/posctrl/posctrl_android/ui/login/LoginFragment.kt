@@ -3,19 +3,26 @@ package `is`.posctrl.posctrl_android.ui.login
 import `is`.posctrl.posctrl_android.BaseFragment
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
-import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.local.set
+import `is`.posctrl.posctrl_android.data.model.LoginResult
+import `is`.posctrl.posctrl_android.data.model.RegisterResult
+import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.FragmentLoginBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
-import `is`.posctrl.posctrl_android.util.Event
+import `is`.posctrl.posctrl_android.service.LoginResultReceiverService
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import `is`.posctrl.posctrl_android.util.extensions.showInputDialog
 import `is`.posctrl.posctrl_android.util.extensions.toast
+import `is`.posctrl.posctrl_android.util.scheduleLogout
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -23,8 +30,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.Observer
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
+import timber.log.Timber
 import javax.inject.Inject
 
 class LoginFragment : BaseFragment() {
@@ -37,111 +45,90 @@ class LoginFragment : BaseFragment() {
     @Inject
     lateinit var prefs: PreferencesSource
 
-    private fun getLoginObserver(): Observer<Event<ResultWrapper<*>>> {
-        return createLoadingObserver(
-            successListener = {
-                loginViewModel.loginResponse.value?.let {
-                    prefs.customPrefs()[getString(R.string.key_server_path)] = it.serverPath
-                    prefs.customPrefs()[getString(R.string.key_server_port)] = it.serverPort
-                    prefs.customPrefs()[getString(R.string.key_filter_respond_time)] =
-                        it.filterRespondTime
-                    prefs.customPrefs()[getString(R.string.key_version)] = it.appVersion
-                    prefs.customPrefs()[getString(R.string.key_server_user)] = it.serverUser
-                    prefs.customPrefs()[getString(R.string.key_server_domain)] = it.serverUserDomain
-                    prefs.customPrefs()[getString(R.string.key_server_password)] =
-                        it.serverUserPassword
-                    prefs.customPrefs()[getString(R.string.key_server_snapshot_path)] =
-                        it.serverSnapshotPath
-                    prefs.customPrefs()[getString(R.string.key_logged_user)] =
-                        loginBinding.etUser.text.toString()
-                }
-                /*  loginViewModel.getStores(
-                      prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
-                      prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
-                      prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
-                      prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
-                      prefs.customPrefs()[getString(R.string.key_logged_user)] ?: ""
-                  )*/
-                loginViewModel.sendFilterProcessOpenMessage()
-                startFilterReceiverService()
+    private var loginBroadcastReceiver = createLoginReceiver()
 
-                loginViewModel.stores.value?.let {
-                    hideLoading()
-                    if (it.size > 1) {
-                        findNavController().navigate(LoginFragmentDirections.toStoresFragment(it.toTypedArray()))
-                    } else {
-                        prefs.customPrefs()[getString(R.string.key_store_number)] =
-                            it[0].storeNumber
-                        prefs.customPrefs()[getString(R.string.key_store_name)] = it[0].storeName
-                        requireContext().getString(
-                            R.string.message_store_value, it[0].storeNumber
-                                ?: -1, it[0].storeName
-                        )
-                        findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it[0]))
-                    }
+    private var loginCountdownTimer: CountDownTimer? = null
+
+    private fun createLoginReceiver(): BroadcastReceiver {
+        return object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                val bundle = intent.extras
+                Timber.d("received login")
+                if (bundle != null) {
+                    loginCountdownTimer?.cancel()
+                    val result =
+                            bundle.getParcelable<LoginResult>(LoginResultReceiverService.EXTRA_LOGIN)
+                    handleLogin(result)
                 }
             }
-        )
+        }
     }
 
-    private fun getStoresObserver(): Observer<Event<ResultWrapper<*>>> {
-        return createLoadingObserver(
-            successListener = {
-                if (!prefs.customPrefs()[getString(R.string.key_logged_user), ""].isNullOrEmpty() || loginViewModel.loginResponse.value != null) {
-                    hideLoading()
-                    loginViewModel.stores.value?.let {
-                        if (it.size > 1) {
-                            findNavController().navigate(LoginFragmentDirections.toStoresFragment(it.toTypedArray()))
-                        } else {
-                            prefs.customPrefs()[getString(R.string.key_store_number)] =
-                                it[0].storeNumber
-                            prefs.customPrefs()[getString(R.string.key_store_name)] =
-                                it[0].storeName
-                            requireContext().getString(
-                                R.string.message_store_value, it[0].storeNumber
-                                    ?: -1, it[0].storeName
-                            )
-                            findNavController().navigate(
-                                LoginFragmentDirections.toRegistersFragment(
-                                    it[0]
-                                )
-                            )
-                        }
-                    }
+    private fun handleLogin(result: LoginResult?) {//todo count down timer 5sec, otherwise connection message
+        hideLoading()
+        result?.let {
+            if (it.errorMessage.isNotEmpty()) {
+                requireContext().toast(it.errorMessage)
+            } else {
+                prefs.customPrefs()[requireActivity().getString(R.string.key_logged_user)] = loginBinding.etUser.text.toString()
+                prefs.customPrefs()[requireActivity().getString(R.string.key_logged_username)] = it.username
+                prefs.customPrefs()[requireActivity().getString(R.string.key_server_path)] = it.serverPath
+                prefs.customPrefs()[requireActivity().getString(R.string.key_server_port)] = it.serverPort
+                prefs.customPrefs()[requireActivity().getString(R.string.key_filter_respond_time)] = it.filterRespondTime
+                prefs.customPrefs()[requireActivity().getString(R.string.key_app_version)] = it.appVersion
+                prefs.customPrefs()[requireActivity().getString(R.string.key_server_user)] = it.serverUser
+                prefs.customPrefs()[requireActivity().getString(R.string.key_server_domain)] = it.serverUserDomain
+                prefs.customPrefs()[requireActivity().getString(R.string.key_server_password)] = it.serverPassword
+                prefs.customPrefs()[requireActivity().getString(R.string.key_server_snapshot_path)] = it.serverSnapshotPath
+
+                prefs.defaultPrefs()[requireActivity().getString(R.string.key_master_password)] = it.masterPassword
+
+                prefs.customPrefs()[requireActivity().getString(R.string.key_time_zone)] = it.timeZone
+                prefs.customPrefs()[requireActivity().getString(R.string.key_receive_notifications)] = it.isReceivingNotifications()
+                prefs.customPrefs()[requireActivity().getString(R.string.key_notification_sound)] = it.isNotificationSoundEnabled()
+                prefs.customPrefs()[requireActivity().getString(R.string.key_store_name)] = it.store.storeName
+                prefs.customPrefs()[requireActivity().getString(R.string.key_store_number)] = it.store.storeNumber
+                prefs.customPrefs()[requireActivity().getString(R.string.key_registers)] = it.store.registers.joinToString(",") { reg -> reg.registerNumber }
+
+                findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it.store))
+                if (it.isReceivingNotifications()) {
+                    startFilterReceiverService()
                 }
-            },
-            errorListener = {
-                loginBinding.clBase.visibility = View.VISIBLE
             }
-        )
+        } ?: kotlin.run {
+            requireContext().toast(requireActivity().getString(R.string.error_unknown))
+        }
+        stopLoginService()
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View? {
         loginBinding = DataBindingUtil
-            .inflate(inflater, R.layout.fragment_login, container, false)
+                .inflate(inflater, R.layout.fragment_login, container, false)
+        requireContext().scheduleLogout()
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
+                loginBroadcastReceiver,
+                IntentFilter(LoginResultReceiverService.ACTION_RECEIVE_LOGIN)
+        )
 
         return loginBinding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loginViewModel.loginEvent.observe(viewLifecycleOwner, getLoginObserver())
-        loginViewModel.storesEvent.observe(viewLifecycleOwner, getStoresObserver())
 
         loginBinding.clBase.setOnSwipeListener(onSwipeBottom = {
             requireContext().showInputDialog(R.string.insert_security_code) {
-                if (it == SECURITY_CODE) {
-                    findNavController().navigate(LoginFragmentDirections.toDatabaseSettingsFragment())
+                if (it == prefs.defaultPrefs()[requireActivity().getString(R.string.key_master_password), SECURITY_CODE] ?: SECURITY_CODE) {
+                    findNavController().navigate(LoginFragmentDirections.toSettingsFragment())
                 } else {
                     requireContext().toast(getString(R.string.error_wrong_code))
                 }
             }
         })
-
         loginBinding.btLogin.setOnClickListener {
             validateLogin()
         }
@@ -153,35 +140,47 @@ class LoginFragment : BaseFragment() {
             return@setOnEditorActionListener false
         }
         setupTextChangeListeners()
-        if (prefs.customPrefs()[getString(R.string.key_logged_user), ""].isNullOrEmpty()) {
-            loginBinding.clBase.visibility = View.VISIBLE
-        }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         checkAlreadyLoggedIn()
+        startLoginResultReceiverService()
+        loginCountdownTimer = object : CountDownTimer(LOGIN_MAX_WAIT_MILLIS, 1000) {
+            override fun onFinish() {
+                hideLoading()
+                requireContext().toast(requireActivity().getString(R.string.message_timed_out))
+            }
+
+            override fun onTick(millisUntilFinished: Long) {
+            }
+        }
     }
 
     private fun checkAlreadyLoggedIn() {
         if (prefs.customPrefs()[getString(R.string.key_logged_user), ""].isNullOrEmpty()) {
+            loginBinding.clBase.visibility = View.VISIBLE
             return
         }
-        loginViewModel.getStores(
-            prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
-            prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
-            prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
-            prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
-            prefs.customPrefs()[getString(R.string.key_logged_user)] ?: ""
-        )
         loginViewModel.sendFilterProcessOpenMessage()
-        startFilterReceiverService()
+        val receivesNotifications = prefs.customPrefs()[getString(R.string.key_receive_notifications), true]
+                ?: true
+        if (receivesNotifications) {
+            startFilterReceiverService()
+        }
+
+        val store = StoreResult(_storeName = prefs.customPrefs()[getString(R.string.key_store_name), ""]
+                ?: "",
+                _storeNumber = prefs.customPrefs()[getString(R.string.key_store_number), -1] ?: -1,
+                _registers = prefs.customPrefs()[getString(R.string.key_registers), ""]?.split(",")
+                        ?.map { RegisterResult(_registerNumber = it) } ?: listOf())
+
+        findNavController().navigate(LoginFragmentDirections.toRegistersFragment(store = store))
+    }
+
+    private fun startLoginResultReceiverService() {
+        LoginResultReceiverService.enqueueWork(requireContext())
     }
 
     private fun setupTextChangeListeners() {
         loginBinding.etUser.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -194,7 +193,6 @@ class LoginFragment : BaseFragment() {
         })
         loginBinding.etPassword.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -218,33 +216,40 @@ class LoginFragment : BaseFragment() {
             loginBinding.tilPassword.error = getString(R.string.error_empty_password)
         }
         if (valid) {
+            showLoading()
             loginViewModel.login(
-                prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
-                loginBinding.etUser.text!!.toString(),
-                loginBinding.etPassword.text!!.toString()
+                    loginBinding.etUser.text!!.toString(),
+                    loginBinding.etPassword.text!!.toString()
             )
-            loginViewModel.getStores(
-                prefs.defaultPrefs()[getString(R.string.key_database_server)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_port)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_user)] ?: "",
-                prefs.defaultPrefs()[getString(R.string.key_database_password)] ?: "",
-                loginBinding.etUser.text!!.toString()
-            )
+            loginCountdownTimer?.start()
         }
     }
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
-            ActivityModule(requireActivity())
+                ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
     }
 
     private fun startFilterReceiverService() {
         FilterReceiverService.enqueueWork(requireContext())
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        stopLoginService()
+        loginCountdownTimer?.cancel()
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(loginBroadcastReceiver)
+    }
+
+    private fun stopLoginService() {
+        val intent = Intent(requireContext(), LoginResultReceiverService::class.java)
+        requireContext().stopService(intent)
+    }
+
+    companion object {
+        const val LOGIN_MAX_WAIT_MILLIS = 5000L
     }
 }
 

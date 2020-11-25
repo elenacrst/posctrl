@@ -11,7 +11,7 @@
 
         <variable
             name="item"
-            type="is.posctrl.posctrl_android.data.model.StoreResponse" />
+            type="is.posctrl.posctrl_android.data.model.StoreResult" />
 
     </data>
 

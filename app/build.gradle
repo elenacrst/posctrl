@@ -66,8 +66,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.preference:preference:1.1.1'
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation files('libs/jtds-1.2.7.jar')
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
     testImplementation 'junit:junit:4.13.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
@@ -103,6 +101,6 @@ dependencies {
     kapt 'com.github.bumptech.glide:compiler:4.11.0'
 
     implementation("com.hierynomus:smbj:0.10.0")
-    implementation group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '8.2.2.jre8'
 
+    implementation 'androidx.work:work-runtime-ktx:2.4.0'
 }

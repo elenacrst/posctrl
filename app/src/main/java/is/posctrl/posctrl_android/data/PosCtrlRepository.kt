@@ -31,7 +31,6 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.sql.Date
-import java.sql.DriverManager
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -41,140 +40,6 @@ class PosCtrlRepository @Inject constructor(
         private val appContext: Context,
         private val xmlMapper: XmlMapper
 ) {
-    /*
-    server: String = "192.168.0.110", port: String = "1433",databaseUser: String = "sa", databasePassword: String = "PosCtrl.1234",
-        loginUser: String = "aron", loginPassword: String = "foot.1234"
-     */
-    @Throws(Exception::class)
-    suspend fun login(
-            server: String, port: String, databaseUser: String, databasePassword: String,
-            loginUser: String, loginPassword: String
-    ): ResultWrapper<*> {
-        var response: LoginResponse? = null
-        val connectionURL =
-                "jdbc:jtds:sqlserver://$server:$port/$DATABASE_NAME;instance=POSCTRL;user=$databaseUser;password=$databasePassword;sendStringParametersAsUnicode=false"
-        Timber.e("connection url is $connectionURL")
-        withContext(Dispatchers.Default) {
-            try {
-                val connection = DriverManager.getConnection(connectionURL)
-                val statement =
-                        connection.prepareCall("{call dbo.[Settings.usp_UserLogin] \'$loginUser\', \'$loginPassword\'}")//called the procedure
-                val result = statement.executeQuery()
-                while (result.next()) {
-                    response = LoginResponse(
-                            result.getString(COL_ERROR_MESSAGE),
-                            result.getString(COL_SERVER_PATH),
-                            result.getString(COL_SERVER_PORT),
-                            result.getInt(COL_FILTER_RESPOND_TIME),
-                            result.getString(COL_VERSION),
-                            result.getString(COL_SERVER_USER),
-                            result.getString(COL_SERVER_USER_DOMAIN),
-                            result.getString(COL_SERVER_USER_PASSWORD),
-                            result.getString(COL_SERVER_SNAPSHOT_PATH)
-                    )
-                    Timber.e(
-                            "login result error message=${result.getString(COL_ERROR_MESSAGE)} , server path=${
-                                result.getString(
-                                        COL_SERVER_PATH
-                                )
-                            }"
-                    )
-                }
-                connection.close()
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                throw NoNetworkConnectionException()
-            }
-        }
-
-        return if (response?.errorMessage == null) {
-            ResultWrapper.Success(response)
-        } else {
-            ResultWrapper.Error(message = response?.errorMessage)
-        }
-    }
-
-    @Throws(Exception::class)
-    suspend fun getStores(
-            server: String,
-            port: String,
-            databaseUser: String,
-            databasePassword: String,
-            loggedInUser: String
-    ): ResultWrapper<*> {
-        val storesList = arrayListOf<StoreResponse>()
-        withContext(Dispatchers.Default) {
-            try {
-                val connectionURL =
-                        "jdbc:jtds:sqlserver://$server:$port/$DATABASE_NAME;instance=POSCTRL;user=$databaseUser;password=$databasePassword;sendStringParametersAsUnicode=false"
-                Timber.e("connection url is $connectionURL, user $loggedInUser")
-                val connection = DriverManager.getConnection(connectionURL)
-                val statement =
-                        connection.prepareCall("{call dbo.[Settings.usp_UsersStores] \'$loggedInUser\'}")//called the procedure
-                val result = statement.executeQuery()
-                while (result.next()) {
-                    val response = StoreResponse(
-                            result.getLong(COL_STORE_NUMBER),
-                            result.getString(COL_STORE_NAME)
-                    )
-                    Timber.e("get stores result item $response")
-                    storesList.add(response)
-                }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                throw NoNetworkConnectionException()
-            }
-        }
-
-        return if (storesList.isNotEmpty()) {
-            ResultWrapper.Success(storesList)
-        } else {
-            ResultWrapper.Error(message = appContext.applicationContext.getString(R.string.error_no_stores))
-        }
-    }
-
-    @Throws(Exception::class)
-    suspend fun getRegisters(
-            server: String,
-            port: String,
-            databaseUser: String,
-            databasePassword: String,
-            storeNumber: Int,
-            loggedInUser: String
-    ): ResultWrapper<*> {
-        val registers = arrayListOf<RegisterResponse>()
-        withContext(Dispatchers.Default) {
-            try {
-                val connectionURL =
-                        "jdbc:jtds:sqlserver://$server:$port/$DATABASE_NAME;instance=POSCTRL;user=$databaseUser;password=$databasePassword;sendStringParametersAsUnicode=false;"
-                Timber.e("connection url is $connectionURL")
-                val connection = DriverManager.getConnection(connectionURL)
-                val statement =
-                        connection.prepareCall("{call [PosCtrl-SelfService].dbo.[Settings.usp_UsersStoreRegisters] $storeNumber, \'$loggedInUser\'}")//called the procedure
-                val result = statement.executeQuery()
-                while (result.next()) {
-                    val response = RegisterResponse(
-                            result.getInt(COL_REGISTER_NUMBER)
-                    )
-                    Timber.e("get registers result item $response")
-                    registers.add(response)
-                }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                throw NoNetworkConnectionException()
-            }
-        }
-
-        return if (registers.isNotEmpty()) {
-            ResultWrapper.Success(registers)
-        } else {
-            ResultWrapper.Error(message = appContext.applicationContext.getString(R.string.error_no_registers))
-        }
-    }
-
     @Suppress("BlockingMethodInNonBlockingContext")
     @Throws(Exception::class)
     suspend fun sendReceiptInfoMessage(
@@ -194,7 +59,7 @@ class PosCtrlRepository @Inject constructor(
                         action = action.actionValue,
                         storeNumber = storeNumber,
                         registerNumber = registerNumber,
-                        hostName = getDeviceIdentifier(),//+build product if required
+                        hostName = getDeviceIdentifier(),
                         listeningPort = (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
                                 ?: DEFAULT_LISTENING_PORT).toInt(),
                         time = getLocalTimeString()
@@ -203,18 +68,18 @@ class PosCtrlRepository @Inject constructor(
                 val xmlMessage = xmlMapper.writeValueAsString(receiptInfo)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
-                val port: String =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port)]
+                val port =
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                                 ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port.toInt()))
+                sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
                         bytes,
                         bytes.size,
                         InetAddress.getByName(broadcastIp),
-                        port.toInt()
+                        port
                 )
                 if (action == ReceiptAction.CLOSE) {
                     prefs.customPrefs()[appContext.getString(
@@ -223,6 +88,61 @@ class PosCtrlRepository @Inject constructor(
                             registerNumber
                     )] = false
                 }
+                sendSocket.send(sendPacket)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return@withContext ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
+            }
+        }
+        return ResultWrapper.Success("")
+    }
+
+    private fun getAppVersion(): String {
+        return try {
+            val pInfo: PackageInfo =
+                    appContext.packageManager.getPackageInfo(appContext.packageName, 0)
+            pInfo.versionName
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+            "unknown"
+        }
+    }
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    @Throws(Exception::class)
+    suspend fun sendLoginMessage(
+            userId: String,
+            password: String
+    ): ResultWrapper<*> {
+        withContext(Dispatchers.Default) {
+            try {
+                val loginBody = LoginBody(
+                        appName = appContext.getString(R.string.app_name),
+                        userId = userId,
+                        hostName = getDeviceIdentifier(),
+                        listeningPort = DEFAULT_LOGIN_LISTENING_PORT,//todo check if preference required/ settings item
+                        time = getLocalTimeString(),
+                        appVersion = getAppVersion(),
+                        password = password
+                )
+                Timber.d("login body $loginBody")
+                val xmlMessage = xmlMapper.writeValueAsString(loginBody)
+                val bytes = xmlMessage.toByteArray()
+                val ip = prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), "255.255.255.255"]
+                        ?: "255.255.255.255"
+                val port =
+                        prefs.customPrefs()[appContext.getString(R.string.key_login_port), DEFAULT_LOGIN_SEND_PORT]
+                                ?: DEFAULT_LOGIN_SEND_PORT
+                val sendSocket = DatagramSocket(null)
+                sendSocket.reuseAddress = true
+                sendSocket.bind(InetSocketAddress(port))
+                sendSocket.broadcast = true
+                val sendPacket = DatagramPacket(
+                        bytes,
+                        bytes.size,
+                        InetAddress.getByName(ip),
+                        port
+                )
                 sendSocket.send(sendPacket)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -257,17 +177,17 @@ class PosCtrlRepository @Inject constructor(
                 val xmlMessage = xmlMapper.writeValueAsString(receiptInfo)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
-                val port: String =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port)]
+                val port =
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                                 ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port.toInt()))
+                sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
                         bytes,
                         bytes.size, InetAddress.getByName(broadcastIp),
-                        port.toInt()
+                        port
                 )
                 prefs.customPrefs()[appContext.getString(
                         R.string.key_send_alife,
@@ -309,17 +229,17 @@ class PosCtrlRepository @Inject constructor(
                 val xmlMessage = xmlMapper.writeValueAsString(registerSuspendedBody)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
-                val port: String =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port)]
+                val port =
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                                 ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port.toInt()))
+                sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
                         bytes,
                         bytes.size, InetAddress.getByName(broadcastIp),
-                        port.toInt()
+                        port
                 )
                 sendSocket.send(sendPacket)
             } catch (e: Exception) {
@@ -332,14 +252,7 @@ class PosCtrlRepository @Inject constructor(
     suspend fun sendFilterProcessMessage(action: FilterAction) {//for open & close, not for a life
         withContext(Dispatchers.Default) {
             try {
-                val appVersion = try {
-                    val pInfo: PackageInfo =
-                            appContext.packageManager.getPackageInfo(appContext.packageName, 0)
-                    pInfo.versionName
-                } catch (e: PackageManager.NameNotFoundException) {
-                    e.printStackTrace()
-                    "unknown"
-                }
+                val appVersion = getAppVersion()
                 val filterProcessBody = FilterProcessBody(
                         appName = appContext.getString(R.string.app_name),
                         appVersion = appVersion,
@@ -355,17 +268,17 @@ class PosCtrlRepository @Inject constructor(
                 val xmlMessage = xmlMapper.writeValueAsString(filterProcessBody)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
-                val port: String =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port)]
+                val port =
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                                 ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port.toInt()))
+                sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
                         bytes,
                         bytes.size, InetAddress.getByName(broadcastIp),
-                        port.toInt()
+                        port
                 )
                 if (action == FilterAction.CLOSE) {
                     prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)] =
@@ -383,14 +296,7 @@ class PosCtrlRepository @Inject constructor(
     suspend fun sendFilterProcessALife() {
         withContext(Dispatchers.Default) {
             try {
-                val appVersion = try {
-                    val pInfo: PackageInfo =
-                            appContext.packageManager.getPackageInfo(appContext.packageName, 0)
-                    pInfo.versionName
-                } catch (e: PackageManager.NameNotFoundException) {
-                    e.printStackTrace()
-                    "unknown"
-                }
+                val appVersion = getAppVersion()
                 val filterProcessBody = FilterProcessBody(
                         appName = appContext.getString(R.string.app_name),
                         appVersion = appVersion,
@@ -406,17 +312,17 @@ class PosCtrlRepository @Inject constructor(
                 val xmlMessage = xmlMapper.writeValueAsString(filterProcessBody)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
-                val port: String =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port)]
+                val port =
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                                 ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port.toInt()))
+                sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
                         bytes,
                         bytes.size, InetAddress.getByName(broadcastIp),
-                        port.toInt()
+                        port
                 )
                 prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)] = true
                 while (true) {
@@ -437,10 +343,12 @@ class PosCtrlRepository @Inject constructor(
 
     @SuppressLint("HardwareIds")
     private fun getDeviceIdentifier(): String {
-        return Settings.Secure.getString(
-                appContext.contentResolver,
-                Settings.Secure.ANDROID_ID
-        )
+        return "android-${
+            Settings.Secure.getString(
+                    appContext.contentResolver,
+                    Settings.Secure.ANDROID_ID
+            )
+        }"
     }
 
     private fun getLocalTimeString(): String {
@@ -463,16 +371,10 @@ class PosCtrlRepository @Inject constructor(
                 val server = paths[0]
                 val sharedFolder = paths[1]
                 val user = prefs.customPrefs()[appContext.getString(R.string.key_server_user), ""]
-                val password =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_password), ""]
-
+                val password = prefs.customPrefs()[appContext.getString(R.string.key_server_password), ""]
                 client.connect(server)
                         .use { connection ->
-                            val ac = AuthenticationContext(
-                                    user,
-                                    password?.toCharArray(),
-                                    ""
-                            )
+                            val ac = AuthenticationContext(user, password?.toCharArray(), "")
                             val session: Session = connection.authenticate(ac)
                             fileNames.forEach { fullAddress ->
                                 try {
@@ -480,11 +382,7 @@ class PosCtrlRepository @Inject constructor(
                                     (session.connectShare(sharedFolder) as? DiskShare?)?.let { share ->
                                         val s: MutableSet<SMB2ShareAccess> = HashSet()
                                         s.add(SMB2ShareAccess.FILE_SHARE_READ)
-                                        val file = share.openFile(
-                                                fileName,
-                                                EnumSet.of(AccessMask.GENERIC_READ), null, s,
-                                                SMB2CreateDisposition.FILE_OPEN, null
-                                        )
+                                        val file = share.openFile(fileName, EnumSet.of(AccessMask.GENERIC_READ), null, s, SMB2CreateDisposition.FILE_OPEN, null)
                                         val inputStream = file.inputStream
                                         val bitmap = BitmapFactory.decodeStream(inputStream)
                                         bitmap?.let {
@@ -500,9 +398,7 @@ class PosCtrlRepository @Inject constructor(
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            val message =
-                    appContext.applicationContext.getString(R.string.error_no_snapshots)
-
+            val message = appContext.applicationContext.getString(R.string.error_no_snapshots)
             return ResultWrapper.Error(message = message)
         }
         if (errors > 0) {
@@ -513,7 +409,6 @@ class PosCtrlRepository @Inject constructor(
                 ResultWrapper.Error(message = message)
             }
         }
-
         return ResultWrapper.Success(BitmapsResult(bitmaps, 0))
     }
 
@@ -533,17 +428,17 @@ class PosCtrlRepository @Inject constructor(
                 val xmlMessage = xmlMapper.writeValueAsString(filterResult)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
-                val port: String =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port)]
+                val port =
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                                 ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port.toInt()))
+                sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
                         bytes,
                         bytes.size, InetAddress.getByName(broadcastIp),
-                        port.toInt()
+                        port
                 )
                 sendSocket.send(sendPacket)
             } catch (e: Exception) {
@@ -555,21 +450,10 @@ class PosCtrlRepository @Inject constructor(
     companion object {
         const val ALIFE_DELAY_SECONDS = 60
         const val ALIFE_FILTER_DELAY_SECONDS = 60
-        const val DATABASE_NAME = "PosCtrl-SelfService"
-        const val COL_ERROR_MESSAGE = "ErrorMessage"
-        const val COL_SERVER_PATH = "ServerPath"
-        const val COL_SERVER_PORT = "ServerPort"
-        const val COL_FILTER_RESPOND_TIME = "FilterRespondTime"
-        const val COL_VERSION = "SmartWatchVersion"
-        const val COL_SERVER_USER = "ServerUser"//for shared media folder
-        const val COL_SERVER_USER_DOMAIN = "ServerUserDomain"
-        const val COL_SERVER_USER_PASSWORD = "ServerUserPassword"
-        const val COL_SERVER_SNAPSHOT_PATH = "SnapShotPath"
-        const val COL_STORE_NUMBER = "StoreNumber"
-        const val COL_STORE_NAME = "StoreName"
-        const val COL_REGISTER_NUMBER = "RegisterNumber"
-        const val DEFAULT_SERVER_PORT = "11970"
+        const val DEFAULT_SERVER_PORT = 11970
         const val DEFAULT_LISTENING_PORT = "20000"
+        const val DEFAULT_LOGIN_LISTENING_PORT = 29998
+        const val DEFAULT_LOGIN_SEND_PORT = 11970
         const val DEFAULT_FILTER_PORT = 29999
     }
 }

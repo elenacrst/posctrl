@@ -7,12 +7,11 @@ import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.clear
 import `is`.posctrl.posctrl_android.data.local.get
-import `is`.posctrl.posctrl_android.data.local.set
-import `is`.posctrl.posctrl_android.data.model.RegisterResponse
-import `is`.posctrl.posctrl_android.data.model.StoreResponse
+import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.FragmentAppOptionsBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
+import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.ui.login.LoginViewModel
 import android.content.Context
 import android.content.Intent
@@ -27,8 +26,7 @@ import javax.inject.Inject
 class AppOptionsFragment : BaseFragment() {
 
     private lateinit var appOptionsBinding: FragmentAppOptionsBinding
-    private var register: RegisterResponse? = null
-    private var store: StoreResponse? = null
+    private var store: StoreResult? = null
 
     @Inject
     lateinit var preferencesSource: PreferencesSource
@@ -40,17 +38,16 @@ class AppOptionsFragment : BaseFragment() {
     lateinit var loginViewModel: LoginViewModel
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View? {
         appOptionsBinding = DataBindingUtil
-            .inflate(inflater, R.layout.fragment_app_options, container, false)
+                .inflate(inflater, R.layout.fragment_app_options, container, false)
 
         val args = AppOptionsFragmentArgs.fromBundle(
-            requireArguments()
+                requireArguments()
         )
-        register = args.register
         store = args.store
 
         return appOptionsBinding.root
@@ -62,53 +59,31 @@ class AppOptionsFragment : BaseFragment() {
         appOptionsBinding.tvLogout.setOnClickListener {
             preferencesSource.customPrefs().clear()
             findNavController().navigate(NavigationMainContainerDirections.toLoginFragment())
-            //todo stop services here
+            stopFilterReceiverService()
+            stopReceiptReceiverService()
         }
         appOptionsBinding.tvSuspend.setOnClickListener {
             findNavController().navigate(
-                AppOptionsFragmentDirections.toRegisterSelectionFragment(
-                    store!!
-                )
+                    AppOptionsFragmentDirections.toRegisterSelectionFragment(
+                            store!!
+                    )
             )
         }
         appOptionsBinding.store = store
         appOptionsBinding.loggedInUser =
-            preferencesSource.customPrefs()[getString(R.string.key_logged_user)]
+                preferencesSource.customPrefs()[getString(R.string.key_logged_username)]
+    }
 
-        appOptionsBinding.swSound.isChecked =
-            preferencesSource.customPrefs()[getString(R.string.key_notification_sound), true]
-                ?: true
-        appOptionsBinding.swSound.setOnCheckedChangeListener { _, isChecked ->
-            preferencesSource.customPrefs()[getString(R.string.key_notification_sound)] = isChecked
-        }
-
-        appOptionsBinding.swReceiveNotifications.isChecked =
-            preferencesSource.customPrefs()[getString(R.string.key_receive_notifications), true]
-                ?: true
-        appOptionsBinding.swReceiveNotifications.setOnCheckedChangeListener { _, isChecked ->
-            preferencesSource.customPrefs()[getString(R.string.key_receive_notifications)] =
-                isChecked
-            if (isChecked) {
-                loginViewModel.sendFilterProcessOpenMessage()
-                //start service
-                startFilterReceiverService()
-            } else {
-                appOptionsViewModel.closeFilterNotifications()
-                //stop service
-                stopFilterReceiverService()
-            }
-        }
+    private fun stopReceiptReceiverService() {
+        val intent = Intent(requireContext(), ReceiptReceiverService::class.java)
+        requireActivity().stopService(intent)
     }
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
-            ActivityModule(requireActivity())
+                ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
-    }
-
-    private fun startFilterReceiverService() {
-        FilterReceiverService.enqueueWork(requireContext())
     }
 
     private fun stopFilterReceiverService() {

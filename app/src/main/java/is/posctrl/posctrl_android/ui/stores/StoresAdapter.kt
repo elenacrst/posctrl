@@ -1,6 +1,6 @@
 package `is`.posctrl.posctrl_android.ui.stores
 
-import `is`.posctrl.posctrl_android.data.model.StoreResponse
+import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.ItemStoreBinding
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -10,9 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 class StoresAdapter(private val clickListener: StoreCellListener) :
         RecyclerView.Adapter<StoreCellViewHolder>() {
 
-    private var data = ArrayList<StoreResponse>()
+    private var data = ArrayList<StoreResult>()
 
-    fun setData(data: Array<StoreResponse>?) {
+    fun setData(data: Array<StoreResult>?) {
         this.data = ArrayList()
         if (data != null) {
             this.data.addAll(data)
@@ -38,14 +38,14 @@ class StoresAdapter(private val clickListener: StoreCellListener) :
     }
 }
 
-open class StoreCellListener(val clickListener: (store: StoreResponse) -> Unit) {
-    fun onClick(store: StoreResponse) = clickListener(store)
+open class StoreCellListener(val clickListener: (store: StoreResult) -> Unit) {
+    fun onClick(store: StoreResult) = clickListener(store)
 }
 
 class StoreCellViewHolder(private val binding: ItemStoreBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(clickListener: StoreCellListener, item: StoreResponse) {
+    fun bind(clickListener: StoreCellListener, item: StoreResult) {
         binding.clickListener = clickListener
         binding.item = item
     }

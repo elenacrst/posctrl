@@ -9,31 +9,18 @@ import kotlinx.android.parcel.Parcelize
 @JacksonXmlRootElement(localName = "FilteredInfo")
 @Parcelize
 data class FilteredInfoResponse(
-    private var _storeNumber: Int = -1,
-    private var _registerNumber: Int = -1,
-    private var _itemLineId: Int = -1,
-    private var _storeName: String = "",
-    private var _itemId: Int = -1,//if 1, bold text
-    private var _itemName: String = "",//if 1, italic text
-    private var _quantity: Double = 0.0,
-    private var _totalPrice: Double = 0.0,
-    private var _filterName: String = "",
-    private var _filterQuestion: String = "",
-    private var _pictures: List<Picture> = listOf()
+        private var _storeNumber: Int = -1,
+        private var _registerNumber: Int = -1,
+        private var _itemLineId: Int = -1,
+        private var _storeName: String = "",
+        private var _itemId: Int = -1,//if 1, bold text
+        private var _itemName: String = "",//if 1, italic text
+        private var _quantity: Double = 0.0,
+        private var _totalPrice: Double = 0.0,
+        private var _filterName: String = "",
+        private var _filterQuestion: String = "",
+        private var _pictures: List<Picture> = listOf()
 ) : Parcelable {
-    @get:JacksonXmlProperty(localName = "StoreNumber")
-    var storeNumber: Int
-        set(value) {
-            _storeNumber = value
-        }
-        get() = _storeNumber
-
-    @get:JacksonXmlProperty(localName = "RegisterNumber")
-    var registerNumber: Int
-        set(value) {
-            _registerNumber = value
-        }
-        get() = _registerNumber
 
     @get:JacksonXmlProperty(localName = "ItemLineID")
     var itemLineId: Int
@@ -42,12 +29,26 @@ data class FilteredInfoResponse(
         }
         get() = _itemLineId
 
+    @get:JacksonXmlProperty(localName = "StoreNumber")
+    var storeNumber: Int
+        set(value) {
+            _storeNumber = value
+        }
+        get() = _storeNumber
+
     @get:JacksonXmlProperty(localName = "StoreName")
     var storeName: String
         set(value) {
             _storeName = value
         }
         get() = _storeName
+
+    @get:JacksonXmlProperty(localName = "RegisterNumber")
+    var registerNumber: Int
+        set(value) {
+            _registerNumber = value
+        }
+        get() = _registerNumber
 
     @get:JacksonXmlProperty(localName = "ItemID")
     var itemId: Int

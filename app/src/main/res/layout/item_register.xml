@@ -11,7 +11,7 @@
 
         <variable
             name="item"
-            type="is.posctrl.posctrl_android.data.model.RegisterResponse" />
+            type="is.posctrl.posctrl_android.data.model.RegisterResult" />
 
     </data>
 
@@ -44,7 +44,7 @@
                 android:breakStrategy="simple"
                 android:gravity="center"
                 android:lines="1"
-                android:text="@{Integer.toString(item.registerNumber)}"
+                android:text="@{item.registerNumber}"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
                 android:textSize="@dimen/text_size_extra_large"

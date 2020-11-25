@@ -8,7 +8,7 @@
 
         <variable
             name="store"
-            type="is.posctrl.posctrl_android.data.model.StoreResponse" />
+            type="is.posctrl.posctrl_android.data.model.StoreResult" />
 
         <variable
             name="loggedInUser"
@@ -62,30 +62,6 @@
             android:text="@string/action_logout"
             app:layout_constraintTop_toBottomOf="@id/tv_logged_in" />
 
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/sw_sound"
-            style="@style/TitleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            android:enabled="true"
-            android:focusable="true"
-            android:padding="@dimen/margin_small"
-            android:text="@string/title_notification_sound"
-            app:layout_constraintTop_toBottomOf="@id/sw_receive_notifications" />
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/sw_receive_notifications"
-            style="@style/TitleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            android:enabled="true"
-            android:focusable="true"
-            android:padding="@dimen/margin_small"
-            android:text="@string/title_receive_notifications"
-            app:layout_constraintTop_toBottomOf="@id/tv_logout" />
-
         <TextView
             android:id="@+id/tv_suspend"
             style="@style/TitleText"
@@ -97,6 +73,6 @@
             android:padding="@dimen/margin_small"
             android:text="@string/action_suspend_register"
             android:visibility="@{store==null?View.GONE:View.VISIBLE}"
-            app:layout_constraintTop_toBottomOf="@+id/sw_sound" />
+            app:layout_constraintTop_toBottomOf="@+id/tv_logout" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -1,6 +1,6 @@
 package `is`.posctrl.posctrl_android.ui.registers
 
-import `is`.posctrl.posctrl_android.data.model.RegisterResponse
+import `is`.posctrl.posctrl_android.data.model.RegisterResult
 import `is`.posctrl.posctrl_android.databinding.ItemRegisterBinding
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -10,9 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 class RegistersAdapter(private val clickListener: RegisterCellListener) :
     RecyclerView.Adapter<RegisterViewHolder>() {
 
-    private var data = ArrayList<RegisterResponse>()
+    private var data = ArrayList<RegisterResult>()
 
-    fun setData(data: Array<RegisterResponse>?) {
+    fun setData(data: Array<RegisterResult>?) {
         this.data = ArrayList()
         if (data != null) {
             this.data.addAll(data)
@@ -37,14 +37,14 @@ class RegistersAdapter(private val clickListener: RegisterCellListener) :
     }
 }
 
-open class RegisterCellListener(val clickListener: (register: RegisterResponse) -> Unit) {
-    fun onClick(register: RegisterResponse) = clickListener(register)
+open class RegisterCellListener(val clickListener: (register: RegisterResult) -> Unit) {
+    fun onClick(register: RegisterResult) = clickListener(register)
 }
 
 class RegisterViewHolder(private val binding: ItemRegisterBinding) :
     RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(clickListener: RegisterCellListener, item: RegisterResponse) {
+    fun bind(clickListener: RegisterCellListener, item: RegisterResult) {
         binding.clickListener = clickListener
         binding.item = item
     }

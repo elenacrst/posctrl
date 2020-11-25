@@ -6,7 +6,7 @@
 
         <variable
             name="store"
-            type="is.posctrl.posctrl_android.data.model.StoreResponse" />
+            type="is.posctrl.posctrl_android.data.model.StoreResult" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"

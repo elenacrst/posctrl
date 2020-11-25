@@ -11,8 +11,8 @@
         android:label="Login"
         tools:layout="@layout/fragment_login">
         <action
-            android:id="@+id/toDatabaseSettingsFragment"
-            app:destination="@id/databaseSettingsFragment" />
+            android:id="@+id/toSettingsFragment"
+            app:destination="@id/settingsFragment" />
         <action
             android:id="@+id/toStoresFragment"
             app:destination="@id/storesFragment"
@@ -24,8 +24,8 @@
     </fragment>
 
     <fragment
-        android:id="@+id/databaseSettingsFragment"
-        android:name="is.posctrl.posctrl_android.ui.settings.DatabaseSettingsFragment"
+        android:id="@+id/settingsFragment"
+        android:name="is.posctrl.posctrl_android.ui.settings.SettingsFragment"
         android:label="Database settings" />
 
     <fragment
@@ -35,7 +35,7 @@
         tools:layout="@layout/fragment_stores">
         <argument
             android:name="stores"
-            app:argType="is.posctrl.posctrl_android.data.model.StoreResponse[]"
+            app:argType="is.posctrl.posctrl_android.data.model.StoreResult[]"
             app:nullable="false" />
         <action
             android:id="@+id/toRegistersFragment"
@@ -49,7 +49,7 @@
         tools:layout="@layout/fragment_registers">
         <argument
             android:name="store"
-            app:argType="is.posctrl.posctrl_android.data.model.StoreResponse"
+            app:argType="is.posctrl.posctrl_android.data.model.StoreResult"
             app:nullable="false" />
         <action
             android:id="@+id/toReceiptFragment"
@@ -63,11 +63,11 @@
         tools:layout="@layout/fragment_app_options">
         <argument
             android:name="register"
-            app:argType="is.posctrl.posctrl_android.data.model.RegisterResponse"
+            app:argType="is.posctrl.posctrl_android.data.model.RegisterResult"
             app:nullable="true" />
         <argument
             android:name="store"
-            app:argType="is.posctrl.posctrl_android.data.model.StoreResponse"
+            app:argType="is.posctrl.posctrl_android.data.model.StoreResult"
             app:nullable="true" />
         <action
             android:id="@+id/toRegisterSelectionFragment"
@@ -87,10 +87,10 @@
         tools:layout="@layout/fragment_receipt">
         <argument
             android:name="register"
-            app:argType="is.posctrl.posctrl_android.data.model.RegisterResponse" />
+            app:argType="is.posctrl.posctrl_android.data.model.RegisterResult" />
         <argument
             android:name="store"
-            app:argType="is.posctrl.posctrl_android.data.model.StoreResponse" />
+            app:argType="is.posctrl.posctrl_android.data.model.StoreResult" />
     </fragment>
     <fragment
         android:id="@+id/registerSelectionFragment"
@@ -98,6 +98,6 @@
         android:label="Register selection">
         <argument
             android:name="store"
-            app:argType="is.posctrl.posctrl_android.data.model.StoreResponse" />
+            app:argType="is.posctrl.posctrl_android.data.model.StoreResult" />
     </fragment>
 </navigation>
