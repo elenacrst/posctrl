@@ -8,7 +8,7 @@ import android.app.Application
 import android.content.Intent
 import timber.log.Timber
 
-class PosCtrlApplication : Application() {
+class PosCtrlApplication : Application() {//todo call close in app closing service only if logged in
 
     private lateinit var _appComponent: PosCtrlComponent
     val appComponent: PosCtrlComponent

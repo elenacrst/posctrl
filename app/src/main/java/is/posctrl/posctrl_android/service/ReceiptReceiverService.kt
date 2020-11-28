@@ -38,8 +38,8 @@ class ReceiptReceiverService : JobIntentService() {
         try {
             while (true) {
                 val serverPort =
-                    (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
-                        ?: PosCtrlRepository.DEFAULT_LISTENING_PORT).toInt()
+                        (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
+                                ?: PosCtrlRepository.DEFAULT_LISTENING_PORT).toInt()
                 if (socket == null) {
                     socket = DatagramSocket(serverPort)
                     socket!!.broadcast = false
@@ -90,12 +90,12 @@ class ReceiptReceiverService : JobIntentService() {
         val intent = Intent(ACTION_RECEIVE_RECEIPT)
         intent.putExtra(EXTRA_RECEIPT, result)
         LocalBroadcastManager.getInstance(appContext)
-            .sendBroadcast(intent)//todo use directly application context, no need to inject this, same for other service
+                .sendBroadcast(intent)//todo use directly application context, no need to inject this, same for other service
     }
 
     companion object {
         private const val RECEIPT_RECEIVER_JOB = 1
-        const val ACTION_RECEIVE_RECEIPT = "RECEIVE_RECEIPT"
+        const val ACTION_RECEIVE_RECEIPT = "is.posctrl.posctrl_android.RECEIVE_RECEIPT"
         const val EXTRA_RECEIPT = "RECEIPT"
 
         fun enqueueWork(context: Context, intent: Intent) {

@@ -4,10 +4,10 @@
     <string name="hint_user_id">User ID</string>
     <string name="action_login">Login</string>
     <string name="hint_password">Password</string>
-    <string name="hint_database_server">Database server address</string>
+    <string name="hint_database_server">Login server address</string>
     <string name="key_database_server">keyDatabaseServer</string>
     <string name="title_database_server">Server address</string>
-    <string name="dialog_database_server">Database server address</string>
+    <string name="dialog_database_server">Login server address</string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="header_sql_server">SQL Server</string>
     <string name="key_database_user">keyDatabaseUser</string>
@@ -97,4 +97,17 @@
     <string name="error_unknown">Unknown error</string>
     <string name="header_settings">Settings</string>
     <string name="key_logged_username">keyLoggedInUserUsername</string>
+    <string name="permission_device_admin">Device admin</string>
+    <string name="permission_description_admin">Launch on device boot, keep as the only application displayed</string>
+    <string name="message_kiosk_enabled">Kiosk mode enabled</string>
+    <string name="warning_disabling_kiosk">Warning: this will disable kiosk mode</string>
+    <string name="message_kiosk_disabled">Disabled kiosk mode</string>
+    <string name="message_changed_password">Security code has been changed</string>
+    <string name="action_kiosk_mode">Kiosk mode</string>
+    <string name="key_kiosk_mode">keyKioskMode</string>
+    <string name="explanation_kiosk_mode">Device manager is required to keep PosCtrl as the only app running</string>
+    <string name="title_notification_charging">Charging</string>
+    <string name="message_notification_charging">Background service</string>
+    <string name="key_app_visible">keyAppVisible</string>
+    <string name="key_was_charging">keyLastBatteryStatus</string>
 </resources>

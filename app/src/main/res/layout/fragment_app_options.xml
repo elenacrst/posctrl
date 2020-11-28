@@ -73,6 +73,28 @@
             android:padding="@dimen/margin_small"
             android:text="@string/action_suspend_register"
             android:visibility="@{store==null?View.GONE:View.VISIBLE}"
-            app:layout_constraintTop_toBottomOf="@+id/tv_logout" />
+            app:layout_constraintTop_toBottomOf="@+id/tv_logout"
+            tools:visibility="gone" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/sw_kiosk"
+            style="@style/TitleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:padding="@dimen/margin_small"
+            app:layout_constraintTop_toBottomOf="@+id/tv_suspend" />
+
+        <TextView
+            android:id="@+id/tv_kiosk"
+            style="@style/TitleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="@dimen/margin_small"
+            android:text="@string/action_kiosk_mode"
+            app:layout_constraintTop_toBottomOf="@+id/tv_suspend" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

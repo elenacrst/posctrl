@@ -1,6 +1,5 @@
 package `is`.posctrl.posctrl_android.ui.filter
 
-import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
@@ -8,10 +7,9 @@ import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.FilterResults
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.databinding.ActivityFilterBinding
-import `is`.posctrl.posctrl_android.di.ActivityComponent
-import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.ui.BaseActivity
+import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.app.KeyguardManager
@@ -28,8 +26,6 @@ import javax.inject.Inject
 
 
 class FilterActivity : BaseActivity() {
-
-    private lateinit var activityComponent: ActivityComponent
 
     private var vibrationPauseTimer: CountDownTimer? = null
     private var secondVibrationPauseTimer: CountDownTimer? = null
@@ -53,23 +49,10 @@ class FilterActivity : BaseActivity() {
         allowScreenUnlock()
         filterBinding = DataBindingUtil.setContentView(this, R.layout.activity_filter)
 
-        initializeActivityComponent()
-        activityComponent.inject(this)
-
-        filter =
-                intent.getParcelableExtra(FilterReceiverService.EXTRA_FILTER)
+        filter = intent.getParcelableExtra(FilterReceiverService.EXTRA_FILTER)
         filter?.let {
-            val path = if (it.pictures.isNotEmpty()) {
-                it.pictures[0].imageAddress
-            } else {
-                ""
-            }
-            Timber.d("path $path")
-            filterViewModel.downloadBitmaps(path,
-                    it.pictures.map { picture -> picture.imageAddress }
-            )
+            downloadFilterSnapshots(it)
         }
-
         filterViewModel.bitmapsEvent.observe(this, getBitmapsLoadingObserver())
         filterBinding.rvSnapshots.adapter = picturesAdapter
         filterBinding.filter = filter
@@ -85,22 +68,36 @@ class FilterActivity : BaseActivity() {
             filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.REJECTED)
             finish()
         }
-        filterReactTimer = object : CountDownTimer(
-                TimeUnit.SECONDS.toMillis(
-                        (prefs.customPrefs()[getString(R.string.key_filter_respond_time), DEFAULT_FILTER_RESPOND_TIME_SECONDS]
-                                ?: DEFAULT_FILTER_RESPOND_TIME_SECONDS).toLong()
-                ),
-                1000
-        ) {
-            override fun onFinish() {
-                filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.TIMED_OUT)
-                finish()
-                toast(getString(R.string.message_timed_out))
-            }
+        filterReactTimer = createFilterReactTimer()
+    }
 
-            override fun onTick(millisUntilFinished: Long) {
-            }
+    private fun createFilterReactTimer() = object : CountDownTimer(
+            TimeUnit.SECONDS.toMillis(
+                    (prefs.customPrefs()[getString(R.string.key_filter_respond_time), DEFAULT_FILTER_RESPOND_TIME_SECONDS]
+                            ?: DEFAULT_FILTER_RESPOND_TIME_SECONDS).toLong()
+            ),
+            1000
+    ) {
+        override fun onFinish() {
+            filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.TIMED_OUT)
+            finish()
+            toast(getString(R.string.message_timed_out))
         }
+
+        override fun onTick(millisUntilFinished: Long) {
+        }
+    }
+
+    private fun downloadFilterSnapshots(it: FilteredInfoResponse) {
+        val path = if (it.pictures.isNotEmpty()) {
+            it.pictures[0].imageAddress
+        } else {
+            ""
+        }
+        Timber.d("path $path")
+        filterViewModel.downloadBitmaps(path,
+                it.pictures.map { picture -> picture.imageAddress }
+        )
     }
 
     private fun initializeVibration() {
@@ -216,11 +213,6 @@ class FilterActivity : BaseActivity() {
         }
     }
 
-    private fun initializeActivityComponent() {
-        activityComponent = (application as PosCtrlApplication).appComponent
-                .activityComponent(ActivityModule(this))
-    }
-
     override fun showLoading() {
         filterBinding.pbLoading.visibility = View.VISIBLE
     }
@@ -236,6 +228,11 @@ class FilterActivity : BaseActivity() {
         vibrationPauseTimer?.cancel()
         filterReactTimer?.cancel()
         secondVibrationPauseTimer?.cancel()
+    }
+
+    override fun handleLogout() {
+        setResult(MainActivity.RESULT_LOGOUT)
+        finish()
     }
 
     companion object {

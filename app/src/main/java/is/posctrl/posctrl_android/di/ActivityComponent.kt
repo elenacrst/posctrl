@@ -1,5 +1,6 @@
 package `is`.posctrl.posctrl_android.di
 
+import `is`.posctrl.posctrl_android.ui.BaseActivity
 import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.ui.filter.FilterActivity
 import `is`.posctrl.posctrl_android.ui.login.LoginFragment
@@ -22,7 +23,6 @@ annotation class ActivityScope
         ],
 )
 interface ActivityComponent {
-    fun inject(activity: MainActivity)
     fun inject(fragment: LoginFragment)
     fun inject(registersFragment: RegistersFragment)
     fun inject(storesFragment: StoresFragment)
@@ -30,4 +30,6 @@ interface ActivityComponent {
     fun inject(receiptFragment: ReceiptFragment)
     fun inject(registerSelectionFragment: RegisterSelectionFragment)
     fun inject(filterActivity: FilterActivity)
+    fun inject(baseActivity: BaseActivity)
+    fun inject(mainActivity: MainActivity)
 }

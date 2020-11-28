@@ -7,14 +7,20 @@ import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.clear
 import `is`.posctrl.posctrl_android.data.local.get
+import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.FragmentAppOptionsBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
+import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.ui.login.LoginViewModel
+import `is`.posctrl.posctrl_android.util.extensions.showInputDialog
+import `is`.posctrl.posctrl_android.util.extensions.toast
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -22,6 +28,7 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.fragment.findNavController
 import javax.inject.Inject
+
 
 class AppOptionsFragment : BaseFragment() {
 
@@ -41,7 +48,7 @@ class AppOptionsFragment : BaseFragment() {
             inflater: LayoutInflater,
             container: ViewGroup?,
             savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         appOptionsBinding = DataBindingUtil
                 .inflate(inflater, R.layout.fragment_app_options, container, false)
 
@@ -61,6 +68,7 @@ class AppOptionsFragment : BaseFragment() {
             findNavController().navigate(NavigationMainContainerDirections.toLoginFragment())
             stopFilterReceiverService()
             stopReceiptReceiverService()
+            appOptionsViewModel.closeFilterNotifications()
         }
         appOptionsBinding.tvSuspend.setOnClickListener {
             findNavController().navigate(
@@ -72,6 +80,55 @@ class AppOptionsFragment : BaseFragment() {
         appOptionsBinding.store = store
         appOptionsBinding.loggedInUser =
                 preferencesSource.customPrefs()[getString(R.string.key_logged_username)]
+        appOptionsBinding.swKiosk.isChecked = preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true]
+                ?: true
+        appOptionsBinding.tvKiosk.setOnClickListener {
+            requireContext().showInputDialog(R.string.insert_security_code) {
+                if (it == preferencesSource.defaultPrefs()[requireActivity().getString(R.string.key_master_password), SECURITY_CODE] ?: SECURITY_CODE) {
+                    enableKioskMode(!appOptionsBinding.swKiosk.isChecked)
+                } else {
+                    requireContext().toast(getString(R.string.error_wrong_code))
+                }
+            }
+
+        }
+    }
+
+    private fun enableKioskMode(enable: Boolean) {
+        if (enable) {
+            preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode)] = true
+            appOptionsBinding.swKiosk.isChecked = true
+
+            val homeIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+            val pm: PackageManager = requireActivity().applicationContext.packageManager
+            val resolveInfo = pm.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY)
+            if (resolveInfo?.activityInfo?.packageName != requireActivity().packageName) {
+                val compName = ComponentName(requireContext(),
+
+                        MainActivity::class.java)
+                pm.setComponentEnabledSetting(
+                        compName,
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        PackageManager.DONT_KILL_APP)
+                pm.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY)
+                pm.setComponentEnabledSetting(
+                        compName,
+                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                        PackageManager.DONT_KILL_APP)
+
+            }
+
+        } else {
+            preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode)] = false
+            appOptionsBinding.swKiosk.isChecked = false
+            val pm: PackageManager = requireActivity().applicationContext.packageManager
+            val compName = ComponentName(requireContext(),
+                    MainActivity::class.java)
+            pm.setComponentEnabledSetting(
+                    compName,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED,
+                    PackageManager.DONT_KILL_APP)
+        }
     }
 
     private fun stopReceiptReceiverService() {

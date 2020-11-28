@@ -1,15 +1,22 @@
 package `is`.posctrl.posctrl_android.ui
 
+import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.ResultWrapper
+import `is`.posctrl.posctrl_android.data.local.PreferencesSource
+import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.databinding.ActivityMainBinding
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
+import `is`.posctrl.posctrl_android.service.ChargingService
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.ui.filter.FilterActivity
+import `is`.posctrl.posctrl_android.ui.login.LoginFragment
+import `is`.posctrl.posctrl_android.ui.registers.RegistersFragment
 import `is`.posctrl.posctrl_android.util.Event
+import android.app.ActivityManager
 import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -17,6 +24,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.databinding.DataBindingUtil
@@ -25,6 +33,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import timber.log.Timber
+import javax.inject.Inject
 
 
 class MainActivity : BaseActivity() {
@@ -38,6 +47,11 @@ class MainActivity : BaseActivity() {
 
     private var mainReceiverDisabled = false
 
+    private lateinit var navHostFragment: NavHostFragment
+
+    @Inject
+    lateinit var preferencesSource: PreferencesSource
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         allowScreenUnlock()
@@ -45,18 +59,19 @@ class MainActivity : BaseActivity() {
         mainBinding.lifecycleOwner = this
 
         LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-            broadcastReceiver,
-            IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
+                broadcastReceiver,
+                IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
         )
 
         setupNavController()
         initializeActivityComponent()
         activityComponent.inject(this)
+        startService(Intent(baseContext, ChargingService::class.java))
     }
 
     private fun setupNavController() {
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
+        navHostFragment =
+                supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
@@ -87,16 +102,16 @@ class MainActivity : BaseActivity() {
         } else {
             @Suppress("DEPRECATION")
             this.window.addFlags(
-                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
     }//todo move to base activity
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-            .activityComponent(ActivityModule(this))
+                .activityComponent(ActivityModule(this))
     }
 
     override fun showLoading() {
@@ -115,10 +130,9 @@ class MainActivity : BaseActivity() {
                     Timber.d("received filter 1")
                     if (bundle != null) {
                         val result =
-                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
+                                bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
                         handleFilter(result)
                     }
-
                 }
             }
         }
@@ -126,10 +140,9 @@ class MainActivity : BaseActivity() {
 
     private fun navigateToFilter(filter: FilteredInfoResponse) {
         val intent = Intent(this, FilterActivity::class.java)
-
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         intent.putExtra(FilterReceiverService.EXTRA_FILTER, filter)
-        startActivity(intent)
+        startActivityForResult(intent, RC_FILTER)
     }
 
     override fun handleFilter(result: FilteredInfoResponse?) {
@@ -139,6 +152,53 @@ class MainActivity : BaseActivity() {
             navigateToFilter(it)
         }
     }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK &&
+                (navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
+                && preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onBackPressed() {
+        if ((navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
+                && preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
+            return
+        }
+        super.onBackPressed()
+    }
+
+    private fun setupKiosk() {
+        if (preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
+            val activityManager = applicationContext
+                    .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            activityManager.moveTaskToFront(taskId, 0)
+
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        setupKiosk()
+    }
+
+    override fun handleLogout() {
+        navController.navigate(NavigationMainContainerDirections.toLoginFragment())
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RC_FILTER && resultCode == RESULT_LOGOUT) {
+            handleLogout()
+        }
+    }
+
+    companion object {
+        const val RC_FILTER = 1
+        const val RESULT_LOGOUT = 10
+    }
 }
 
 interface BaseFragmentHandler {
@@ -146,7 +206,7 @@ interface BaseFragmentHandler {
     fun hideLoading()
     fun handleFilter(result: FilteredInfoResponse?)
     fun createLoadingObserver(
-        successListener: (ResultWrapper<*>?) -> Unit = { },
-        errorListener: () -> Unit = { }
+            successListener: (ResultWrapper<*>?) -> Unit = { },
+            errorListener: () -> Unit = { }
     ): Observer<Event<ResultWrapper<*>>>
 }

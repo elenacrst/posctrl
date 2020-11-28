@@ -56,9 +56,12 @@ class LoginFragment : BaseFragment() {
                 Timber.d("received login")
                 if (bundle != null) {
                     loginCountdownTimer?.cancel()
-                    val result =
-                            bundle.getParcelable<LoginResult>(LoginResultReceiverService.EXTRA_LOGIN)
-                    handleLogin(result)
+                    if (activity != null && isVisible) {
+                        val result =
+                                bundle.getParcelable<LoginResult>(LoginResultReceiverService.EXTRA_LOGIN)
+                        handleLogin(result)
+                    }
+
                 }
             }
         }
@@ -69,7 +72,8 @@ class LoginFragment : BaseFragment() {
         result?.let {
             if (it.errorMessage.isNotEmpty()) {
                 requireContext().toast(it.errorMessage)
-            } else {
+            } else if (prefs.customPrefs()[requireActivity().getString(R.string.key_logged_user), ""].isNullOrEmpty()) {
+                stopLoginService()
                 prefs.customPrefs()[requireActivity().getString(R.string.key_logged_user)] = loginBinding.etUser.text.toString()
                 prefs.customPrefs()[requireActivity().getString(R.string.key_logged_username)] = it.username
                 prefs.customPrefs()[requireActivity().getString(R.string.key_server_path)] = it.serverPath
@@ -89,7 +93,7 @@ class LoginFragment : BaseFragment() {
                 prefs.customPrefs()[requireActivity().getString(R.string.key_store_name)] = it.store.storeName
                 prefs.customPrefs()[requireActivity().getString(R.string.key_store_number)] = it.store.storeNumber
                 prefs.customPrefs()[requireActivity().getString(R.string.key_registers)] = it.store.registers.joinToString(",") { reg -> reg.registerNumber }
-
+                LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(loginBroadcastReceiver)
                 findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it.store))
                 if (it.isReceivingNotifications()) {
                     startFilterReceiverService()
@@ -98,28 +102,24 @@ class LoginFragment : BaseFragment() {
         } ?: kotlin.run {
             requireContext().toast(requireActivity().getString(R.string.error_unknown))
         }
-        stopLoginService()
+
     }
 
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
             savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         loginBinding = DataBindingUtil
                 .inflate(inflater, R.layout.fragment_login, container, false)
         requireContext().scheduleLogout()
-        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
-                loginBroadcastReceiver,
-                IntentFilter(LoginResultReceiverService.ACTION_RECEIVE_LOGIN)
-        )
 
         return loginBinding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        prefs.customPrefs()[getString(R.string.key_kiosk_mode)] = true
         loginBinding.clBase.setOnSwipeListener(onSwipeBottom = {
             requireContext().showInputDialog(R.string.insert_security_code) {
                 if (it == prefs.defaultPrefs()[requireActivity().getString(R.string.key_master_password), SECURITY_CODE] ?: SECURITY_CODE) {
@@ -151,6 +151,10 @@ class LoginFragment : BaseFragment() {
             override fun onTick(millisUntilFinished: Long) {
             }
         }
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
+                loginBroadcastReceiver,
+                IntentFilter(LoginResultReceiverService.ACTION_RECEIVE_LOGIN)
+        )
     }
 
     private fun checkAlreadyLoggedIn() {
@@ -170,7 +174,7 @@ class LoginFragment : BaseFragment() {
                 _storeNumber = prefs.customPrefs()[getString(R.string.key_store_number), -1] ?: -1,
                 _registers = prefs.customPrefs()[getString(R.string.key_registers), ""]?.split(",")
                         ?.map { RegisterResult(_registerNumber = it) } ?: listOf())
-
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(loginBroadcastReceiver)
         findNavController().navigate(LoginFragmentDirections.toRegistersFragment(store = store))
     }
 
@@ -240,7 +244,7 @@ class LoginFragment : BaseFragment() {
         super.onDetach()
         stopLoginService()
         loginCountdownTimer?.cancel()
-        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(loginBroadcastReceiver)
+
     }
 
     private fun stopLoginService() {
