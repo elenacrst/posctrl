@@ -1,5 +1,6 @@
 package `is`.posctrl.posctrl_android.ui.filter
 
+import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
@@ -7,6 +8,8 @@ import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.FilterResults
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.databinding.ActivityFilterBinding
+import `is`.posctrl.posctrl_android.di.ActivityComponent
+import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.ui.BaseActivity
 import `is`.posctrl.posctrl_android.ui.MainActivity
@@ -34,6 +37,7 @@ class FilterActivity : BaseActivity() {
     private var vibrator: Vibrator? = null
     private var mediaPlayer: MediaPlayer? = null
     private var filter: FilteredInfoResponse? = null
+    private lateinit var activityComponent: ActivityComponent
 
     @Inject
     lateinit var prefs: PreferencesSource
@@ -48,6 +52,9 @@ class FilterActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         allowScreenUnlock()
         filterBinding = DataBindingUtil.setContentView(this, R.layout.activity_filter)
+
+        initializeActivityComponent()
+        activityComponent.inject(this)
 
         filter = intent.getParcelableExtra(FilterReceiverService.EXTRA_FILTER)
         filter?.let {
@@ -71,12 +78,17 @@ class FilterActivity : BaseActivity() {
         filterReactTimer = createFilterReactTimer()
     }
 
+    private fun initializeActivityComponent() {
+        activityComponent = (application as PosCtrlApplication).appComponent
+            .activityComponent(ActivityModule(this))
+    }
+
     private fun createFilterReactTimer() = object : CountDownTimer(
-            TimeUnit.SECONDS.toMillis(
-                    (prefs.customPrefs()[getString(R.string.key_filter_respond_time), DEFAULT_FILTER_RESPOND_TIME_SECONDS]
-                            ?: DEFAULT_FILTER_RESPOND_TIME_SECONDS).toLong()
-            ),
-            1000
+        TimeUnit.SECONDS.toMillis(
+            (prefs.customPrefs()[getString(R.string.key_filter_respond_time), DEFAULT_FILTER_RESPOND_TIME_SECONDS]
+                ?: DEFAULT_FILTER_RESPOND_TIME_SECONDS).toLong()
+        ),
+        1000
     ) {
         override fun onFinish() {
             filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.TIMED_OUT)
@@ -96,7 +108,7 @@ class FilterActivity : BaseActivity() {
         }
         Timber.d("path $path")
         filterViewModel.downloadBitmaps(path,
-                it.pictures.map { picture -> picture.imageAddress }
+            it.pictures.map { picture -> picture.imageAddress }
         )
     }
 
@@ -143,14 +155,14 @@ class FilterActivity : BaseActivity() {
         if (vibrator?.hasVibrator() == true) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator?.vibrate(
-                        VibrationEffect.createWaveform(
-                                longArrayOf(
-                                        200L,
-                                        100L,
-                                        200L,
-                                        100L
-                                ), -1
-                        )
+                    VibrationEffect.createWaveform(
+                        longArrayOf(
+                            200L,
+                            100L,
+                            200L,
+                            100L
+                        ), -1
+                    )
                 )
             } else {
                 @Suppress("DEPRECATION")
@@ -163,14 +175,14 @@ class FilterActivity : BaseActivity() {
         if (vibrator?.hasVibrator() == true) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator?.vibrate(
-                        VibrationEffect.createWaveform(
-                                longArrayOf(
-                                        200L,
-                                        100L,
-                                        200L,
-                                        100L
-                                ), -1
-                        )
+                    VibrationEffect.createWaveform(
+                        longArrayOf(
+                            200L,
+                            100L,
+                            200L,
+                            100L
+                        ), -1
+                    )
                 )
             } else {
                 @Suppress("DEPRECATION")
@@ -206,9 +218,9 @@ class FilterActivity : BaseActivity() {
         } else {
             @Suppress("DEPRECATION")
             this.window.addFlags(
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
     }

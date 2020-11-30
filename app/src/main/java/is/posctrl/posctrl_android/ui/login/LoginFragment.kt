@@ -58,7 +58,7 @@ class LoginFragment : BaseFragment() {
                     loginCountdownTimer?.cancel()
                     if (activity != null && isVisible) {
                         val result =
-                                bundle.getParcelable<LoginResult>(LoginResultReceiverService.EXTRA_LOGIN)
+                            bundle.getParcelable<LoginResult>(LoginResultReceiverService.EXTRA_LOGIN)
                         handleLogin(result)
                     }
 
@@ -67,33 +67,17 @@ class LoginFragment : BaseFragment() {
         }
     }
 
-    private fun handleLogin(result: LoginResult?) {//todo count down timer 5sec, otherwise connection message
+    private fun handleLogin(result: LoginResult?) {
         hideLoading()
         result?.let {
             if (it.errorMessage.isNotEmpty()) {
                 requireContext().toast(it.errorMessage)
             } else if (prefs.customPrefs()[requireActivity().getString(R.string.key_logged_user), ""].isNullOrEmpty()) {
                 stopLoginService()
-                prefs.customPrefs()[requireActivity().getString(R.string.key_logged_user)] = loginBinding.etUser.text.toString()
-                prefs.customPrefs()[requireActivity().getString(R.string.key_logged_username)] = it.username
-                prefs.customPrefs()[requireActivity().getString(R.string.key_server_path)] = it.serverPath
-                prefs.customPrefs()[requireActivity().getString(R.string.key_server_port)] = it.serverPort
-                prefs.customPrefs()[requireActivity().getString(R.string.key_filter_respond_time)] = it.filterRespondTime
-                prefs.customPrefs()[requireActivity().getString(R.string.key_app_version)] = it.appVersion
-                prefs.customPrefs()[requireActivity().getString(R.string.key_server_user)] = it.serverUser
-                prefs.customPrefs()[requireActivity().getString(R.string.key_server_domain)] = it.serverUserDomain
-                prefs.customPrefs()[requireActivity().getString(R.string.key_server_password)] = it.serverPassword
-                prefs.customPrefs()[requireActivity().getString(R.string.key_server_snapshot_path)] = it.serverSnapshotPath
-
-                prefs.defaultPrefs()[requireActivity().getString(R.string.key_master_password)] = it.masterPassword
-
-                prefs.customPrefs()[requireActivity().getString(R.string.key_time_zone)] = it.timeZone
-                prefs.customPrefs()[requireActivity().getString(R.string.key_receive_notifications)] = it.isReceivingNotifications()
-                prefs.customPrefs()[requireActivity().getString(R.string.key_notification_sound)] = it.isNotificationSoundEnabled()
-                prefs.customPrefs()[requireActivity().getString(R.string.key_store_name)] = it.store.storeName
-                prefs.customPrefs()[requireActivity().getString(R.string.key_store_number)] = it.store.storeNumber
-                prefs.customPrefs()[requireActivity().getString(R.string.key_registers)] = it.store.registers.joinToString(",") { reg -> reg.registerNumber }
-                LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(loginBroadcastReceiver)
+                loginViewModel.sendFilterProcessOpenMessage()
+                storeLoginResultData(it)
+                LocalBroadcastManager.getInstance(requireContext())
+                    .unregisterReceiver(loginBroadcastReceiver)
                 findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it.store))
                 if (it.isReceivingNotifications()) {
                     startFilterReceiverService()
@@ -105,13 +89,52 @@ class LoginFragment : BaseFragment() {
 
     }
 
+    private fun storeLoginResultData(it: LoginResult) {
+        prefs.customPrefs()[requireActivity().getString(R.string.key_logged_user)] =
+            loginBinding.etUser.text.toString()
+        prefs.customPrefs()[requireActivity().getString(R.string.key_logged_username)] =
+            it.username
+        prefs.customPrefs()[requireActivity().getString(R.string.key_server_path)] =
+            it.serverPath
+        prefs.customPrefs()[requireActivity().getString(R.string.key_server_port)] =
+            it.serverPort
+        prefs.customPrefs()[requireActivity().getString(R.string.key_filter_respond_time)] =
+            it.filterRespondTime
+        prefs.customPrefs()[requireActivity().getString(R.string.key_app_version)] =
+            it.appVersion
+        prefs.customPrefs()[requireActivity().getString(R.string.key_server_user)] =
+            it.serverUser
+        prefs.customPrefs()[requireActivity().getString(R.string.key_server_domain)] =
+            it.serverUserDomain
+        prefs.customPrefs()[requireActivity().getString(R.string.key_server_password)] =
+            it.serverPassword
+        prefs.customPrefs()[requireActivity().getString(R.string.key_server_snapshot_path)] =
+            it.serverSnapshotPath
+
+        prefs.defaultPrefs()[requireActivity().getString(R.string.key_master_password)] =
+            it.masterPassword
+
+        prefs.customPrefs()[requireActivity().getString(R.string.key_time_zone)] =
+            it.timeZone
+        prefs.customPrefs()[requireActivity().getString(R.string.key_receive_notifications)] =
+            it.isReceivingNotifications()
+        prefs.customPrefs()[requireActivity().getString(R.string.key_notification_sound)] =
+            it.isNotificationSoundEnabled()
+        prefs.customPrefs()[requireActivity().getString(R.string.key_store_name)] =
+            it.store.storeName
+        prefs.customPrefs()[requireActivity().getString(R.string.key_store_number)] =
+            it.store.storeNumber
+        prefs.customPrefs()[requireActivity().getString(R.string.key_registers)] =
+            it.store.registers.joinToString(",") { reg -> reg.registerNumber }
+    }
+
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         loginBinding = DataBindingUtil
-                .inflate(inflater, R.layout.fragment_login, container, false)
+            .inflate(inflater, R.layout.fragment_login, container, false)
         requireContext().scheduleLogout()
 
         return loginBinding.root
@@ -128,6 +151,8 @@ class LoginFragment : BaseFragment() {
                     requireContext().toast(getString(R.string.error_wrong_code))
                 }
             }
+        }, onDoubleTap = {
+            baseFragmentHandler?.onDoubleTap()
         })
         loginBinding.btLogin.setOnClickListener {
             validateLogin()
@@ -141,7 +166,6 @@ class LoginFragment : BaseFragment() {
         }
         setupTextChangeListeners()
         checkAlreadyLoggedIn()
-        startLoginResultReceiverService()
         loginCountdownTimer = object : CountDownTimer(LOGIN_MAX_WAIT_MILLIS, 1000) {
             override fun onFinish() {
                 hideLoading()
@@ -151,10 +175,6 @@ class LoginFragment : BaseFragment() {
             override fun onTick(millisUntilFinished: Long) {
             }
         }
-        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
-                loginBroadcastReceiver,
-                IntentFilter(LoginResultReceiverService.ACTION_RECEIVE_LOGIN)
-        )
     }
 
     private fun checkAlreadyLoggedIn() {
@@ -163,18 +183,21 @@ class LoginFragment : BaseFragment() {
             return
         }
         loginViewModel.sendFilterProcessOpenMessage()
-        val receivesNotifications = prefs.customPrefs()[getString(R.string.key_receive_notifications), true]
+        val receivesNotifications =
+            prefs.customPrefs()[getString(R.string.key_receive_notifications), true]
                 ?: true
         if (receivesNotifications) {
             startFilterReceiverService()
         }
 
-        val store = StoreResult(_storeName = prefs.customPrefs()[getString(R.string.key_store_name), ""]
+        val store =
+            StoreResult(_storeName = prefs.customPrefs()[getString(R.string.key_store_name), ""]
                 ?: "",
                 _storeNumber = prefs.customPrefs()[getString(R.string.key_store_number), -1] ?: -1,
                 _registers = prefs.customPrefs()[getString(R.string.key_registers), ""]?.split(",")
-                        ?.map { RegisterResult(_registerNumber = it) } ?: listOf())
-        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(loginBroadcastReceiver)
+                    ?.map { RegisterResult(_registerNumber = it) } ?: listOf())
+        LocalBroadcastManager.getInstance(requireContext())
+            .unregisterReceiver(loginBroadcastReceiver)
         findNavController().navigate(LoginFragmentDirections.toRegistersFragment(store = store))
     }
 
@@ -210,6 +233,11 @@ class LoginFragment : BaseFragment() {
     }
 
     private fun validateLogin() {
+        startLoginResultReceiverService()
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
+            loginBroadcastReceiver,
+            IntentFilter(LoginResultReceiverService.ACTION_RECEIVE_LOGIN)
+        )
         var valid = true
         if (loginBinding.etUser.text!!.isEmpty()) {
             valid = false
@@ -222,16 +250,17 @@ class LoginFragment : BaseFragment() {
         if (valid) {
             showLoading()
             loginViewModel.login(
-                    loginBinding.etUser.text!!.toString(),
-                    loginBinding.etPassword.text!!.toString()
+                loginBinding.etUser.text!!.toString(),
+                loginBinding.etPassword.text!!.toString()
             )
+
             loginCountdownTimer?.start()
         }
     }
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
-                ActivityModule(requireActivity())
+            ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
     }

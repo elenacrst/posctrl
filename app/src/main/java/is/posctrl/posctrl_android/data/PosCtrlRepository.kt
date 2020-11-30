@@ -7,10 +7,9 @@ import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.*
 import `is`.posctrl.posctrl_android.ui.receipt.ReceiptAction
+import `is`.posctrl.posctrl_android.util.extensions.getAppVersion
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.provider.Settings
@@ -36,16 +35,16 @@ import java.util.*
 import javax.inject.Inject
 
 class PosCtrlRepository @Inject constructor(
-        val prefs: PreferencesSource,
-        private val appContext: Context,
-        private val xmlMapper: XmlMapper
+    val prefs: PreferencesSource,
+    private val appContext: Context,
+    private val xmlMapper: XmlMapper
 ) {
     @Suppress("BlockingMethodInNonBlockingContext")
     @Throws(Exception::class)
     suspend fun sendReceiptInfoMessage(
-            action: ReceiptAction = ReceiptAction.OPEN,
-            storeNumber: Int = -1,
-            registerNumber: Int = -1,
+        action: ReceiptAction = ReceiptAction.OPEN,
+        storeNumber: Int = -1,
+        registerNumber: Int = -1,
     ): ResultWrapper<*> {
         withContext(Dispatchers.Default) {
             try {
@@ -53,39 +52,39 @@ class PosCtrlRepository @Inject constructor(
                     return@withContext ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
                 }
                 val receiptInfo = ReceiptInfoBody(
-                        appName = appContext.getString(R.string.app_name),
-                        userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
-                                ?: "",
-                        action = action.actionValue,
-                        storeNumber = storeNumber,
-                        registerNumber = registerNumber,
-                        hostName = getDeviceIdentifier(),
-                        listeningPort = (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
-                                ?: DEFAULT_LISTENING_PORT).toInt(),
-                        time = getLocalTimeString()
+                    appName = appContext.getString(R.string.app_name),
+                    userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
+                        ?: "",
+                    action = action.actionValue,
+                    storeNumber = storeNumber,
+                    registerNumber = registerNumber,
+                    hostName = getDeviceIdentifier(),
+                    listeningPort = (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
+                        ?: DEFAULT_LISTENING_PORT).toInt(),
+                    time = getLocalTimeString()
                 )
                 Timber.d("receipt info $receiptInfo")
                 val xmlMessage = xmlMapper.writeValueAsString(receiptInfo)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
                 val port =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                                ?: DEFAULT_SERVER_PORT
+                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                        ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size,
-                        InetAddress.getByName(broadcastIp),
-                        port
+                    bytes,
+                    bytes.size,
+                    InetAddress.getByName(broadcastIp),
+                    port
                 )
                 if (action == ReceiptAction.CLOSE) {
                     prefs.customPrefs()[appContext.getString(
-                            R.string.key_send_alife,
-                            storeNumber,
-                            registerNumber
+                        R.string.key_send_alife,
+                        storeNumber,
+                        registerNumber
                     )] = false
                 }
                 sendSocket.send(sendPacket)
@@ -97,51 +96,41 @@ class PosCtrlRepository @Inject constructor(
         return ResultWrapper.Success("")
     }
 
-    private fun getAppVersion(): String {
-        return try {
-            val pInfo: PackageInfo =
-                    appContext.packageManager.getPackageInfo(appContext.packageName, 0)
-            pInfo.versionName
-        } catch (e: PackageManager.NameNotFoundException) {
-            e.printStackTrace()
-            "unknown"
-        }
-    }
-
     @Suppress("BlockingMethodInNonBlockingContext")
     @Throws(Exception::class)
     suspend fun sendLoginMessage(
-            userId: String,
-            password: String
+        userId: String,
+        password: String
     ): ResultWrapper<*> {
         withContext(Dispatchers.Default) {
             try {
                 val loginBody = LoginBody(
-                        appName = appContext.getString(R.string.app_name),
-                        userId = userId,
-                        hostName = getDeviceIdentifier(),
-                        listeningPort = DEFAULT_LOGIN_LISTENING_PORT,//todo check if preference required/ settings item
-                        time = getLocalTimeString(),
-                        appVersion = getAppVersion(),
-                        password = password
+                    appName = appContext.getString(R.string.app_name),
+                    userId = userId,
+                    hostName = getDeviceIdentifier(),
+                    listeningPort = DEFAULT_LOGIN_LISTENING_PORT,//todo check if preference required/ settings item
+                    time = getLocalTimeString(),
+                    appVersion = appContext.getAppVersion(),
+                    password = password
                 )
                 Timber.d("login body $loginBody")
                 val xmlMessage = xmlMapper.writeValueAsString(loginBody)
                 val bytes = xmlMessage.toByteArray()
-                val ip = prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), "255.255.255.255"]
+                val ip =
+                    prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), "255.255.255.255"]
                         ?: "255.255.255.255"
                 val port =
-                        prefs.customPrefs()[appContext.getString(R.string.key_login_port), DEFAULT_LOGIN_SEND_PORT]
-                                ?: DEFAULT_LOGIN_SEND_PORT
+                    prefs.customPrefs()[appContext.getString(R.string.key_login_port), DEFAULT_LOGIN_SEND_PORT]
+                        ?: DEFAULT_LOGIN_SEND_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size,
-                        InetAddress.getByName(ip),
-                        port
+                    bytes,
+                    bytes.size,
+                    InetAddress.getByName(ip),
+                    port
                 )
                 sendSocket.send(sendPacket)
             } catch (e: Exception) {
@@ -156,52 +145,52 @@ class PosCtrlRepository @Inject constructor(
     @Suppress("BlockingMethodInNonBlockingContext")
     @Throws(Exception::class)
     suspend fun sendReceiptInfoALife(
-            storeNumber: Int,
-            registerNumber: Int,
+        storeNumber: Int,
+        registerNumber: Int,
     ) {
         withContext(Dispatchers.Default) {
             try {
                 val receiptInfo = ReceiptInfoBody(
-                        appName = appContext.getString(R.string.app_name),
-                        userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
-                                ?: "",
-                        action = ReceiptAction.ALIFE.actionValue,
-                        storeNumber = storeNumber,
-                        registerNumber = registerNumber,
-                        hostName = getDeviceIdentifier(),//+build product if required
-                        listeningPort = (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
-                                ?: DEFAULT_LISTENING_PORT).toInt(),
-                        time = getLocalTimeString()
+                    appName = appContext.getString(R.string.app_name),
+                    userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
+                        ?: "",
+                    action = ReceiptAction.ALIFE.actionValue,
+                    storeNumber = storeNumber,
+                    registerNumber = registerNumber,
+                    hostName = getDeviceIdentifier(),//+build product if required
+                    listeningPort = (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
+                        ?: DEFAULT_LISTENING_PORT).toInt(),
+                    time = getLocalTimeString()
                 )
                 Timber.d("receipt info $receiptInfo")
                 val xmlMessage = xmlMapper.writeValueAsString(receiptInfo)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
                 val port =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                                ?: DEFAULT_SERVER_PORT
+                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                        ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size, InetAddress.getByName(broadcastIp),
-                        port
+                    bytes,
+                    bytes.size, InetAddress.getByName(broadcastIp),
+                    port
                 )
                 prefs.customPrefs()[appContext.getString(
-                        R.string.key_send_alife,
-                        storeNumber,
-                        registerNumber
+                    R.string.key_send_alife,
+                    storeNumber,
+                    registerNumber
                 )] = true
                 while (true) {
                     delay(ALIFE_DELAY_SECONDS * 1000L)
                     val sendAlife: Boolean = prefs.customPrefs()[appContext.getString(
-                            R.string.key_send_alife,
-                            storeNumber,
-                            registerNumber
+                        R.string.key_send_alife,
+                        storeNumber,
+                        registerNumber
                     )]
-                            ?: true
+                        ?: true
                     if (!sendAlife) {
                         return@withContext
                     }
@@ -215,31 +204,31 @@ class PosCtrlRepository @Inject constructor(
 
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun sendSuspendRegisterMessage(
-            storeNumber: Int,
-            registerNumber: Int,
+        storeNumber: Int,
+        registerNumber: Int,
     ) {
         withContext(Dispatchers.Default) {
             try {
                 val registerSuspendedBody = RegisterSuspendedBody(
-                        message = "Register suspended",
-                        storeNumber = storeNumber,
-                        registerNumber = registerNumber
+                    message = "Register suspended",
+                    storeNumber = storeNumber,
+                    registerNumber = registerNumber
                 )
                 Timber.d("register suspended body: $registerSuspendedBody")
                 val xmlMessage = xmlMapper.writeValueAsString(registerSuspendedBody)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
                 val port =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                                ?: DEFAULT_SERVER_PORT
+                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                        ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size, InetAddress.getByName(broadcastIp),
-                        port
+                    bytes,
+                    bytes.size, InetAddress.getByName(broadcastIp),
+                    port
                 )
                 sendSocket.send(sendPacket)
             } catch (e: Exception) {
@@ -252,37 +241,37 @@ class PosCtrlRepository @Inject constructor(
     suspend fun sendFilterProcessMessage(action: FilterAction) {//for open & close, not for a life
         withContext(Dispatchers.Default) {
             try {
-                val appVersion = getAppVersion()
+                val appVersion = appContext.getAppVersion()
                 val filterProcessBody = FilterProcessBody(
-                        appName = appContext.getString(R.string.app_name),
-                        appVersion = appVersion,
-                        userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
-                                ?: "",
-                        action = action.actionValue,
-                        hostName = getDeviceIdentifier(),
-                        listeningPort = prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
-                                ?: DEFAULT_FILTER_PORT,
-                        time = getLocalTimeString()
+                    appName = appContext.getString(R.string.app_name),
+                    appVersion = appVersion,
+                    userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
+                        ?: "",
+                    action = action.actionValue,
+                    hostName = getDeviceIdentifier(),
+                    listeningPort = prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
+                        ?: DEFAULT_FILTER_PORT,
+                    time = getLocalTimeString()
                 )
                 Timber.d("filter process body: $filterProcessBody")
                 val xmlMessage = xmlMapper.writeValueAsString(filterProcessBody)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
                 val port =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                                ?: DEFAULT_SERVER_PORT
+                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                        ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size, InetAddress.getByName(broadcastIp),
-                        port
+                    bytes,
+                    bytes.size, InetAddress.getByName(broadcastIp),
+                    port
                 )
                 if (action == FilterAction.CLOSE) {
                     prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)] =
-                            false
+                        false
                 }
                 sendSocket.send(sendPacket)
             } catch (e: Exception) {
@@ -296,40 +285,40 @@ class PosCtrlRepository @Inject constructor(
     suspend fun sendFilterProcessALife() {
         withContext(Dispatchers.Default) {
             try {
-                val appVersion = getAppVersion()
+                val appVersion = appContext.getAppVersion()
                 val filterProcessBody = FilterProcessBody(
-                        appName = appContext.getString(R.string.app_name),
-                        appVersion = appVersion,
-                        userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
-                                ?: "",
-                        action = FilterAction.ALIFE.actionValue,
-                        hostName = getDeviceIdentifier(),
-                        listeningPort = prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
-                                ?: DEFAULT_FILTER_PORT,
-                        time = getLocalTimeString()
+                    appName = appContext.getString(R.string.app_name),
+                    appVersion = appVersion,
+                    userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
+                        ?: "",
+                    action = FilterAction.ALIFE.actionValue,
+                    hostName = getDeviceIdentifier(),
+                    listeningPort = prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
+                        ?: DEFAULT_FILTER_PORT,
+                    time = getLocalTimeString()
                 )
                 Timber.d("filter process body: $filterProcessBody")
                 val xmlMessage = xmlMapper.writeValueAsString(filterProcessBody)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
                 val port =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                                ?: DEFAULT_SERVER_PORT
+                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                        ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size, InetAddress.getByName(broadcastIp),
-                        port
+                    bytes,
+                    bytes.size, InetAddress.getByName(broadcastIp),
+                    port
                 )
                 prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)] = true
                 while (true) {
                     delay(ALIFE_FILTER_DELAY_SECONDS * 1000L)
                     val sendAlife: Boolean =
-                            prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)]
-                                    ?: true
+                        prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)]
+                            ?: true
                     if (!sendAlife) {
                         return@withContext
                     }
@@ -345,8 +334,8 @@ class PosCtrlRepository @Inject constructor(
     private fun getDeviceIdentifier(): String {
         return "android-${
             Settings.Secure.getString(
-                    appContext.contentResolver,
-                    Settings.Secure.ANDROID_ID
+                appContext.contentResolver,
+                Settings.Secure.ANDROID_ID
             )
         }"
     }
@@ -371,30 +360,38 @@ class PosCtrlRepository @Inject constructor(
                 val server = paths[0]
                 val sharedFolder = paths[1]
                 val user = prefs.customPrefs()[appContext.getString(R.string.key_server_user), ""]
-                val password = prefs.customPrefs()[appContext.getString(R.string.key_server_password), ""]
+                val password =
+                    prefs.customPrefs()[appContext.getString(R.string.key_server_password), ""]
                 client.connect(server)
-                        .use { connection ->
-                            val ac = AuthenticationContext(user, password?.toCharArray(), "")
-                            val session: Session = connection.authenticate(ac)
-                            fileNames.forEach { fullAddress ->
-                                try {
-                                    val fileName = fullAddress.split("\\$sharedFolder\\").last()
-                                    (session.connectShare(sharedFolder) as? DiskShare?)?.let { share ->
-                                        val s: MutableSet<SMB2ShareAccess> = HashSet()
-                                        s.add(SMB2ShareAccess.FILE_SHARE_READ)
-                                        val file = share.openFile(fileName, EnumSet.of(AccessMask.GENERIC_READ), null, s, SMB2CreateDisposition.FILE_OPEN, null)
-                                        val inputStream = file.inputStream
-                                        val bitmap = BitmapFactory.decodeStream(inputStream)
-                                        bitmap?.let {
-                                            bitmaps += it
-                                        }
+                    .use { connection ->
+                        val ac = AuthenticationContext(user, password?.toCharArray(), "")
+                        val session: Session = connection.authenticate(ac)
+                        fileNames.forEach { fullAddress ->
+                            try {
+                                val fileName = fullAddress.split("\\$sharedFolder\\").last()
+                                (session.connectShare(sharedFolder) as? DiskShare?)?.let { share ->
+                                    val s: MutableSet<SMB2ShareAccess> = HashSet()
+                                    s.add(SMB2ShareAccess.FILE_SHARE_READ)
+                                    val file = share.openFile(
+                                        fileName,
+                                        EnumSet.of(AccessMask.GENERIC_READ),
+                                        null,
+                                        s,
+                                        SMB2CreateDisposition.FILE_OPEN,
+                                        null
+                                    )
+                                    val inputStream = file.inputStream
+                                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                                    bitmap?.let {
+                                        bitmaps += it
                                     }
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                    errors++
                                 }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                errors++
                             }
                         }
+                    }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -414,31 +411,31 @@ class PosCtrlRepository @Inject constructor(
 
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun sendFilterResultMessage(
-            itemLineId: Int, result: FilterResults
+        itemLineId: Int, result: FilterResults
     ) {
         withContext(Dispatchers.Default) {
             try {
                 val filterResult = FilterResultBody(
-                        appName = appContext.getString(R.string.app_name),
-                        itemLineId,
-                        result.result,
-                        getLocalTimeString()
+                    appName = appContext.getString(R.string.app_name),
+                    itemLineId,
+                    result.result,
+                    getLocalTimeString()
                 )
                 Timber.d("filter result body: $filterResult")
                 val xmlMessage = xmlMapper.writeValueAsString(filterResult)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
                 val port =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                                ?: DEFAULT_SERVER_PORT
+                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                        ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size, InetAddress.getByName(broadcastIp),
-                        port
+                    bytes,
+                    bytes.size, InetAddress.getByName(broadcastIp),
+                    port
                 )
                 sendSocket.send(sendPacket)
             } catch (e: Exception) {

@@ -24,13 +24,13 @@ fun Context.scheduleLogout(nextDay: Boolean = false) {
         timeDiff = c.timeInMillis - System.currentTimeMillis()
     }
     val repeatingRequest = OneTimeWorkRequestBuilder<LogoutWorker>()
-            .setInitialDelay(timeDiff, TimeUnit.MILLISECONDS)
-            .addTag(LogoutWorker.TAG_LOGOUT_WORKER).build()
+        .setInitialDelay(timeDiff, TimeUnit.MILLISECONDS)
+        .addTag(LogoutWorker.TAG_LOGOUT_WORKER).build()
 
     Timber.d("scheduled logout at ${c.time}")
     WorkManager.getInstance(this)
-            .cancelAllWorkByTag(LogoutWorker.TAG_LOGOUT_WORKER)//to avoid having multiple workers with the same tag, helpful in the work info observer
+        .cancelAllWorkByTag(LogoutWorker.TAG_LOGOUT_WORKER)//to avoid having multiple workers with the same tag, helpful in the work info observer
     WorkManager.getInstance(this).enqueue(
-            repeatingRequest
+        repeatingRequest
     )
 }

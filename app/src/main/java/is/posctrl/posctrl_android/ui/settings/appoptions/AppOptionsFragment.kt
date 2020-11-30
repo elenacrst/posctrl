@@ -15,6 +15,7 @@ import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.ui.login.LoginViewModel
+import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import `is`.posctrl.posctrl_android.util.extensions.showInputDialog
 import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.content.ComponentName
@@ -45,15 +46,15 @@ class AppOptionsFragment : BaseFragment() {
     lateinit var loginViewModel: LoginViewModel
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         appOptionsBinding = DataBindingUtil
-                .inflate(inflater, R.layout.fragment_app_options, container, false)
+            .inflate(inflater, R.layout.fragment_app_options, container, false)
 
         val args = AppOptionsFragmentArgs.fromBundle(
-                requireArguments()
+            requireArguments()
         )
         store = args.store
 
@@ -72,15 +73,16 @@ class AppOptionsFragment : BaseFragment() {
         }
         appOptionsBinding.tvSuspend.setOnClickListener {
             findNavController().navigate(
-                    AppOptionsFragmentDirections.toRegisterSelectionFragment(
-                            store!!
-                    )
+                AppOptionsFragmentDirections.toRegisterSelectionFragment(
+                    store!!
+                )
             )
         }
         appOptionsBinding.store = store
         appOptionsBinding.loggedInUser =
-                preferencesSource.customPrefs()[getString(R.string.key_logged_username)]
-        appOptionsBinding.swKiosk.isChecked = preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true]
+            preferencesSource.customPrefs()[getString(R.string.key_logged_username)]
+        appOptionsBinding.swKiosk.isChecked =
+            preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true]
                 ?: true
         appOptionsBinding.tvKiosk.setOnClickListener {
             requireContext().showInputDialog(R.string.insert_security_code) {
@@ -92,6 +94,9 @@ class AppOptionsFragment : BaseFragment() {
             }
 
         }
+        appOptionsBinding.clBase.setOnSwipeListener(onDoubleTap = {
+            baseFragmentHandler?.onDoubleTap()
+        })
     }
 
     private fun enableKioskMode(enable: Boolean) {
@@ -103,18 +108,22 @@ class AppOptionsFragment : BaseFragment() {
             val pm: PackageManager = requireActivity().applicationContext.packageManager
             val resolveInfo = pm.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY)
             if (resolveInfo?.activityInfo?.packageName != requireActivity().packageName) {
-                val compName = ComponentName(requireContext(),
+                val compName = ComponentName(
+                    requireContext(),
 
-                        MainActivity::class.java)
+                    MainActivity::class.java
+                )
                 pm.setComponentEnabledSetting(
-                        compName,
-                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                        PackageManager.DONT_KILL_APP)
+                    compName,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP
+                )
                 pm.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY)
                 pm.setComponentEnabledSetting(
-                        compName,
-                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                        PackageManager.DONT_KILL_APP)
+                    compName,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP
+                )
 
             }
 
@@ -122,12 +131,15 @@ class AppOptionsFragment : BaseFragment() {
             preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode)] = false
             appOptionsBinding.swKiosk.isChecked = false
             val pm: PackageManager = requireActivity().applicationContext.packageManager
-            val compName = ComponentName(requireContext(),
-                    MainActivity::class.java)
+            val compName = ComponentName(
+                requireContext(),
+                MainActivity::class.java
+            )
             pm.setComponentEnabledSetting(
-                    compName,
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED,
-                    PackageManager.DONT_KILL_APP)
+                compName,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED,
+                PackageManager.DONT_KILL_APP
+            )
         }
     }
 
@@ -138,7 +150,7 @@ class AppOptionsFragment : BaseFragment() {
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
-                ActivityModule(requireActivity())
+            ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
     }

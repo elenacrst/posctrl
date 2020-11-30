@@ -9,17 +9,17 @@ import kotlinx.android.parcel.Parcelize
 @JacksonXmlRootElement(localName = "FilteredInfo")
 @Parcelize
 data class FilteredInfoResponse(
-        private var _storeNumber: Int = -1,
-        private var _registerNumber: Int = -1,
-        private var _itemLineId: Int = -1,
-        private var _storeName: String = "",
-        private var _itemId: Int = -1,//if 1, bold text
-        private var _itemName: String = "",//if 1, italic text
-        private var _quantity: Double = 0.0,
-        private var _totalPrice: Double = 0.0,
-        private var _filterName: String = "",
-        private var _filterQuestion: String = "",
-        private var _pictures: List<Picture> = listOf()
+    private var _storeNumber: Int = -1,
+    private var _registerNumber: Int = -1,
+    private var _itemLineId: Int = -1,
+    private var _storeName: String = "",
+    private var _itemId: Int = -1,//if 1, bold text
+    private var _itemName: String = "",//if 1, italic text
+    private var _quantity: String = "0.0",
+    private var _totalPrice: String = "0.0",
+    private var _filterName: String = "",
+    private var _filterQuestion: String = "",
+    private var _pictures: List<Picture> = listOf()
 ) : Parcelable {
 
     @get:JacksonXmlProperty(localName = "ItemLineID")
@@ -65,14 +65,14 @@ data class FilteredInfoResponse(
         get() = _itemName
 
     @get:JacksonXmlProperty(localName = "Quantity")
-    var quantity: Double
+    var quantity: String
         set(value) {
             _quantity = value
         }
         get() = _quantity
 
     @get:JacksonXmlProperty(localName = "TotalPrice")
-    var totalPrice: Double
+    var totalPrice: String
         set(value) {
             _totalPrice = value
         }
@@ -98,4 +98,14 @@ data class FilteredInfoResponse(
             _pictures = value
         }
         get() = _pictures
+
+    var quantityNumber = {
+        val quantityText = quantity.replace(",", ".")
+        quantityText.toDoubleOrNull()
+    }
+
+    var totalPriceNumber = {
+        val totalPriceText = totalPrice.replace(",", ".")
+        totalPriceText.toDoubleOrNull()
+    }
 }

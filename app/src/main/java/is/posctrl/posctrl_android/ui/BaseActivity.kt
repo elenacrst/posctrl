@@ -10,6 +10,7 @@ import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.util.Event
+import `is`.posctrl.posctrl_android.util.extensions.lockScreen
 import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -41,8 +42,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     override fun onResume() {
         super.onResume()
         LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                receiver,
-                IntentFilter(ACTION_LOGOUT)
+            receiver,
+            IntentFilter(ACTION_LOGOUT)
         )
     }
 
@@ -57,7 +58,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-                .activityComponent(ActivityModule(this))
+            .activityComponent(ActivityModule(this))
     }
 
     private fun handleError(resultError: ResultWrapper.Error): Boolean {
@@ -76,8 +77,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     }
 
     override fun createLoadingObserver(
-            successListener: (ResultWrapper<*>?) -> Unit,
-            errorListener: () -> Unit
+        successListener: (ResultWrapper<*>?) -> Unit,
+        errorListener: () -> Unit
     ): Observer<Event<ResultWrapper<*>>> {
         return Observer { result ->
             when (val value = result.getContentIfNotHandled()) {
@@ -88,12 +89,12 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                 is ResultWrapper.Error -> {
                     hideLoading()
                     val resultError =
-                            result.peekContent() as ResultWrapper.Error
+                        result.peekContent() as ResultWrapper.Error
                     val resultHandled = handleError(resultError)
                     if (!resultHandled) {
                         toast(
-                                message = (result.peekContent() as
-                                        ResultWrapper.Error).message.toString()
+                            message = (result.peekContent() as
+                                    ResultWrapper.Error).message.toString()
                         )
                     }
                     errorListener()
@@ -116,6 +117,10 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     }
 
     abstract fun handleLogout()
+
+    override fun onDoubleTap() {
+        lockScreen()
+    }
 
     companion object {
         const val ACTION_LOGOUT = "is.posctrl.posctrl_android.ACTION_LOGOUT"

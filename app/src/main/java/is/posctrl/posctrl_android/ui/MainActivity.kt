@@ -1,6 +1,5 @@
 package `is`.posctrl.posctrl_android.ui
 
-import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.ResultWrapper
@@ -49,6 +48,8 @@ class MainActivity : BaseActivity() {
 
     private lateinit var navHostFragment: NavHostFragment
 
+    private var startsOtherIntent: Boolean = false
+
     @Inject
     lateinit var preferencesSource: PreferencesSource
 
@@ -59,8 +60,8 @@ class MainActivity : BaseActivity() {
         mainBinding.lifecycleOwner = this
 
         LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                broadcastReceiver,
-                IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
+            broadcastReceiver,
+            IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
         )
 
         setupNavController()
@@ -71,7 +72,7 @@ class MainActivity : BaseActivity() {
 
     private fun setupNavController() {
         navHostFragment =
-                supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
+            supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
@@ -102,16 +103,16 @@ class MainActivity : BaseActivity() {
         } else {
             @Suppress("DEPRECATION")
             this.window.addFlags(
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
     }//todo move to base activity
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-                .activityComponent(ActivityModule(this))
+            .activityComponent(ActivityModule(this))
     }
 
     override fun showLoading() {
@@ -130,7 +131,7 @@ class MainActivity : BaseActivity() {
                     Timber.d("received filter 1")
                     if (bundle != null) {
                         val result =
-                                bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
+                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
                         handleFilter(result)
                     }
                 }
@@ -139,6 +140,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun navigateToFilter(filter: FilteredInfoResponse) {
+        startsOtherIntent = true
         val intent = Intent(this, FilterActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         intent.putExtra(FilterReceiverService.EXTRA_FILTER, filter)
@@ -155,16 +157,29 @@ class MainActivity : BaseActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK &&
-                (navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
-                && preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
+            (navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
+            && preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true
+        ) {
             return true
         }
         return super.onKeyDown(keyCode, event)
     }
 
+   /* override fun onUserLeaveHint() {
+        if (startsOtherIntent) {
+            startsOtherIntent = false
+        } else if (preferencesSource.defaultPrefs()[getString(R.string.key_app_visible), false] == true) {
+            preferencesSource.defaultPrefs()[getString(R.string.key_app_visible)] = false
+            lockScreen()
+
+        }
+        super.onUserLeaveHint()
+    }*/
+
     override fun onBackPressed() {
         if ((navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
-                && preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
+            && preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true
+        ) {
             return
         }
         super.onBackPressed()
@@ -173,7 +188,7 @@ class MainActivity : BaseActivity() {
     private fun setupKiosk() {
         if (preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
             val activityManager = applicationContext
-                    .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             activityManager.moveTaskToFront(taskId, 0)
 
         }
@@ -185,7 +200,10 @@ class MainActivity : BaseActivity() {
     }
 
     override fun handleLogout() {
-        navController.navigate(NavigationMainContainerDirections.toLoginFragment())
+        startsOtherIntent = true
+        val openAppIntent = Intent(this, MainActivity::class.java)
+        openAppIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(openAppIntent)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -206,7 +224,8 @@ interface BaseFragmentHandler {
     fun hideLoading()
     fun handleFilter(result: FilteredInfoResponse?)
     fun createLoadingObserver(
-            successListener: (ResultWrapper<*>?) -> Unit = { },
-            errorListener: () -> Unit = { }
+        successListener: (ResultWrapper<*>?) -> Unit = { },
+        errorListener: () -> Unit = { }
     ): Observer<Event<ResultWrapper<*>>>
+    fun onDoubleTap()
 }

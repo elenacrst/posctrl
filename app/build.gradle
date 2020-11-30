@@ -15,8 +15,8 @@ android {
         applicationId "is.posctrl.posctrl_android"
         minSdkVersion 24
         targetSdkVersion 30
-        versionCode 15
-        versionName "1.14"
+        versionCode 17
+        versionName "1.16"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

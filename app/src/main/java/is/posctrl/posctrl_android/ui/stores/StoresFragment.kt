@@ -59,6 +59,8 @@ class StoresFragment : BaseFragment() {
 
         storesBinding.llBase.setOnSwipeListener(onSwipeLeft = {
             findNavController().navigate(NavigationMainContainerDirections.toAppOptionsFragment(null, null))
+        }, onDoubleTap = {
+            baseFragmentHandler?.onDoubleTap()
         })
     }
 

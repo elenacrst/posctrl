@@ -7,7 +7,6 @@ import `is`.posctrl.posctrl_android.data.local.clear
 import `is`.posctrl.posctrl_android.ui.BaseActivity
 import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsViewModel
-import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.annotation.SuppressLint
 import android.app.*
 import android.content.BroadcastReceiver
@@ -38,14 +37,14 @@ class ChargingService : Service() {
         createNotificationChannel()
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
-                this, 0,
-                notificationIntent, 0
+            this, 0,
+            notificationIntent, 0
         )
         startForeground(
-                CHARGING_SERVICE, NotificationCompat.Builder(
+            CHARGING_SERVICE, NotificationCompat.Builder(
                 this,
                 CHARGING_CHANNEL_ID
-        ) // don't forget create a notification channel first
+            ) // don't forget create a notification channel first
                 .setOngoing(true)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(getString(R.string.title_notification_charging))
@@ -58,12 +57,12 @@ class ChargingService : Service() {
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
-                    CHARGING_CHANNEL_ID,
-                    "Charging service",
-                    NotificationManager.IMPORTANCE_DEFAULT
+                CHARGING_CHANNEL_ID,
+                "Charging service",
+                NotificationManager.IMPORTANCE_DEFAULT
             )
             val manager = getSystemService(
-                    NotificationManager::class.java
+                NotificationManager::class.java
             )
             manager.createNotificationChannel(serviceChannel)
         }
@@ -105,10 +104,10 @@ class ChargingReceiver : BroadcastReceiver() {
         Timber.d("charging - cleared prefs")
         stopFilterReceiverService(context)
         stopReceiptReceiverService(context)
-        val appOptionsViewModel = AppOptionsViewModel(PosCtrlRepository(preferencesSource, context, XmlMapper()))
+        val appOptionsViewModel =
+            AppOptionsViewModel(PosCtrlRepository(preferencesSource, context, XmlMapper()))
         appOptionsViewModel.closeFilterNotifications()
         //todo might be useless to track app visibility
-        context.toast("logout broadcast")
         val i = Intent(BaseActivity.ACTION_LOGOUT)
         LocalBroadcastManager.getInstance(context).sendBroadcast(i)
     }

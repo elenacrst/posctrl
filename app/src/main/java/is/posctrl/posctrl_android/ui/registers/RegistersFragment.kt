@@ -35,16 +35,16 @@ class RegistersFragment : BaseFragment() {
     private lateinit var store: StoreResult
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
-    ): View? {
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
 
         registersBinding = DataBindingUtil
-                .inflate(inflater, R.layout.fragment_registers, container, false)
+            .inflate(inflater, R.layout.fragment_registers, container, false)
 
         val args = RegistersFragmentArgs.fromBundle(
-                requireArguments()
+            requireArguments()
         )
         store = args.store
 
@@ -55,10 +55,10 @@ class RegistersFragment : BaseFragment() {
         if (registers.isNotEmpty()) {
             if (registers.size > 6) {
                 registersBinding.rvRegisters.layoutManager =
-                        GridLayoutManager(requireContext(), 3)
+                    GridLayoutManager(requireContext(), 3)
             } else {
                 registersBinding.rvRegisters.layoutManager =
-                        GridLayoutManager(requireContext(), 2)
+                    GridLayoutManager(requireContext(), 2)
             }
             adapter.setData(registers.toTypedArray())
             registersBinding.registers.visibility = View.VISIBLE
@@ -75,10 +75,10 @@ class RegistersFragment : BaseFragment() {
         adapter = RegistersAdapter(RegisterCellListener { register ->
             startReceiptReceiverService()
             findNavController().navigate(
-                    RegistersFragmentDirections.toReceiptFragment(
-                            register,
-                            store
-                    )
+                RegistersFragmentDirections.toReceiptFragment(
+                    register,
+                    store
+                )
             )
         })
         registersBinding.rvRegisters.adapter = adapter
@@ -87,11 +87,16 @@ class RegistersFragment : BaseFragment() {
 
         registersBinding.clBase.setOnSwipeListener(onSwipeLeft = {
             findNavController().navigate(
-                    NavigationMainContainerDirections.toAppOptionsFragment(
-                            null,
-                            store
-                    )
+                NavigationMainContainerDirections.toAppOptionsFragment(
+                    null,
+                    store
+                )
             )
+        }, onDoubleTap = {
+            baseFragmentHandler?.onDoubleTap()
+        })
+        registersBinding.rvRegisters.setOnSwipeListener(onDoubleTap = {
+            baseFragmentHandler?.onDoubleTap()
         })
         handleRegisters(store.registers)
     }
@@ -103,7 +108,7 @@ class RegistersFragment : BaseFragment() {
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
-                ActivityModule(requireActivity())
+            ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
     }

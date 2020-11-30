@@ -4,7 +4,7 @@ import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
 import kotlin.math.abs
 
-class GestureListener(val onSwipeLeft: () -> Unit = {}, val onSwipeRight: () -> Unit = {}, val onSwipeTop: () -> Unit = {}, val onSwipeBottom: () -> Unit = {}) : SimpleOnGestureListener() {
+class GestureListener(val onSwipeLeft: () -> Unit = {}, val onSwipeRight: () -> Unit = {}, val onSwipeTop: () -> Unit = {}, val onSwipeBottom: () -> Unit = {}, val onDoubleTap: () -> Unit = {}) : SimpleOnGestureListener() {
     override fun onDown(e: MotionEvent): Boolean {
         return true
     }
@@ -40,6 +40,11 @@ class GestureListener(val onSwipeLeft: () -> Unit = {}, val onSwipeRight: () -> 
             exception.printStackTrace()
         }
         return result
+    }
+
+    override fun onDoubleTap(e: MotionEvent?): Boolean {
+        onDoubleTap()
+        return super.onDoubleTap(e)
     }
 
     companion object {
