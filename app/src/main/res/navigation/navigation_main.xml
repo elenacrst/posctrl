@@ -14,10 +14,6 @@
             android:id="@+id/toSettingsFragment"
             app:destination="@id/settingsFragment" />
         <action
-            android:id="@+id/toStoresFragment"
-            app:destination="@id/storesFragment"
-            app:popUpTo="@id/navigation_main_container" />
-        <action
             android:id="@+id/toRegistersFragment"
             app:destination="@id/registersFragment"
             app:popUpTo="@id/navigation_main_container" />
@@ -27,20 +23,6 @@
         android:id="@+id/settingsFragment"
         android:name="is.posctrl.posctrl_android.ui.settings.SettingsFragment"
         android:label="Database settings" />
-
-    <fragment
-        android:id="@+id/storesFragment"
-        android:name="is.posctrl.posctrl_android.ui.stores.StoresFragment"
-        android:label="Stores"
-        tools:layout="@layout/fragment_stores">
-        <argument
-            android:name="stores"
-            app:argType="is.posctrl.posctrl_android.data.model.StoreResult[]"
-            app:nullable="false" />
-        <action
-            android:id="@+id/toRegistersFragment"
-            app:destination="@id/registersFragment" />
-    </fragment>
 
     <fragment
         android:id="@+id/registersFragment"

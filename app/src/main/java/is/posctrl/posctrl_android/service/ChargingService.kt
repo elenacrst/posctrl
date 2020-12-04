@@ -4,7 +4,7 @@ import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.clear
-import `is`.posctrl.posctrl_android.ui.BaseActivity
+import `is`.posctrl.posctrl_android.ui.base.BaseActivity
 import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsViewModel
 import android.annotation.SuppressLint

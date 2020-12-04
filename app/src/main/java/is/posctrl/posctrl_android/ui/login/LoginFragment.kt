@@ -13,6 +13,7 @@ import `is`.posctrl.posctrl_android.databinding.FragmentLoginBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.LoginResultReceiverService
+import `is`.posctrl.posctrl_android.util.extensions.getAppVersion
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import `is`.posctrl.posctrl_android.util.extensions.showInputDialog
 import `is`.posctrl.posctrl_android.util.extensions.toast
@@ -81,6 +82,13 @@ class LoginFragment : BaseFragment() {
                 findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it.store))
                 if (it.isReceivingNotifications()) {
                     startFilterReceiverService()
+                }
+                val versionNumber = it.appVersion.split(".")[0].toInt()
+                val subVersionNumber = it.appVersion.split(".")[1].toInt()
+                val currentVersionNumber = requireContext().getAppVersion().split(".")[0].toInt()
+                val currentSubVersionNumber = requireContext().getAppVersion().split(".")[1].toInt()
+                if (versionNumber > currentVersionNumber || versionNumber == currentVersionNumber && subVersionNumber > currentSubVersionNumber) {
+                    baseFragmentHandler!!.downloadApk()
                 }
             }
         } ?: kotlin.run {
@@ -151,8 +159,6 @@ class LoginFragment : BaseFragment() {
                     requireContext().toast(getString(R.string.error_wrong_code))
                 }
             }
-        }, onDoubleTap = {
-            baseFragmentHandler?.onDoubleTap()
         })
         loginBinding.btLogin.setOnClickListener {
             validateLogin()

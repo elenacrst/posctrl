@@ -5,7 +5,7 @@ import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.clear
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
-import `is`.posctrl.posctrl_android.ui.BaseActivity
+import `is`.posctrl.posctrl_android.ui.base.BaseActivity
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsViewModel
 import `is`.posctrl.posctrl_android.util.scheduleLogout
 import android.content.Context

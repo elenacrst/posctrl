@@ -1,27 +1,32 @@
-package `is`.posctrl.posctrl_android.ui
+package `is`.posctrl.posctrl_android.ui.base
 
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.ErrorCode
+import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
+import `is`.posctrl.posctrl_android.ui.BaseFragmentHandler
 import `is`.posctrl.posctrl_android.util.Event
-import `is`.posctrl.posctrl_android.util.extensions.lockScreen
+import `is`.posctrl.posctrl_android.util.extensions.getAppDirectory
 import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.os.Bundle
-import android.os.PersistableBundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 
 
@@ -32,11 +37,50 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     @Inject
     lateinit var preferences: PreferencesSource
 
-    override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
-        super.onCreate(savedInstanceState, persistentState)
+    @Inject
+    lateinit var globalViewModel: GlobalViewModel
+
+    fun createDownloadObserver(): Observer<Event<ResultWrapper<*>>> {
+        return createLoadingObserver(successListener = {
+            toast("successfully downloaded apk")
+            openAPK()
+
+        }, errorListener = {
+            toast("error downloading apk")
+        })
+    }
+
+    private fun openAPK() {
+        val apkFile = File(getAppDirectory(), PosCtrlRepository.APK_FILE_NAME)
+        val intent = Intent(Intent.ACTION_VIEW)
+            .apply {
+                val uri = FileProvider.getUriForFile(
+                    this@BaseActivity,
+                    "${applicationContext.packageName}.provider",
+                    apkFile
+                )
+                setDataAndType(uri, INTENT_TYPE_APK)
+                val resInfoList: List<ResolveInfo> =
+                    applicationContext.packageManager.queryIntentActivities(
+                        this,
+                        PackageManager.MATCH_DEFAULT_ONLY
+                    )
+                for (resolveInfo in resInfoList) {
+                    val packageName = resolveInfo.activityInfo.packageName
+                    applicationContext.grantUriPermission(
+                        packageName,
+                        uri,
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                }
+            }
+        startActivity(intent)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         initializeActivityComponent()
         activityComponent.inject(this)
-
     }
 
     override fun onResume() {
@@ -85,7 +129,9 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                 is ResultWrapper.Success -> {
                     successListener(value)
                 }
-                is ResultWrapper.Loading -> showLoading()
+                is ResultWrapper.Loading -> {
+                    showLoading()
+                }
                 is ResultWrapper.Error -> {
                     hideLoading()
                     val resultError =
@@ -99,7 +145,9 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                     }
                     errorListener()
                 }
-                else -> Timber.d("Nothing to do here")
+                else -> {
+                    Timber.d("Nothing to do here")
+                }
             }
         }
     }
@@ -119,10 +167,14 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     abstract fun handleLogout()
 
     override fun onDoubleTap() {
-        lockScreen()
+    }
+
+    override fun downloadApk() {
+        globalViewModel.downloadApk()
     }
 
     companion object {
         const val ACTION_LOGOUT = "is.posctrl.posctrl_android.ACTION_LOGOUT"
+        const val INTENT_TYPE_APK = "application/vnd.android.package-archive"
     }
 }

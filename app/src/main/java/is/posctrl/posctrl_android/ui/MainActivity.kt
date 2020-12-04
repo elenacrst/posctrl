@@ -11,10 +11,14 @@ import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.ChargingService
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
+import `is`.posctrl.posctrl_android.ui.base.BaseActivity
 import `is`.posctrl.posctrl_android.ui.filter.FilterActivity
 import `is`.posctrl.posctrl_android.ui.login.LoginFragment
 import `is`.posctrl.posctrl_android.ui.registers.RegistersFragment
 import `is`.posctrl.posctrl_android.util.Event
+import `is`.posctrl.posctrl_android.util.activitycontracts.InstallUnknownContract
+import `is`.posctrl.posctrl_android.util.extensions.toast
+import android.Manifest
 import android.app.ActivityManager
 import android.app.KeyguardManager
 import android.content.BroadcastReceiver
@@ -26,6 +30,7 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -53,6 +58,24 @@ class MainActivity : BaseActivity() {
     @Inject
     lateinit var preferencesSource: PreferencesSource
 
+    // Register the permissions callback, which handles the user's response to the
+// system permissions dialog. Save the return value, an instance of
+// ActivityResultLauncher. You can use either a val, as shown in this snippet,
+// or a lateinit var in your onAttach() or onCreate() method.
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+            Timber.d("permissions: write ${results[Manifest.permission.WRITE_EXTERNAL_STORAGE]}, read ${results[Manifest.permission.READ_EXTERNAL_STORAGE]}")
+            if (results[Manifest.permission.WRITE_EXTERNAL_STORAGE] != true ||
+                results[Manifest.permission.READ_EXTERNAL_STORAGE] != true
+            ) {
+                toast(getString(R.string.permission_not_granted))
+            } else {
+                toast(getString(R.string.permissions_granted))
+            }
+
+        }
+    private val installPackagesRequest = registerForActivityResult(InstallUnknownContract()) {}
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         allowScreenUnlock()
@@ -68,6 +91,17 @@ class MainActivity : BaseActivity() {
         initializeActivityComponent()
         activityComponent.inject(this)
         startService(Intent(baseContext, ChargingService::class.java))
+        requestPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
+            installPackagesRequest.launch(InstallUnknownContract().createIntent(this, null))
+        }
+        globalViewModel.downloadApkEvent.observe(this, createDownloadObserver())
     }
 
     private fun setupNavController() {
@@ -76,7 +110,7 @@ class MainActivity : BaseActivity() {
         navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                R.id.storesFragment, R.id.registersFragment -> {
+                R.id.registersFragment -> {
                     mainReceiverDisabled = false
 
                     if (filterItemMessages.isNotEmpty()) {
@@ -144,7 +178,7 @@ class MainActivity : BaseActivity() {
         val intent = Intent(this, FilterActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         intent.putExtra(FilterReceiverService.EXTRA_FILTER, filter)
-        startActivityForResult(intent, RC_FILTER)
+        startActivityForResult(intent, RC_FILTER)//todo use activity result api
     }
 
     override fun handleFilter(result: FilteredInfoResponse?) {
@@ -164,17 +198,6 @@ class MainActivity : BaseActivity() {
         }
         return super.onKeyDown(keyCode, event)
     }
-
-   /* override fun onUserLeaveHint() {
-        if (startsOtherIntent) {
-            startsOtherIntent = false
-        } else if (preferencesSource.defaultPrefs()[getString(R.string.key_app_visible), false] == true) {
-            preferencesSource.defaultPrefs()[getString(R.string.key_app_visible)] = false
-            lockScreen()
-
-        }
-        super.onUserLeaveHint()
-    }*/
 
     override fun onBackPressed() {
         if ((navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
@@ -227,5 +250,7 @@ interface BaseFragmentHandler {
         successListener: (ResultWrapper<*>?) -> Unit = { },
         errorListener: () -> Unit = { }
     ): Observer<Event<ResultWrapper<*>>>
+
     fun onDoubleTap()
+    fun downloadApk()
 }

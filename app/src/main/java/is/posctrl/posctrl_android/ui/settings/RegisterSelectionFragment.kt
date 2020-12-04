@@ -84,8 +84,6 @@ class RegisterSelectionFragment : BaseFragment() {
                     store
                 )
             )
-        }, onDoubleTap = {
-            baseFragmentHandler?.onDoubleTap()
         })
 
         handleRegisters(store.registers)

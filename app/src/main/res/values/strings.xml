@@ -110,4 +110,8 @@
     <string name="message_notification_charging">Background service</string>
     <string name="key_app_visible">keyAppVisible</string>
     <string name="key_was_charging">keyLastBatteryStatus</string>
+    <string name="error_download_update">Error downloading app update</string>
+    <string name="error_app_update">App update file not found on the server</string>
+    <string name="permission_not_granted">Permissions not granted</string>
+    <string name="permissions_granted">Permissions granted</string>
 </resources>

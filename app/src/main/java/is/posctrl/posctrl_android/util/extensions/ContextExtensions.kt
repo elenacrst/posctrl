@@ -1,6 +1,7 @@
 package `is`.posctrl.posctrl_android.util.extensions
 
 import `is`.posctrl.posctrl_android.R
+import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.databinding.DialogConfirmBinding
 import `is`.posctrl.posctrl_android.databinding.DialogEtBinding
 import android.content.Context
@@ -11,6 +12,7 @@ import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.io.File
 
 fun Context.toast(message: String) =
     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
@@ -67,4 +69,15 @@ fun Context.getAppVersion(): String {
         e.printStackTrace()
         "unknown"
     }
+}
+
+fun Context.getAppDirectory(): File {
+    val directory = File(
+        applicationContext.getExternalFilesDir(null)
+            .toString() + PosCtrlRepository.APP_DIR
+    )
+    if (!directory.exists()) {
+        directory.mkdirs()
+    }
+    return directory
 }

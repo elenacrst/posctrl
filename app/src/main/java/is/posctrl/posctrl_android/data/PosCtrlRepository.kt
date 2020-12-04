@@ -7,11 +7,13 @@ import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.*
 import `is`.posctrl.posctrl_android.ui.receipt.ReceiptAction
+import `is`.posctrl.posctrl_android.util.extensions.getAppDirectory
 import `is`.posctrl.posctrl_android.util.extensions.getAppVersion
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Environment
 import android.provider.Settings
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.hierynomus.msdtyp.AccessMask
@@ -25,6 +27,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -33,6 +38,7 @@ import java.sql.Date
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
+
 
 class PosCtrlRepository @Inject constructor(
     val prefs: PreferencesSource,
@@ -444,6 +450,97 @@ class PosCtrlRepository @Inject constructor(
         }
     }
 
+    fun getDownloadsDirectory(): File {
+        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)//todo implement for API Q
+    }
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    suspend fun downloadApk(): ResultWrapper<*> {
+        var foundApk = true
+        try {
+            withContext(Dispatchers.Default) {
+                val client = SMBClient()
+                val server = prefs.customPrefs()[appContext.getString(R.string.key_server_path), ""]
+                var sharedFolder =
+                    prefs.customPrefs()[appContext.getString(R.string.key_server_snapshot_path), ""]
+                        ?: ""
+                sharedFolder = sharedFolder.split("\\").last()
+                Timber.d("shared: $server $sharedFolder ")
+                val user = prefs.customPrefs()[appContext.getString(R.string.key_server_user), ""]
+                val password =
+                    prefs.customPrefs()[appContext.getString(R.string.key_server_password), ""]
+
+                client.connect(server)
+                    .use { connection ->
+                        val ac = AuthenticationContext(user, password?.toCharArray(), "")
+                        val session: Session = connection.authenticate(ac)
+
+                        try {
+                            //val fileName = fullAddress.split("\\$sharedFolder\\").last()
+                            (session.connectShare(sharedFolder) as? DiskShare?)?.let { share ->
+                                val s: MutableSet<SMB2ShareAccess> = HashSet()
+                                s.add(SMB2ShareAccess.FILE_SHARE_READ)
+                                val f = share.list("", "*.APK").firstOrNull()
+                                f?.let {
+                                    Timber.d("File : %s", f.fileName)
+                                    val file = share.openFile(
+                                        f.fileName,
+                                        EnumSet.of(AccessMask.GENERIC_READ),
+                                        null,
+                                        s,
+                                        SMB2CreateDisposition.FILE_OPEN,
+                                        null
+                                    )
+                                    val inputStream = file.inputStream
+                                    copyStreamToFile(inputStream)
+                                } ?: {
+                                    foundApk = false
+                                }
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            val message =
+                                appContext.applicationContext.getString(R.string.error_download_update)
+                            foundApk = false
+                            return@withContext ResultWrapper.Error(message = message)
+                        }
+                    }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            val message = appContext.applicationContext.getString(R.string.error_download_update)
+            foundApk = false
+            return ResultWrapper.Error(message = message)
+        }
+        return if (foundApk) {
+            ResultWrapper.Success("")
+        } else {
+            ResultWrapper.Error(appContext.getString(R.string.error_app_update))
+        }
+
+    }
+
+    private fun copyStreamToFile(inputStream: InputStream) {
+        val directory = appContext.getAppDirectory()
+        val outputFile = File(directory, APK_FILE_NAME)
+        if (!outputFile.exists()) {
+            outputFile.createNewFile()
+        }
+        inputStream.use { input ->
+            val outputStream = FileOutputStream(outputFile)
+            outputStream.use { output ->
+                val buffer = ByteArray(4 * 1024) // buffer size
+                while (true) {
+                    val byteCount = input.read(buffer)
+                    if (byteCount < 0) break
+                    output.write(buffer, 0, byteCount)
+                }
+                output.flush()
+            }
+        }
+    }
+//todo ask again for storage permissions after login if apk has to be downloaded
+
     companion object {
         const val ALIFE_DELAY_SECONDS = 60
         const val ALIFE_FILTER_DELAY_SECONDS = 60
@@ -452,6 +549,8 @@ class PosCtrlRepository @Inject constructor(
         const val DEFAULT_LOGIN_LISTENING_PORT = 29998
         const val DEFAULT_LOGIN_SEND_PORT = 11970
         const val DEFAULT_FILTER_PORT = 29999
+        const val APP_DIR = "/posctrl/"
+        const val APK_FILE_NAME = "update.apk"
     }
 }
 
