@@ -123,20 +123,21 @@ class PosCtrlRepository @Inject constructor(
                 val xmlMessage = xmlMapper.writeValueAsString(loginBody)
                 val bytes = xmlMessage.toByteArray()
                 val ip =
-                    prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), "255.255.255.255"]
-                        ?: "255.255.255.255"
+                    prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), ""]
+                        ?: ""
                 val port =
-                    prefs.customPrefs()[appContext.getString(R.string.key_login_port), DEFAULT_LOGIN_SEND_PORT]
-                        ?: DEFAULT_LOGIN_SEND_PORT
+                    prefs.defaultPrefs()[appContext.getString(R.string.key_login_port), "0"]
+                        ?: "0"
+                Timber.d("ip $ip, port $port")
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port))
-                sendSocket.broadcast = true
+                sendSocket.bind(InetSocketAddress(port.toInt()))
+                //  sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
                     bytes,
                     bytes.size,
                     InetAddress.getByName(ip),
-                    port
+                    port.toInt()
                 )
                 sendSocket.send(sendPacket)
             } catch (e: Exception) {
@@ -547,7 +548,6 @@ class PosCtrlRepository @Inject constructor(
         const val DEFAULT_SERVER_PORT = 11970
         const val DEFAULT_LISTENING_PORT = "20000"
         const val DEFAULT_LOGIN_LISTENING_PORT = 29998
-        const val DEFAULT_LOGIN_SEND_PORT = 11970
         const val DEFAULT_FILTER_PORT = 29999
         const val APP_DIR = "/posctrl/"
         const val APK_FILE_NAME = "update.apk"

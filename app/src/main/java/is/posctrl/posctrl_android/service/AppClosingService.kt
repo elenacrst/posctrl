@@ -1,10 +1,8 @@
 package `is`.posctrl.posctrl_android.service
 
 import `is`.posctrl.posctrl_android.PosCtrlApplication
-import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
-import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.FilterAction
 import android.app.Service
 import android.content.Intent
@@ -34,7 +32,7 @@ class AppClosingService : Service() {
             stopFilterReceiverService()
 
             stopSelf()
-            preferencesSource.defaultPrefs()[getString(R.string.key_app_visible)] = false
+//            preferencesSource.defaultPrefs()[getString(R.string.key_app_visible)] = false
         }
 
     }

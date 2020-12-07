@@ -1,30 +1,32 @@
 package `is`.posctrl.posctrl_android.data.model
 
 import android.os.Parcelable
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
 import kotlinx.android.parcel.Parcelize
 
 @JacksonXmlRootElement(localName = "LoginResult")
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Parcelize
 data class LoginResult(
-        private var _errorMessage: String = "",
-        private var _username: String = "",
-        private var _serverPath: String = "",
-        private var _serverPort: Int = -1,
-        private var _filterRespondTime: Int = -1,
-        private var _appVersion: String = "",
-        private var _serverUser: String = "",
-        private var _serverUserDomain: String = "",
-        private var _serverPassword: String = "",
-        private var _serverSnapshotPath: String = "",
-        private var _masterPassword: String = "",
-        private var _timeZone: String = "",
-        private var _receiveNotification: Boolean = false,
-        private var _notificationSound: Boolean = false,
-        private var _store: StoreResult = StoreResult(),
-        private var _serverTime: String = ""
+    private var _errorMessage: String = "",
+    private var _username: String = "",
+    private var _serverPath: String = "",
+    private var _serverPort: Int = -1,
+    private var _filterRespondTime: Int = -1,
+    private var _appVersion: String = "",
+    private var _serverUser: String = "",
+    private var _serverUserDomain: String = "",
+    private var _serverPassword: String = "",
+    private var _serverSnapshotPath: String = "",
+    private var _masterPassword: String = "",
+    private var _timeZone: String = "",
+    private var _receiveNotification: Boolean = false,
+    private var _notificationSound: Boolean = false,
+    private var _store: StoreResult = StoreResult(),
+    private var _serverTime: String = ""
 ) : Parcelable {
     @get:JacksonXmlProperty(localName = "ErrorMessage")
     var errorMessage: String

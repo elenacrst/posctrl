@@ -57,11 +57,17 @@ class LoginResultReceiverService : Service() {
                 socket!!.soTimeout = 60 * 1000
                 Timber.d("waiting to receive login result via udp on port $serverPort")
                 try {
-                    val message = ByteArray(1024)
+                    val message = ByteArray(9000)
                     p = DatagramPacket(message, message.size)
                     socket!!.receive(p)
-                    Timber.d("received login result ${String(message).substring(0, p.length)}")
-                    publishResults(String(message).substring(0, p.length))
+                    if (p.length < 9000) {
+                        Timber.d("received login result ${String(message).substring(0, p.length)}")
+                        publishResults(String(message).substring(0, p.length))
+                    } else {
+                        Timber.d("received login result ${String(message)}")
+                        publishResults(String(message))
+                    }
+
                 } catch (e: SocketTimeoutException) {
                 } catch (e: IOException) {
                     e.printStackTrace()
@@ -113,7 +119,7 @@ class LoginResultReceiverService : Service() {
             }
         } else {
             Timber.d(
-                    "with a null intent. It has been probably restarted by the system."
+                "with a null intent. It has been probably restarted by the system."
             )
         }
         return START_REDELIVER_INTENT

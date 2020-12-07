@@ -6,7 +6,6 @@ import `is`.posctrl.posctrl_android.data.ErrorCode
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
-import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
@@ -49,6 +48,34 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
             toast("error downloading apk")
         })
     }
+
+    /* private fun openAPK() {//todo use this once google reviews app, for possibly having google play protect ignore it
+         // PackageManager provides an instance of PackageInstaller
+         val packageInstaller = packageManager.packageInstaller
+
+         // Prepare params for installing one APK file with MODE_FULL_INSTALL
+         // We could use MODE_INHERIT_EXISTING to install multiple split APKs
+         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
+         params.setAppPackageName(packageName)
+
+         // Get a PackageInstaller.Session for performing the actual update
+         val sessionId = packageInstaller.createSession(params)
+         val session = packageInstaller.openSession(sessionId)
+
+         // Copy APK file bytes into OutputStream provided by install Session
+         val out = session.openWrite(packageName, 0, -1)
+         val fis = File(getAppDirectory(), PosCtrlRepository.APK_FILE_NAME).inputStream()
+         fis.copyTo(out)
+         session.fsync(out)
+         out.close()
+
+         // The app gets killed after installation session commit
+         session.commit(
+             PendingIntent.getBroadcast(this, sessionId,
+                 Intent("android.intent.action.MAIN"), 0).intentSender)
+
+         // installPackage(this, File(getAppDirectory(), PosCtrlRepository.APK_FILE_NAME).inputStream(), packageName)
+     }*/
 
     private fun openAPK() {
         val apkFile = File(getAppDirectory(), PosCtrlRepository.APK_FILE_NAME)
@@ -115,10 +142,10 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         }
     }
 
-    override fun onStart() {
+/*    override fun onStart() {
         super.onStart()
-        preferences.defaultPrefs()[getString(R.string.key_app_visible)] = true
-    }
+     //   preferences.defaultPrefs()[getString(R.string.key_app_visible)] = true
+    }*/
 
     override fun createLoadingObserver(
         successListener: (ResultWrapper<*>?) -> Unit,

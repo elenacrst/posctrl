@@ -1,10 +1,12 @@
 package `is`.posctrl.posctrl_android.data.model
 
 import android.os.Parcelable
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Picture(
     private var _imageAddress: String = ""
 ) : Parcelable {

@@ -1,11 +1,13 @@
 package `is`.posctrl.posctrl_android.data.model
 
 import android.os.Parcelable
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
 import kotlinx.android.parcel.Parcelize
 
 @JacksonXmlRootElement(localName = "Receipt")
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Parcelize
 data class ReceiptResponse(
     private var _storeNumber: Int = -1,
