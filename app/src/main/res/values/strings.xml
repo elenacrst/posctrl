@@ -4,12 +4,9 @@
     <string name="hint_user_id">User ID</string>
     <string name="action_login">Login</string>
     <string name="hint_password">Password</string>
-    <string name="hint_database_server">Login server address</string>
     <string name="key_database_server" translatable="false">keyDatabaseServer</string>
     <string name="title_database_server">Server address</string>
     <string name="dialog_database_server">Login server address</string>
-    <string name="attachment_summary_off">Only download attachments when manually requested</string>
-    <string name="header_sql_server">SQL Server</string>
     <string name="key_database_user" translatable="false">keyDatabaseUser</string>
     <string name="title_database_user">Database user</string>
     <string name="dialog_database_user">Database user</string>
@@ -24,9 +21,7 @@
     <string name="error_wrong_code">Wrong security code</string>
     <string name="error_empty_user">Username can\'t be empty</string>
     <string name="error_empty_password">Password can\'t be empty</string>
-    <string name="key_database_port">keyDatabasePort</string>
     <string name="title_server_port">Server port</string>
-    <string name="dialog_server_port">Server port</string>
     <string name="key_server_path"  translatable="false">keyServerPath</string>
     <string name="key_server_port" translatable="false">keyServerPort</string>
     <string name="key_filter_respond_time" translatable="false">keyFilterRespondTime</string>
@@ -40,7 +35,6 @@
     <string name="key_logged_user" translatable="false">keyLoggedInUser</string>
     <string name="message_store_value">Detected store %1$d %2$s</string>
     <string name="store_value">%1$d, %2$s</string>
-    <string name="title_select_store">Please select a store</string>
     <string name="error_no_registers">No registers found for selected store</string>
     <string name="error_registers_store">No registers were found for store %1$d, %2$s</string>
     <string name="title_select_register">Please select a register</string>
@@ -67,8 +61,6 @@
     <string name="action_accept">Accept</string>
     <string name="action_reject">Reject</string>
     <string name="key_notification_sound">keyNotificationSound</string>
-    <string name="title_notification_sound">Notification sound</string>
-    <string name="title_receive_notifications">Receive notifications</string>
     <string name="key_receive_notifications">keyReceiveNotifications</string>
     <string name="key_send_alife_filter">keySendALifeFilter</string>
     <string name="message_timed_out">Timed out</string>

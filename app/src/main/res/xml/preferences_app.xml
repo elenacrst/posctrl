@@ -13,7 +13,7 @@
     </EditTextPreference>
     <EditTextPreference
         android:dialogLayout="@layout/dialog_et"
-        android:dialogTitle="@string/dialog_server_port"
+        android:dialogTitle="@string/title_server_port"
         android:inputType="number"
         android:key="@string/key_login_port"
         android:title="@string/title_server_port"
