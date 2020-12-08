@@ -13,13 +13,11 @@ import `is`.posctrl.posctrl_android.ui.BaseFragmentHandler
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.getAppDirectory
 import `is`.posctrl.posctrl_android.util.extensions.toast
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Observer
@@ -38,6 +36,24 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
     @Inject
     lateinit var globalViewModel: GlobalViewModel
+
+    // Register the permissions callback, which handles the user's response to the
+// system permissions dialog. Save the return value, an instance of
+// ActivityResultLauncher. You can use either a val, as shown in this snippet,
+// or a lateinit var in your onAttach() or onCreate() method.
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+            Timber.d("permissions: write ${results[android.Manifest.permission.WRITE_EXTERNAL_STORAGE]}, read ${results[android.Manifest.permission.READ_EXTERNAL_STORAGE]}")
+            if (results[android.Manifest.permission.WRITE_EXTERNAL_STORAGE] != true ||
+                results[android.Manifest.permission.READ_EXTERNAL_STORAGE] != true
+            ) {
+                toast(getString(R.string.permission_not_granted))
+            } else {
+                toast(getString(R.string.permissions_granted))
+                globalViewModel.saveSettingsFromFile()
+            }
+
+        }
 
     fun createDownloadObserver(): Observer<Event<ResultWrapper<*>>> {
         return createLoadingObserver(successListener = {
@@ -108,6 +124,12 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         super.onCreate(savedInstanceState)
         initializeActivityComponent()
         activityComponent.inject(this)
+        requestPermissionLauncher.launch(
+            arrayOf(
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+        )
     }
 
     override fun onResume() {
@@ -116,6 +138,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
             receiver,
             IntentFilter(ACTION_LOGOUT)
         )
+
     }
 
     private fun createLogoutReceiver(): BroadcastReceiver {

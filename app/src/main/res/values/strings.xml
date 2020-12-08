@@ -94,4 +94,5 @@
     <string name="error_app_update">App update file not found on the server</string>
     <string name="permission_not_granted">Permissions not granted</string>
     <string name="permissions_granted">Permissions granted</string>
+    <string name="message_app_open_directory">Access to Downloads directory is required for settings import</string>
 </resources>

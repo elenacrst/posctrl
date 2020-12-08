@@ -17,8 +17,6 @@ import `is`.posctrl.posctrl_android.ui.login.LoginFragment
 import `is`.posctrl.posctrl_android.ui.registers.RegistersFragment
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.activitycontracts.InstallUnknownContract
-import `is`.posctrl.posctrl_android.util.extensions.toast
-import android.Manifest
 import android.app.ActivityManager
 import android.app.KeyguardManager
 import android.content.BroadcastReceiver
@@ -30,7 +28,6 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -58,22 +55,6 @@ class MainActivity : BaseActivity() {
     @Inject
     lateinit var preferencesSource: PreferencesSource
 
-    // Register the permissions callback, which handles the user's response to the
-// system permissions dialog. Save the return value, an instance of
-// ActivityResultLauncher. You can use either a val, as shown in this snippet,
-// or a lateinit var in your onAttach() or onCreate() method.
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
-            Timber.d("permissions: write ${results[Manifest.permission.WRITE_EXTERNAL_STORAGE]}, read ${results[Manifest.permission.READ_EXTERNAL_STORAGE]}")
-            if (results[Manifest.permission.WRITE_EXTERNAL_STORAGE] != true ||
-                results[Manifest.permission.READ_EXTERNAL_STORAGE] != true
-            ) {
-                toast(getString(R.string.permission_not_granted))
-            } else {
-                toast(getString(R.string.permissions_granted))
-            }
-
-        }
     private val installPackagesRequest = registerForActivityResult(InstallUnknownContract()) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,12 +72,7 @@ class MainActivity : BaseActivity() {
         initializeActivityComponent()
         activityComponent.inject(this)
         startService(Intent(baseContext, ChargingService::class.java))
-        requestPermissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            )
-        )
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
             installPackagesRequest.launch(InstallUnknownContract().createIntent(this, null))
@@ -229,8 +205,8 @@ class MainActivity : BaseActivity() {
         startActivity(openAppIntent)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
+        super.onActivityResult(requestCode, resultCode, intent)
         if (requestCode == RC_FILTER && resultCode == RESULT_LOGOUT) {
             handleLogout()
         }

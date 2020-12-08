@@ -27,9 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
+import java.io.*
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -132,7 +130,6 @@ class PosCtrlRepository @Inject constructor(
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port.toInt()))
-                //  sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
                     bytes,
                     bytes.size,
@@ -451,10 +448,6 @@ class PosCtrlRepository @Inject constructor(
         }
     }
 
-    fun getDownloadsDirectory(): File {
-        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)//todo implement for API Q
-    }
-
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun downloadApk(): ResultWrapper<*> {
         var foundApk = true
@@ -540,7 +533,51 @@ class PosCtrlRepository @Inject constructor(
             }
         }
     }
-//todo ask again for storage permissions after login if apk has to be downloaded
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    @Throws(IOException::class)
+    suspend fun saveSettingsFromFile() {
+        withContext(Dispatchers.Default) {
+            @Suppress("DEPRECATION") val path = Environment.getExternalStorageDirectory()
+            val file = File(path, Environment.DIRECTORY_DOWNLOADS)
+            val f: Array<File>? = file.listFiles()
+            var appliedFirstFile = false
+            f?.let {
+                for (ff in it) {
+                    Timber.d("File regular $ff")
+                    if (ff.isFile && ff.path.endsWith(".xml") && ff.name.startsWith(
+                            SETTINGS_FILE_PREFIX
+                        )
+                    ) {
+                        Timber.d("File xml $ff")
+                        val stringBuilder = StringBuilder()
+                        ff.inputStream().use { inputStream ->
+                            BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                                var line: String? = reader.readLine()
+                                while (line != null) {
+                                    stringBuilder.append(line)
+                                    line = reader.readLine()
+                                }
+                            }
+                        }
+                        val result = xmlMapper.readValue(
+                            stringBuilder.toString(),
+                            SettingsFileBody::class.java
+                        )
+                        Timber.d("settings mapped $result")
+                        if (!appliedFirstFile) {
+                            prefs.defaultPrefs()[appContext.getString(R.string.key_login_server)] =
+                                result.loginServer
+                            prefs.defaultPrefs()[appContext.getString(R.string.key_login_port)] =
+                                result.loginPort
+                            appliedFirstFile = true
+                        }
+                        ff.delete()
+                    }
+                }
+            }
+        }
+    }
 
     companion object {
         const val ALIFE_DELAY_SECONDS = 60
@@ -551,6 +588,7 @@ class PosCtrlRepository @Inject constructor(
         const val DEFAULT_FILTER_PORT = 29999
         const val APP_DIR = "/posctrl/"
         const val APK_FILE_NAME = "update.apk"
+        const val SETTINGS_FILE_PREFIX = "PosCtrl-"
     }
 }
 

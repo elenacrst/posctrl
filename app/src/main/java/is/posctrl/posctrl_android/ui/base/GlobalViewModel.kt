@@ -33,12 +33,19 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
                     e.printStackTrace()
                     ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
                 }
-
-
             }
-            Timber.d("result was $result")
             _downloadApkEvent.value = Event(result)
             Timber.d("Download apk duration $time")
+        }
+    }
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    fun saveSettingsFromFile() {
+        viewModelScope.launch {
+            val time = measureTimeMillis {
+                repository.saveSettingsFromFile()
+            }
+            Timber.d("Save settings from file duration $time")
         }
     }
 }
