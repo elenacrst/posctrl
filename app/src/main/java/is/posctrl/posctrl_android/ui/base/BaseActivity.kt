@@ -117,7 +117,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                     )
                 }
             }
-        startActivity(intent)
+        startActivityForResult(intent, RC_OPEN_APK)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -226,5 +226,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     companion object {
         const val ACTION_LOGOUT = "is.posctrl.posctrl_android.ACTION_LOGOUT"
         const val INTENT_TYPE_APK = "application/vnd.android.package-archive"
+        const val RC_OPEN_APK = 3
     }
 }
