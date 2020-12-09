@@ -11,17 +11,17 @@ import kotlinx.android.parcel.Parcelize
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Parcelize
 data class FilteredInfoResponse(
-    private var _storeNumber: Int = -1,
-    private var _registerNumber: Int = -1,
-    private var _itemLineId: Int = -1,
-    private var _storeName: String = "",
-    private var _itemId: Int = -1,//if 1, bold text
-    private var _itemName: String = "",//if 1, italic text
-    private var _quantity: String = "0.0",
-    private var _totalPrice: String = "0.0",
-    private var _filterName: String = "",
-    private var _filterQuestion: String = "",
-    private var _pictures: List<Picture> = listOf()
+        private var _storeNumber: Int = -1,
+        private var _registerNumber: Int = -1,
+        private var _itemLineId: Int = -1,
+        private var _storeName: String = "",
+        private var _itemId: Int = -1,//if 1, bold text
+        private var _itemName: String = "",//if 1, italic text
+        private var _quantity: String = "0.0",
+        private var _totalPrice: String = "0.0",
+        // private var _filterName: String = "",
+        private var _filterQuestion: String = "",
+        private var _pictures: List<Picture> = listOf()
 ) : Parcelable {
 
     @get:JacksonXmlProperty(localName = "ItemLineID")
@@ -80,12 +80,12 @@ data class FilteredInfoResponse(
         }
         get() = _totalPrice
 
-    @get:JacksonXmlProperty(localName = "FilterName")
-    var filterName: String
-        set(value) {
-            _filterName = value
-        }
-        get() = _filterName
+    /* @get:JacksonXmlProperty(localName = "FilterName")
+     var filterName: String
+         set(value) {
+             _filterName = value
+         }
+         get() = _filterName*/
 
     @get:JacksonXmlProperty(localName = "FilterQuestion")
     var filterQuestion: String

@@ -13,12 +13,12 @@ import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
 class GlobalViewModel @Inject constructor(private val repository: PosCtrlRepository) :
-    ViewModel() {
+        ViewModel() {
     @Inject
     lateinit var appContext: Application
 
     private var _downloadApkEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-        MutableLiveData(Event(ResultWrapper.None))
+            MutableLiveData(Event(ResultWrapper.None))
     val downloadApkEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _downloadApkEvent
 
@@ -28,6 +28,7 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
             var result: ResultWrapper<*>
             val time = measureTimeMillis {
                 result = try {
+                    repository.downloadSettings()
                     repository.downloadApk()
                 } catch (e: NoNetworkConnectionException) {
                     e.printStackTrace()

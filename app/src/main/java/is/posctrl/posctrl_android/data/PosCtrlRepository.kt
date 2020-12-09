@@ -39,16 +39,16 @@ import javax.inject.Inject
 
 
 class PosCtrlRepository @Inject constructor(
-    val prefs: PreferencesSource,
-    private val appContext: Context,
-    private val xmlMapper: XmlMapper
+        val prefs: PreferencesSource,
+        private val appContext: Context,
+        private val xmlMapper: XmlMapper
 ) {
     @Suppress("BlockingMethodInNonBlockingContext")
     @Throws(Exception::class)
     suspend fun sendReceiptInfoMessage(
-        action: ReceiptAction = ReceiptAction.OPEN,
-        storeNumber: Int = -1,
-        registerNumber: Int = -1,
+            action: ReceiptAction = ReceiptAction.OPEN,
+            storeNumber: Int = -1,
+            registerNumber: Int = -1,
     ): ResultWrapper<*> {
         withContext(Dispatchers.Default) {
             try {
@@ -56,39 +56,39 @@ class PosCtrlRepository @Inject constructor(
                     return@withContext ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
                 }
                 val receiptInfo = ReceiptInfoBody(
-                    appName = appContext.getString(R.string.app_name),
-                    userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
-                        ?: "",
-                    action = action.actionValue,
-                    storeNumber = storeNumber,
-                    registerNumber = registerNumber,
-                    hostName = getDeviceIdentifier(),
-                    listeningPort = (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
-                        ?: DEFAULT_LISTENING_PORT).toInt(),
-                    time = getLocalTimeString()
+                        appName = appContext.getString(R.string.app_name),
+                        userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
+                                ?: "",
+                        action = action.actionValue,
+                        storeNumber = storeNumber,
+                        registerNumber = registerNumber,
+                        hostName = getDeviceIdentifier(),
+                        listeningPort = (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
+                                ?: DEFAULT_LISTENING_PORT).toInt(),
+                        time = getLocalTimeString()
                 )
                 Timber.d("receipt info $receiptInfo")
                 val xmlMessage = xmlMapper.writeValueAsString(receiptInfo)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
                 val port =
-                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                        ?: DEFAULT_SERVER_PORT
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                                ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                    bytes,
-                    bytes.size,
-                    InetAddress.getByName(broadcastIp),
-                    port
+                        bytes,
+                        bytes.size,
+                        InetAddress.getByName(broadcastIp),
+                        port
                 )
                 if (action == ReceiptAction.CLOSE) {
                     prefs.customPrefs()[appContext.getString(
-                        R.string.key_send_alife,
-                        storeNumber,
-                        registerNumber
+                            R.string.key_send_alife,
+                            storeNumber,
+                            registerNumber
                     )] = false
                 }
                 sendSocket.send(sendPacket)
@@ -103,38 +103,38 @@ class PosCtrlRepository @Inject constructor(
     @Suppress("BlockingMethodInNonBlockingContext")
     @Throws(Exception::class)
     suspend fun sendLoginMessage(
-        userId: String,
-        password: String
+            userId: String,
+            password: String
     ): ResultWrapper<*> {
         withContext(Dispatchers.Default) {
             try {
                 val loginBody = LoginBody(
-                    appName = appContext.getString(R.string.app_name),
-                    userId = userId,
-                    hostName = getDeviceIdentifier(),
-                    listeningPort = DEFAULT_LOGIN_LISTENING_PORT,//todo check if preference required/ settings item
-                    time = getLocalTimeString(),
-                    appVersion = appContext.getAppVersion(),
-                    password = password
+                        appName = appContext.getString(R.string.app_name),
+                        userId = userId,
+                        hostName = getDeviceIdentifier(),
+                        listeningPort = DEFAULT_LOGIN_LISTENING_PORT,//todo check if preference required/ settings item
+                        time = getLocalTimeString(),
+                        appVersion = appContext.getAppVersion(),
+                        password = password
                 )
                 Timber.d("login body $loginBody")
                 val xmlMessage = xmlMapper.writeValueAsString(loginBody)
                 val bytes = xmlMessage.toByteArray()
                 val ip =
-                    prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), ""]
-                        ?: ""
+                        prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), ""]
+                                ?: ""
                 val port =
-                    prefs.defaultPrefs()[appContext.getString(R.string.key_login_port), "0"]
-                        ?: "0"
+                        prefs.defaultPrefs()[appContext.getString(R.string.key_login_port), "0"]
+                                ?: "0"
                 Timber.d("ip $ip, port $port")
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port.toInt()))
                 val sendPacket = DatagramPacket(
-                    bytes,
-                    bytes.size,
-                    InetAddress.getByName(ip),
-                    port.toInt()
+                        bytes,
+                        bytes.size,
+                        InetAddress.getByName(ip),
+                        port.toInt()
                 )
                 sendSocket.send(sendPacket)
             } catch (e: Exception) {
@@ -149,52 +149,52 @@ class PosCtrlRepository @Inject constructor(
     @Suppress("BlockingMethodInNonBlockingContext")
     @Throws(Exception::class)
     suspend fun sendReceiptInfoALife(
-        storeNumber: Int,
-        registerNumber: Int,
+            storeNumber: Int,
+            registerNumber: Int,
     ) {
         withContext(Dispatchers.Default) {
             try {
                 val receiptInfo = ReceiptInfoBody(
-                    appName = appContext.getString(R.string.app_name),
-                    userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
-                        ?: "",
-                    action = ReceiptAction.ALIFE.actionValue,
-                    storeNumber = storeNumber,
-                    registerNumber = registerNumber,
-                    hostName = getDeviceIdentifier(),//+build product if required
-                    listeningPort = (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
-                        ?: DEFAULT_LISTENING_PORT).toInt(),
-                    time = getLocalTimeString()
+                        appName = appContext.getString(R.string.app_name),
+                        userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
+                                ?: "",
+                        action = ReceiptAction.ALIFE.actionValue,
+                        storeNumber = storeNumber,
+                        registerNumber = registerNumber,
+                        hostName = getDeviceIdentifier(),//+build product if required
+                        listeningPort = (prefs.customPrefs()[appContext.getString(R.string.key_listen_port)]
+                                ?: DEFAULT_LISTENING_PORT).toInt(),
+                        time = getLocalTimeString()
                 )
                 Timber.d("receipt info $receiptInfo")
                 val xmlMessage = xmlMapper.writeValueAsString(receiptInfo)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
                 val port =
-                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                        ?: DEFAULT_SERVER_PORT
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                                ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                    bytes,
-                    bytes.size, InetAddress.getByName(broadcastIp),
-                    port
+                        bytes,
+                        bytes.size, InetAddress.getByName(broadcastIp),
+                        port
                 )
                 prefs.customPrefs()[appContext.getString(
-                    R.string.key_send_alife,
-                    storeNumber,
-                    registerNumber
+                        R.string.key_send_alife,
+                        storeNumber,
+                        registerNumber
                 )] = true
                 while (true) {
                     delay(ALIFE_DELAY_SECONDS * 1000L)
                     val sendAlife: Boolean = prefs.customPrefs()[appContext.getString(
-                        R.string.key_send_alife,
-                        storeNumber,
-                        registerNumber
+                            R.string.key_send_alife,
+                            storeNumber,
+                            registerNumber
                     )]
-                        ?: true
+                            ?: true
                     if (!sendAlife) {
                         return@withContext
                     }
@@ -208,31 +208,31 @@ class PosCtrlRepository @Inject constructor(
 
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun sendSuspendRegisterMessage(
-        storeNumber: Int,
-        registerNumber: Int,
+            storeNumber: Int,
+            registerNumber: Int,
     ) {
         withContext(Dispatchers.Default) {
             try {
                 val registerSuspendedBody = RegisterSuspendedBody(
-                    message = "Register suspended",
-                    storeNumber = storeNumber,
-                    registerNumber = registerNumber
+                        message = "Register suspended",
+                        storeNumber = storeNumber,
+                        registerNumber = registerNumber
                 )
                 Timber.d("register suspended body: $registerSuspendedBody")
                 val xmlMessage = xmlMapper.writeValueAsString(registerSuspendedBody)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
                 val port =
-                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                        ?: DEFAULT_SERVER_PORT
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                                ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                    bytes,
-                    bytes.size, InetAddress.getByName(broadcastIp),
-                    port
+                        bytes,
+                        bytes.size, InetAddress.getByName(broadcastIp),
+                        port
                 )
                 sendSocket.send(sendPacket)
             } catch (e: Exception) {
@@ -247,35 +247,35 @@ class PosCtrlRepository @Inject constructor(
             try {
                 val appVersion = appContext.getAppVersion()
                 val filterProcessBody = FilterProcessBody(
-                    appName = appContext.getString(R.string.app_name),
-                    appVersion = appVersion,
-                    userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
-                        ?: "",
-                    action = action.actionValue,
-                    hostName = getDeviceIdentifier(),
-                    listeningPort = prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
-                        ?: DEFAULT_FILTER_PORT,
-                    time = getLocalTimeString()
+                        appName = appContext.getString(R.string.app_name),
+                        appVersion = appVersion,
+                        userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
+                                ?: "",
+                        action = action.actionValue,
+                        hostName = getDeviceIdentifier(),
+                        listeningPort = prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
+                                ?: DEFAULT_FILTER_PORT,
+                        time = getLocalTimeString()
                 )
                 Timber.d("filter process body: $filterProcessBody")
                 val xmlMessage = xmlMapper.writeValueAsString(filterProcessBody)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
                 val port =
-                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                        ?: DEFAULT_SERVER_PORT
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                                ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                    bytes,
-                    bytes.size, InetAddress.getByName(broadcastIp),
-                    port
+                        bytes,
+                        bytes.size, InetAddress.getByName(broadcastIp),
+                        port
                 )
                 if (action == FilterAction.CLOSE) {
                     prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)] =
-                        false
+                            false
                 }
                 sendSocket.send(sendPacket)
             } catch (e: Exception) {
@@ -291,38 +291,38 @@ class PosCtrlRepository @Inject constructor(
             try {
                 val appVersion = appContext.getAppVersion()
                 val filterProcessBody = FilterProcessBody(
-                    appName = appContext.getString(R.string.app_name),
-                    appVersion = appVersion,
-                    userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
-                        ?: "",
-                    action = FilterAction.ALIFE.actionValue,
-                    hostName = getDeviceIdentifier(),
-                    listeningPort = prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
-                        ?: DEFAULT_FILTER_PORT,
-                    time = getLocalTimeString()
+                        appName = appContext.getString(R.string.app_name),
+                        appVersion = appVersion,
+                        userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
+                                ?: "",
+                        action = FilterAction.ALIFE.actionValue,
+                        hostName = getDeviceIdentifier(),
+                        listeningPort = prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
+                                ?: DEFAULT_FILTER_PORT,
+                        time = getLocalTimeString()
                 )
                 Timber.d("filter process body: $filterProcessBody")
                 val xmlMessage = xmlMapper.writeValueAsString(filterProcessBody)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
                 val port =
-                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                        ?: DEFAULT_SERVER_PORT
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                                ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                    bytes,
-                    bytes.size, InetAddress.getByName(broadcastIp),
-                    port
+                        bytes,
+                        bytes.size, InetAddress.getByName(broadcastIp),
+                        port
                 )
                 prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)] = true
                 while (true) {
                     delay(ALIFE_FILTER_DELAY_SECONDS * 1000L)
                     val sendAlife: Boolean =
-                        prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)]
-                            ?: true
+                            prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)]
+                                    ?: true
                     if (!sendAlife) {
                         return@withContext
                     }
@@ -338,8 +338,8 @@ class PosCtrlRepository @Inject constructor(
     private fun getDeviceIdentifier(): String {
         return "android-${
             Settings.Secure.getString(
-                appContext.contentResolver,
-                Settings.Secure.ANDROID_ID
+                    appContext.contentResolver,
+                    Settings.Secure.ANDROID_ID
             )
         }"
     }
@@ -365,37 +365,37 @@ class PosCtrlRepository @Inject constructor(
                 val sharedFolder = paths[1]
                 val user = prefs.customPrefs()[appContext.getString(R.string.key_server_user), ""]
                 val password =
-                    prefs.customPrefs()[appContext.getString(R.string.key_server_password), ""]
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_password), ""]
                 client.connect(server)
-                    .use { connection ->
-                        val ac = AuthenticationContext(user, password?.toCharArray(), "")
-                        val session: Session = connection.authenticate(ac)
-                        fileNames.forEach { fullAddress ->
-                            try {
-                                val fileName = fullAddress.split("\\$sharedFolder\\").last()
-                                (session.connectShare(sharedFolder) as? DiskShare?)?.let { share ->
-                                    val s: MutableSet<SMB2ShareAccess> = HashSet()
-                                    s.add(SMB2ShareAccess.FILE_SHARE_READ)
-                                    val file = share.openFile(
-                                        fileName,
-                                        EnumSet.of(AccessMask.GENERIC_READ),
-                                        null,
-                                        s,
-                                        SMB2CreateDisposition.FILE_OPEN,
-                                        null
-                                    )
-                                    val inputStream = file.inputStream
-                                    val bitmap = BitmapFactory.decodeStream(inputStream)
-                                    bitmap?.let {
-                                        bitmaps += it
+                        .use { connection ->
+                            val ac = AuthenticationContext(user, password?.toCharArray(), "")
+                            val session: Session = connection.authenticate(ac)
+                            fileNames.forEach { fullAddress ->
+                                try {
+                                    val fileName = fullAddress.split("\\$sharedFolder\\").last()
+                                    (session.connectShare(sharedFolder) as? DiskShare?)?.let { share ->
+                                        val s: MutableSet<SMB2ShareAccess> = HashSet()
+                                        s.add(SMB2ShareAccess.FILE_SHARE_READ)
+                                        val file = share.openFile(
+                                                fileName,
+                                                EnumSet.of(AccessMask.GENERIC_READ),
+                                                null,
+                                                s,
+                                                SMB2CreateDisposition.FILE_OPEN,
+                                                null
+                                        )
+                                        val inputStream = file.inputStream
+                                        val bitmap = BitmapFactory.decodeStream(inputStream)
+                                        bitmap?.let {
+                                            bitmaps += it
+                                        }
                                     }
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                    errors++
                                 }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                                errors++
                             }
                         }
-                    }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -415,31 +415,31 @@ class PosCtrlRepository @Inject constructor(
 
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun sendFilterResultMessage(
-        itemLineId: Int, result: FilterResults
+            itemLineId: Int, result: FilterResults
     ) {
         withContext(Dispatchers.Default) {
             try {
                 val filterResult = FilterResultBody(
-                    appName = appContext.getString(R.string.app_name),
-                    itemLineId,
-                    result.result,
-                    getLocalTimeString()
+                        appName = appContext.getString(R.string.app_name),
+                        itemLineId,
+                        result.result,
+                        getLocalTimeString()
                 )
                 Timber.d("filter result body: $filterResult")
                 val xmlMessage = xmlMapper.writeValueAsString(filterResult)
                 val bytes = xmlMessage.toByteArray()
                 val broadcastIp = "255.255.255.255"
                 val port =
-                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                        ?: DEFAULT_SERVER_PORT
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                                ?: DEFAULT_SERVER_PORT
                 val sendSocket = DatagramSocket(null)
                 sendSocket.reuseAddress = true
                 sendSocket.bind(InetSocketAddress(port))
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
-                    bytes,
-                    bytes.size, InetAddress.getByName(broadcastIp),
-                    port
+                        bytes,
+                        bytes.size, InetAddress.getByName(broadcastIp),
+                        port
                 )
                 sendSocket.send(sendPacket)
             } catch (e: Exception) {
@@ -456,49 +456,49 @@ class PosCtrlRepository @Inject constructor(
                 val client = SMBClient()
                 val server = prefs.customPrefs()[appContext.getString(R.string.key_server_path), ""]
                 var sharedFolder =
-                    prefs.customPrefs()[appContext.getString(R.string.key_server_snapshot_path), ""]
-                        ?: ""
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_snapshot_path), ""]
+                                ?: ""
                 sharedFolder = sharedFolder.split("\\").last()
                 Timber.d("shared: $server $sharedFolder ")
                 val user = prefs.customPrefs()[appContext.getString(R.string.key_server_user), ""]
                 val password =
-                    prefs.customPrefs()[appContext.getString(R.string.key_server_password), ""]
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_password), ""]
 
                 client.connect(server)
-                    .use { connection ->
-                        val ac = AuthenticationContext(user, password?.toCharArray(), "")
-                        val session: Session = connection.authenticate(ac)
+                        .use { connection ->
+                            val ac = AuthenticationContext(user, password?.toCharArray(), "")
+                            val session: Session = connection.authenticate(ac)
 
-                        try {
-                            //val fileName = fullAddress.split("\\$sharedFolder\\").last()
-                            (session.connectShare(sharedFolder) as? DiskShare?)?.let { share ->
-                                val s: MutableSet<SMB2ShareAccess> = HashSet()
-                                s.add(SMB2ShareAccess.FILE_SHARE_READ)
-                                val f = share.list("", "*.APK").firstOrNull()
-                                f?.let {
-                                    Timber.d("File : %s", f.fileName)
-                                    val file = share.openFile(
-                                        f.fileName,
-                                        EnumSet.of(AccessMask.GENERIC_READ),
-                                        null,
-                                        s,
-                                        SMB2CreateDisposition.FILE_OPEN,
-                                        null
-                                    )
-                                    val inputStream = file.inputStream
-                                    copyStreamToFile(inputStream)
-                                } ?: {
-                                    foundApk = false
+                            try {
+                                //val fileName = fullAddress.split("\\$sharedFolder\\").last()
+                                (session.connectShare(sharedFolder) as? DiskShare?)?.let { share ->
+                                    val s: MutableSet<SMB2ShareAccess> = HashSet()
+                                    s.add(SMB2ShareAccess.FILE_SHARE_READ)
+                                    val f = share.list("", "*.APK").firstOrNull()
+                                    f?.let {
+                                        Timber.d("File : %s", f.fileName)
+                                        val file = share.openFile(
+                                                f.fileName,
+                                                EnumSet.of(AccessMask.GENERIC_READ),
+                                                null,
+                                                s,
+                                                SMB2CreateDisposition.FILE_OPEN,
+                                                null
+                                        )
+                                        val inputStream = file.inputStream
+                                        copyStreamToFile(inputStream)
+                                    } ?: {
+                                        foundApk = false
+                                    }
                                 }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                val message =
+                                        appContext.applicationContext.getString(R.string.error_download_update)
+                                foundApk = false
+                                return@withContext ResultWrapper.Error(message = message)
                             }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            val message =
-                                appContext.applicationContext.getString(R.string.error_download_update)
-                            foundApk = false
-                            return@withContext ResultWrapper.Error(message = message)
                         }
-                    }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -546,8 +546,8 @@ class PosCtrlRepository @Inject constructor(
                 for (ff in it) {
                     Timber.d("File regular $ff")
                     if (ff.isFile && ff.path.endsWith(".xml") && ff.name.startsWith(
-                            SETTINGS_FILE_PREFIX
-                        )
+                                    SETTINGS_FILE_PREFIX
+                            )
                     ) {
                         Timber.d("File xml $ff")
                         val stringBuilder = StringBuilder()
@@ -561,20 +561,90 @@ class PosCtrlRepository @Inject constructor(
                             }
                         }
                         val result = xmlMapper.readValue(
-                            stringBuilder.toString(),
-                            SettingsFileBody::class.java
+                                stringBuilder.toString(),
+                                SettingsFileBody::class.java
                         )
                         Timber.d("settings mapped $result")
                         if (!appliedFirstFile) {
                             prefs.defaultPrefs()[appContext.getString(R.string.key_login_server)] =
-                                result.loginServer
+                                    result.loginServer
                             prefs.defaultPrefs()[appContext.getString(R.string.key_login_port)] =
-                                result.loginPort
+                                    result.loginPort
                             appliedFirstFile = true
                         }
                         ff.delete()
                     }
                 }
+            }
+        }
+    }
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    suspend fun downloadSettings(): ResultWrapper<*> {
+        try {
+            withContext(Dispatchers.Default) {
+                val client = SMBClient()
+                val snapshotPath = prefs.customPrefs()[appContext.getString(R.string.key_server_snapshot_path), ""]
+                        ?: ""
+                val paths = snapshotPath.split("\\").filter { it.isNotEmpty() }
+                Timber.d("paths ${paths.joinToString(",")}")
+                val server = prefs.customPrefs()[appContext.getString(R.string.key_server_path), ""]
+                        ?: ""
+                val sharedFolder = paths[1]
+                val user = prefs.customPrefs()[appContext.getString(R.string.key_server_user), ""]
+                val password =
+                        prefs.customPrefs()[appContext.getString(R.string.key_server_password), ""]
+                client.connect(server)
+                        .use { connection ->
+                            val ac = AuthenticationContext(user, password?.toCharArray(), "")
+                            val session: Session = connection.authenticate(ac)
+
+                            try {
+                                //val fileName = fullAddress.split("\\$sharedFolder\\").last()
+                                (session.connectShare(sharedFolder) as? DiskShare?)?.let { share ->
+                                    val s: MutableSet<SMB2ShareAccess> = HashSet()
+                                    s.add(SMB2ShareAccess.FILE_SHARE_READ)
+                                    share.list("", "PosCtrl-*.XML").forEach { f ->
+
+                                        f?.let {
+                                            Timber.d("File : ${f.fileName}")
+                                            val file = share.openFile(
+                                                    f.fileName,
+                                                    EnumSet.of(AccessMask.GENERIC_READ),
+                                                    null,
+                                                    s,
+                                                    SMB2CreateDisposition.FILE_OPEN,
+                                                    null
+                                            )
+                                            val inputStream = file.inputStream
+                                            saveSettingsFile(inputStream)
+                                        }
+                                    }
+
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                return@withContext ResultWrapper.Error()
+                            }
+                        }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return ResultWrapper.Error()
+        }
+        return ResultWrapper.Success("")
+    }
+
+    private fun saveSettingsFile(inputStream: InputStream) {
+        @Suppress("DEPRECATION") val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val file = File(path, SETTINGS_FILE_PREFIX + "settings.xml")
+        file.createNewFile()
+        val outStream: OutputStream = FileOutputStream(file)
+        outStream.use {
+            val buffer = ByteArray(8 * 1024)
+            var bytesRead: Int
+            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                outStream.write(buffer, 0, bytesRead)
             }
         }
     }
