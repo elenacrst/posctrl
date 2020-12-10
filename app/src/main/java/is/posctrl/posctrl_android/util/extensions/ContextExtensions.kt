@@ -4,6 +4,7 @@ import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.databinding.DialogConfirmBinding
 import `is`.posctrl.posctrl_android.databinding.DialogEtBinding
+import `is`.posctrl.posctrl_android.databinding.DialogLoadingBinding
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
@@ -80,4 +81,24 @@ fun Context.getAppDirectory(): File {
         directory.mkdirs()
     }
     return directory
+}
+
+fun Context.showUpdateDialog(): androidx.appcompat.app.AlertDialog {
+    val binding: DialogLoadingBinding = DataBindingUtil.inflate(
+        LayoutInflater.from(this),
+        R.layout.dialog_loading,
+        null,
+        false
+    )
+    val dialog = MaterialAlertDialogBuilder(
+        this,
+        android.R.style.Theme_Material_Light_NoActionBar_Fullscreen
+    )
+        .setTitle(applicationContext.getString(R.string.title_downloading_update))
+        .setMessage(applicationContext.getString(R.string.message_wait_download))
+        .setView(binding.root)
+        .setCancelable(false)
+        .create()
+    dialog.show()
+    return dialog
 }

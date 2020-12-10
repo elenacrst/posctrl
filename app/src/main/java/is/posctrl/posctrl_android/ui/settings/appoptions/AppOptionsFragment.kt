@@ -15,7 +15,6 @@ import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.ui.login.LoginViewModel
-import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import `is`.posctrl.posctrl_android.util.extensions.showInputDialog
 import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.content.ComponentName
@@ -94,9 +93,9 @@ class AppOptionsFragment : BaseFragment() {
             }
 
         }
-        appOptionsBinding.clBase.setOnSwipeListener(onDoubleTap = {
+        /*appOptionsBinding.clBase.setOnSwipeListener(onDoubleTap = {
             baseFragmentHandler?.onDoubleTap()
-        })
+        })*/
     }
 
     private fun enableKioskMode(enable: Boolean) {

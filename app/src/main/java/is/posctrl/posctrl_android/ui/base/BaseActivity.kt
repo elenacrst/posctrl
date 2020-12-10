@@ -6,6 +6,7 @@ import `is`.posctrl.posctrl_android.data.ErrorCode
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
+import `is`.posctrl.posctrl_android.data.local.clear
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
@@ -37,6 +38,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     @Inject
     lateinit var globalViewModel: GlobalViewModel
 
+    private var onApkDownloaded: () -> Unit = {}
+
     // Register the permissions callback, which handles the user's response to the
 // system permissions dialog. Save the return value, an instance of
 // ActivityResultLauncher. You can use either a val, as shown in this snippet,
@@ -59,9 +62,12 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         return createLoadingObserver(successListener = {
             toast("successfully downloaded apk")
             openAPK()
+            onApkDownloaded()
+            preferences.customPrefs().clear()
 
         }, errorListener = {
             toast("error downloading apk")
+            onApkDownloaded()
         })
     }
 
@@ -219,8 +225,9 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     override fun onDoubleTap() {
     }
 
-    override fun downloadApk() {
+    override fun downloadApk(function: () -> Unit) {
         globalViewModel.downloadApk()
+        onApkDownloaded = function
     }
 
     companion object {

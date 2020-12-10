@@ -13,10 +13,7 @@ import `is`.posctrl.posctrl_android.databinding.FragmentLoginBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.LoginResultReceiverService
-import `is`.posctrl.posctrl_android.util.extensions.getAppVersion
-import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
-import `is`.posctrl.posctrl_android.util.extensions.showInputDialog
-import `is`.posctrl.posctrl_android.util.extensions.toast
+import `is`.posctrl.posctrl_android.util.extensions.*
 import `is`.posctrl.posctrl_android.util.scheduleLogout
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -49,6 +46,7 @@ class LoginFragment : BaseFragment() {
     private var loginBroadcastReceiver = createLoginReceiver()
 
     private var loginCountdownTimer: CountDownTimer? = null
+    private var updateDialog: androidx.appcompat.app.AlertDialog? = null
 
     private fun createLoginReceiver(): BroadcastReceiver {
         return object : BroadcastReceiver() {
@@ -68,18 +66,21 @@ class LoginFragment : BaseFragment() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        hideLoading()
+    }
+
     private fun handleLogin(result: LoginResult?) {
         hideLoading()
         result?.let {
             if (it.errorMessage.isNotEmpty()) {
                 requireContext().toast(it.errorMessage)
-            } else if (prefs.customPrefs()[requireActivity().getString(R.string.key_logged_user), ""].isNullOrEmpty()) {
+            } else {
                 stopLoginService()
-                loginViewModel.sendFilterProcessOpenMessage()
-                storeLoginResultData(it)
                 LocalBroadcastManager.getInstance(requireContext())
                     .unregisterReceiver(loginBroadcastReceiver)
-                findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it.store))
+
                 if (it.isReceivingNotifications()) {
                     startFilterReceiverService()
                 }
@@ -88,7 +89,15 @@ class LoginFragment : BaseFragment() {
                 val currentVersionNumber = requireContext().getAppVersion().split(".")[0].toInt()
                 val currentSubVersionNumber = requireContext().getAppVersion().split(".")[1].toInt()
                 if (versionNumber > currentVersionNumber || versionNumber == currentVersionNumber && subVersionNumber > currentSubVersionNumber) {
-                    baseFragmentHandler!!.downloadApk()
+                    storeLoginResultData(it, false)
+                    updateDialog = requireContext().showUpdateDialog()
+                    baseFragmentHandler!!.downloadApk {
+                        updateDialog?.dismiss()
+                    }
+                } else {
+                    storeLoginResultData(it, true)
+                    loginViewModel.sendFilterProcessOpenMessage()
+                    findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it.store))
                 }
             }
         } ?: kotlin.run {
@@ -97,11 +106,14 @@ class LoginFragment : BaseFragment() {
 
     }
 
-    private fun storeLoginResultData(it: LoginResult) {
-        prefs.customPrefs()[requireActivity().getString(R.string.key_logged_user)] =
-            loginBinding.etUser.text.toString()
-        prefs.customPrefs()[requireActivity().getString(R.string.key_logged_username)] =
-            it.username
+    private fun storeLoginResultData(it: LoginResult, fullStore: Boolean = true) {
+        if (fullStore) {
+            prefs.customPrefs()[requireActivity().getString(R.string.key_logged_user)] =
+                loginBinding.etUser.text.toString()
+            prefs.customPrefs()[requireActivity().getString(R.string.key_logged_username)] =
+                it.username
+        }
+
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_path)] =
             it.serverPath
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_port)] =
@@ -184,7 +196,10 @@ class LoginFragment : BaseFragment() {
     }
 
     private fun checkAlreadyLoggedIn() {
-        if (prefs.customPrefs()[getString(R.string.key_logged_user), ""].isNullOrEmpty()) {
+        if (prefs.customPrefs()[getString(R.string.key_logged_user), ""].isNullOrEmpty() || prefs.customPrefs()[getString(
+                R.string.key_registers
+            ), ""].isNullOrEmpty()
+        ) {
             loginBinding.clBase.visibility = View.VISIBLE
             return
         }

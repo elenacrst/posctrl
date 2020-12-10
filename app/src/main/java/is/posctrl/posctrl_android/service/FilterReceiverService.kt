@@ -55,8 +55,8 @@ class FilterReceiverService : Service() {
         try {
             while (true) {
                 val serverPort: Int =
-                        prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
-                                ?: DEFAULT_FILTER_PORT
+                    prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
+                        ?: DEFAULT_FILTER_PORT
                 if (socket == null) {
                     socket = DatagramSocket(serverPort)
                     socket!!.broadcast = false
@@ -65,7 +65,7 @@ class FilterReceiverService : Service() {
                 socket!!.soTimeout = 60 * 1000
                 Timber.d("waiting to receive filter via udp on port $serverPort")
                 try {
-                    val message = ByteArray(512)
+                    val message = ByteArray(1024)
                     p = DatagramPacket(message, message.size)
                     socket!!.receive(p)
                     val msg = String(message).substring(0, p.length)
@@ -107,11 +107,11 @@ class FilterReceiverService : Service() {
         // to use a specific method to create the notification
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager =
-                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val channel = NotificationChannel(
-                    notificationChannelId,
-                    "Filter notifications channel",
-                    NotificationManager.IMPORTANCE_HIGH
+                notificationChannelId,
+                "Filter notifications channel",
+                NotificationManager.IMPORTANCE_HIGH
             ).let {
                 it.description = "Filter notifications service channel"
                 it
@@ -120,16 +120,16 @@ class FilterReceiverService : Service() {
         }
 
         val builder: Notification.Builder =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(
-                        this,
-                        notificationChannelId
-                ) else Notification.Builder(this)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(
+                this,
+                notificationChannelId
+            ) else Notification.Builder(this)
 
         return builder
-                .setContentTitle("Listening for filter notifications")
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setPriority(PRIORITY_HIGH) // for under android 26 compatibility
-                .build()
+            .setContentTitle("Listening for filter notifications")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(PRIORITY_HIGH) // for under android 26 compatibility
+            .build()
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
@@ -162,7 +162,7 @@ class FilterReceiverService : Service() {
             }
         } else {
             Timber.d(
-                    "with a null intent. It has been probably restarted by the system."
+                "with a null intent. It has been probably restarted by the system."
             )
         }
         return START_REDELIVER_INTENT

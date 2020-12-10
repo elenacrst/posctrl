@@ -95,4 +95,6 @@
     <string name="permission_not_granted">Permissions not granted</string>
     <string name="permissions_granted">Permissions granted</string>
     <string name="message_app_open_directory">Access to Downloads directory is required for settings import</string>
+    <string name="title_downloading_update">Downloading application update</string>
+    <string name="message_wait_download">There is a newer version available. Please wait while the update is being downloaded.</string>
 </resources>

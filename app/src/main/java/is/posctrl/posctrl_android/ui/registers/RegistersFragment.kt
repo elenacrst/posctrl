@@ -93,9 +93,6 @@ class RegistersFragment : BaseFragment() {
                 )
             )
         })
-        registersBinding.rvRegisters.setOnSwipeListener(onDoubleTap = {
-            baseFragmentHandler?.onDoubleTap()
-        })
         handleRegisters(store.registers)
     }
 

@@ -228,5 +228,5 @@ interface BaseFragmentHandler {
     ): Observer<Event<ResultWrapper<*>>>
 
     fun onDoubleTap()
-    fun downloadApk()
+    fun downloadApk(function: () -> Unit = {})
 }
