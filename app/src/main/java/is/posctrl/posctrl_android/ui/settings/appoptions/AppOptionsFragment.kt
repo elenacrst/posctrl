@@ -120,10 +120,11 @@ class AppOptionsFragment : BaseFragment() {
 
         val user = preferencesSource.customPrefs()[getString(R.string.key_logged_username), "null"]
             ?: "null"
-        appOptionsBinding.tvLoggedIn.text =
+        var loggedInText =
             preferencesSource.defaultPrefs()["login_value", getString(R.string.login_value, user)]
                 ?: getString(R.string.login_value, user)
-                    .replace("%s", user)
+        loggedInText = loggedInText.replace("%s", user)
+        appOptionsBinding.tvLoggedIn.text = loggedInText
     }
 
     private fun enableKioskMode(enable: Boolean) {
