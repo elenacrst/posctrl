@@ -39,10 +39,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_medium"
                 android:layout_marginEnd="@dimen/margin_extra_small"
-                android:text="@string/action_accept"
                 app:layout_constraintEnd_toStartOf="@+id/guideline"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_question" />
+                app:layout_constraintTop_toBottomOf="@id/tv_question"
+                tools:text="@string/action_accept" />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guideline"
@@ -58,10 +58,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_extra_small"
                 android:layout_marginEnd="@dimen/margin_medium"
-                android:text="@string/action_reject"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="@+id/guideline"
-                app:layout_constraintTop_toBottomOf="@+id/tv_question" />
+                app:layout_constraintTop_toBottomOf="@+id/tv_question"
+                tools:text="@string/action_reject" />
 
             <TextView
                 android:id="@+id/tv_store_label"
@@ -69,9 +69,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_medium"
-                android:text="@string/label_store"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/bt_yes" />
+                app:layout_constraintTop_toBottomOf="@id/bt_yes"
+                tools:text="@string/label_store" />
 
             <TextView
                 android:id="@+id/tv_item_label"
@@ -79,9 +79,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_medium"
-                android:text="@string/label_item"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tv_register" />
+                app:layout_constraintTop_toBottomOf="@+id/tv_register"
+                tools:text="@string/label_item" />
 
             <TextView
                 android:id="@+id/tv_quantity_label"
@@ -89,9 +89,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_medium"
-                android:text="@string/label_quantity"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_item" />
+                app:layout_constraintTop_toBottomOf="@id/tv_item"
+                tools:text="@string/label_quantity" />
 
             <TextView
                 android:id="@+id/tv_register_label"
@@ -99,9 +99,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_medium"
-                android:text="@string/label_register"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tv_store" />
+                app:layout_constraintTop_toBottomOf="@+id/tv_store"
+                tools:text="@string/label_register" />
 
             <TextView
                 android:id="@+id/tv_price_label"
@@ -109,9 +109,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_medium"
-                android:text="@string/label_price"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_quantity" />
+                app:layout_constraintTop_toBottomOf="@id/tv_quantity"
+                tools:text="@string/label_price" />
 
             <TextView
                 android:id="@+id/tv_store"

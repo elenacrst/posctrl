@@ -44,10 +44,10 @@
             android:paddingStart="@dimen/margin_small"
             android:paddingTop="@dimen/margin_small"
             android:paddingEnd="@dimen/margin_small"
-            android:text="@string/title_app_options"
             android:textColor="@color/teal_700"
             android:textStyle="bold"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="@string/title_app_options" />
 
 
         <TextView
@@ -59,7 +59,6 @@
             android:clickable="true"
             android:focusable="true"
             android:padding="@dimen/margin_small"
-            android:text="@string/action_logout"
             app:layout_constraintTop_toBottomOf="@id/tv_logged_in" />
 
         <TextView
@@ -71,7 +70,6 @@
             android:clickable="true"
             android:focusable="true"
             android:padding="@dimen/margin_small"
-            android:text="@string/action_suspend_register"
             android:visibility="@{store==null?View.GONE:View.VISIBLE}"
             app:layout_constraintTop_toBottomOf="@+id/tv_logout"
             tools:visibility="gone" />
@@ -94,7 +92,7 @@
             android:clickable="true"
             android:focusable="true"
             android:padding="@dimen/margin_small"
-            android:text="@string/action_kiosk_mode"
-            app:layout_constraintTop_toBottomOf="@+id/tv_suspend" />
+            app:layout_constraintTop_toBottomOf="@+id/tv_suspend"
+            tools:text="@string/action_kiosk_mode" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

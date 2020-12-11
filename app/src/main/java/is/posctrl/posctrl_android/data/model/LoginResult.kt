@@ -26,7 +26,8 @@ data class LoginResult(
     private var _receiveNotification: Boolean = false,
     private var _notificationSound: Boolean = false,
     private var _store: StoreResult = StoreResult(),
-    private var _serverTime: String = ""
+    private var _serverTime: String = "",
+    private var _texts: List<TextItem> = listOf()
 ) : Parcelable {
     @get:JacksonXmlProperty(localName = "ErrorMessage")
     var errorMessage: String
@@ -139,6 +140,13 @@ data class LoginResult(
             _serverTime = value
         }
         get() = _serverTime
+
+    @get:JacksonXmlElementWrapper(localName = "Texts")
+    var texts: List<TextItem>
+        set(value) {
+            _texts = value
+        }
+        get() = _texts
 
     fun isReceivingNotifications(): Boolean {
         return _receiveNotification

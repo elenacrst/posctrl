@@ -56,7 +56,8 @@ class PosCtrlRepository @Inject constructor(
                     return@withContext ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
                 }
                 val receiptInfo = ReceiptInfoBody(
-                    appName = appContext.getString(R.string.app_name),
+                    appName = prefs.defaultPrefs()["app_name", appContext.getString(R.string.app_name)]
+                        ?: appContext.getString(R.string.app_name),
                     userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
                         ?: "",
                     action = action.actionValue,
@@ -109,7 +110,8 @@ class PosCtrlRepository @Inject constructor(
         withContext(Dispatchers.Default) {
             try {
                 val loginBody = LoginBody(
-                    appName = appContext.getString(R.string.app_name),
+                    appName = prefs.defaultPrefs()["app_name", appContext.getString(R.string.app_name)]
+                        ?: appContext.getString(R.string.app_name),
                     userId = userId,
                     hostName = getDeviceIdentifier(),
                     listeningPort = DEFAULT_LOGIN_LISTENING_PORT,//todo check if preference required/ settings item
@@ -155,7 +157,8 @@ class PosCtrlRepository @Inject constructor(
         withContext(Dispatchers.Default) {
             try {
                 val receiptInfo = ReceiptInfoBody(
-                    appName = appContext.getString(R.string.app_name),
+                    appName = prefs.defaultPrefs()["app_name", appContext.getString(R.string.app_name)]
+                        ?: appContext.getString(R.string.app_name),
                     userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
                         ?: "",
                     action = ReceiptAction.ALIFE.actionValue,
@@ -247,7 +250,8 @@ class PosCtrlRepository @Inject constructor(
             try {
                 val appVersion = appContext.getAppVersion()
                 val filterProcessBody = FilterProcessBody(
-                    appName = appContext.getString(R.string.app_name),
+                    appName = prefs.defaultPrefs()["app_name", appContext.getString(R.string.app_name)]
+                        ?: appContext.getString(R.string.app_name),
                     appVersion = appVersion,
                     userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
                         ?: "",
@@ -291,7 +295,8 @@ class PosCtrlRepository @Inject constructor(
             try {
                 val appVersion = appContext.getAppVersion()
                 val filterProcessBody = FilterProcessBody(
-                    appName = appContext.getString(R.string.app_name),
+                    appName = prefs.defaultPrefs()["app_name", appContext.getString(R.string.app_name)]
+                        ?: appContext.getString(R.string.app_name),
                     appVersion = appVersion,
                     userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
                         ?: "",
@@ -399,14 +404,18 @@ class PosCtrlRepository @Inject constructor(
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            val message = appContext.applicationContext.getString(R.string.error_no_snapshots)
+            val message =
+                prefs.defaultPrefs()["error_no_snapshots", appContext.getString(R.string.error_no_snapshots)]
+                    ?: appContext.getString(R.string.error_no_snapshots)
             return ResultWrapper.Error(message = message)
         }
         if (errors > 0) {
             return if (bitmaps.isNotEmpty()) {
                 ResultWrapper.Success(BitmapsResult(bitmaps, errors))
             } else {
-                val message = appContext.applicationContext.getString(R.string.error_no_snapshots)
+                val message =
+                    prefs.defaultPrefs()["error_no_snapshots", appContext.getString(R.string.error_no_snapshots)]
+                        ?: appContext.getString(R.string.error_no_snapshots)
                 ResultWrapper.Error(message = message)
             }
         }
@@ -420,7 +429,8 @@ class PosCtrlRepository @Inject constructor(
         withContext(Dispatchers.Default) {
             try {
                 val filterResult = FilterResultBody(
-                    appName = appContext.getString(R.string.app_name),
+                    appName = prefs.defaultPrefs()["app_name", appContext.getString(R.string.app_name)]
+                        ?: appContext.getString(R.string.app_name),
                     itemLineId,
                     result.result,
                     getLocalTimeString()
@@ -495,7 +505,9 @@ class PosCtrlRepository @Inject constructor(
                         } catch (e: Exception) {
                             e.printStackTrace()
                             val message =
-                                appContext.applicationContext.getString(R.string.error_download_update)
+                                prefs.defaultPrefs()["error_download_update", appContext.getString(R.string.error_download_update)]
+                                    ?: appContext.getString(R.string.error_download_update)
+
                             foundApk = false
                             return@withContext ResultWrapper.Error(message = message)
                         }
@@ -503,14 +515,19 @@ class PosCtrlRepository @Inject constructor(
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            val message = appContext.applicationContext.getString(R.string.error_download_update)
+            val message =
+                prefs.defaultPrefs()["error_download_update", appContext.getString(R.string.error_download_update)]
+                    ?: appContext.getString(R.string.error_download_update)
             foundApk = false
             return ResultWrapper.Error(message = message)
         }
         return if (foundApk) {
             ResultWrapper.Success("")
         } else {
-            ResultWrapper.Error(appContext.getString(R.string.error_app_update))
+            ResultWrapper.Error(
+                prefs.defaultPrefs()["error_app_update", appContext.getString(R.string.error_app_update)]
+                    ?: appContext.getString(R.string.error_app_update)
+            )
         }
 
     }

@@ -52,27 +52,27 @@ class ReceiptFragment : BaseFragment() {
     private var broadcastReceiver = createReceiptReceiver()
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
-    ): View? {
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
 
         receiptBinding = DataBindingUtil
-                .inflate(inflater, R.layout.fragment_receipt, container, false)
+            .inflate(inflater, R.layout.fragment_receipt, container, false)
 
         val args = ReceiptFragmentArgs.fromBundle(
-                requireArguments()
+            requireArguments()
         )
         store = args.store
         register = args.register
         receiptViewModel.sendReceiptInfoMessage(
-                ReceiptAction.OPEN,
-                store.storeNumber,
-                register.registerNumber.toInt()
+            ReceiptAction.OPEN,
+            store.storeNumber,
+            register.registerNumber.toInt()
         )
         receiptViewModel.sendReceiptInfoALife(
-                store.storeNumber,
-                register.registerNumber.toInt()
+            store.storeNumber,
+            register.registerNumber.toInt()
         )
 
         return receiptBinding.root
@@ -82,28 +82,43 @@ class ReceiptFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         receiptBinding.svBase.setOnSwipeListener(onSwipeLeft = {
-            requireContext().showConfirmDialog(
-                    getString(
-                            R.string.confirm_suspend_register,
-                            register.registerNumber.toInt(),
-                            store.storeNumber
-                    )
-            ) {
+            var confirmText = prefs.defaultPrefs()["confirm_suspend_register", getString(
+                R.string.confirm_suspend_register,
+                register.registerNumber.toInt(),
+                store.storeNumber
+            )] ?: getString(
+                R.string.confirm_suspend_register,
+                register.registerNumber.toInt(),
+                store.storeNumber
+            )
+            confirmText = confirmText.replace("%1\$d", register.registerNumber)
+            confirmText = confirmText.replace("%2\$d", store.storeNumber.toString())
+            requireContext().showConfirmDialog(confirmText) {
                 appOptionsViewModel.suspendRegister(
-                        store.storeNumber, register.registerNumber.toInt()
+                    store.storeNumber, register.registerNumber.toInt()
                 )
             }
         })
-        receiptBinding.tvTitle.text = getString(
-                R.string.title_receipt_incomplete_values,
-                store.storeNumber,
-                register.registerNumber.toInt()
+        var incompleteValText = prefs.defaultPrefs()["title_receipt_incomplete_values",
+                getString(
+                    R.string.title_receipt_incomplete_values,
+                    store.storeNumber,
+                    register.registerNumber.toInt()
+                )] ?: getString(
+            R.string.title_receipt_incomplete_values,
+            store.storeNumber,
+            register.registerNumber.toInt()
         )
+        incompleteValText = incompleteValText.replace("%1\$d", store.storeNumber.toString())
+        incompleteValText = incompleteValText.replace("%2\$d", register.registerNumber)
+
+        receiptBinding.tvTitle.text = incompleteValText
+
     }
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
-                ActivityModule(requireActivity())
+            ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
     }
@@ -115,11 +130,11 @@ class ReceiptFragment : BaseFragment() {
                 if (bundle != null) {
                     if (intent.action == FilterReceiverService.ACTION_RECEIVE_FILTER) {
                         val result =
-                                bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
+                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
                         baseFragmentHandler?.handleFilter(result)
                     } else if (intent.action == ReceiptReceiverService.ACTION_RECEIVE_RECEIPT) {
                         val result =
-                                bundle.getParcelable<ReceiptResponse>(ReceiptReceiverService.EXTRA_RECEIPT)
+                            bundle.getParcelable<ReceiptResponse>(ReceiptReceiverService.EXTRA_RECEIPT)
                         handleReceipt(result)
                     }
 
@@ -138,12 +153,24 @@ class ReceiptFragment : BaseFragment() {
 
             if (lastTxn != it.clearTextFlag && lastTxn != -1) {
                 receiptBinding.llReceipt.removeAllViews()
-                receiptBinding.tvTitle.text = getString(
-                        R.string.title_receipt_values,
-                        store.storeNumber,
-                        register.registerNumber.toInt(),
-                        it.clearTextFlag
+                var receiptValuesText = prefs.defaultPrefs()["title_receipt_values",
+                        getString(
+                            R.string.title_receipt_values,
+                            store.storeNumber,
+                            register.registerNumber.toInt(),
+                            it.clearTextFlag
+                        )] ?: getString(
+                    R.string.title_receipt_values,
+                    store.storeNumber,
+                    register.registerNumber.toInt(),
+                    it.clearTextFlag
                 )
+                receiptValuesText = receiptValuesText.replace("%1\$d", store.storeNumber.toString())
+                receiptValuesText = receiptValuesText.replace("%2\$d", register.registerNumber)
+                receiptValuesText = receiptValuesText.replace("%3\$d", it.clearTextFlag.toString())
+                receiptBinding.tvTitle.text = receiptValuesText
+
+
             }
 
             val view = generateFormattedTextView(it, it.line)
@@ -164,10 +191,10 @@ class ReceiptFragment : BaseFragment() {
 
 
         textView.setTextColor(
-                ContextCompat.getColor(
-                        requireContext(),
-                        color
-                )
+            ContextCompat.getColor(
+                requireContext(),
+                color
+            )
         )
         textView.text = text
         if (it.bold == 1) {
@@ -218,22 +245,22 @@ class ReceiptFragment : BaseFragment() {
         val intentFilter = IntentFilter(ReceiptReceiverService.ACTION_RECEIVE_RECEIPT)
         intentFilter.addAction(FilterReceiverService.ACTION_RECEIVE_FILTER)
         LocalBroadcastManager.getInstance(requireContext().applicationContext).registerReceiver(
-                broadcastReceiver,
-                intentFilter
+            broadcastReceiver,
+            intentFilter
         )
     }
 
     override fun onPause() {
         super.onPause()
         LocalBroadcastManager.getInstance(requireContext().applicationContext)
-                .unregisterReceiver(broadcastReceiver)
+            .unregisterReceiver(broadcastReceiver)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         receiptViewModel.sendReceiptInfoMessage(
-                ReceiptAction.CLOSE, store.storeNumber,
-                register.registerNumber.toInt()
+            ReceiptAction.CLOSE, store.storeNumber,
+            register.registerNumber.toInt()
         )
     }
 }

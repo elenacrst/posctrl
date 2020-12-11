@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory app:title="@string/header_settings" />
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <PreferenceCategory
+        android:key="@string/key_header_settings"
+        tools:title="@string/header_settings" />
     <EditTextPreference
         android:dialogLayout="@layout/dialog_et"
         android:dialogTitle="@string/dialog_database_server"

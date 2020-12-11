@@ -7,6 +7,7 @@ import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.clear
+import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
@@ -14,6 +15,7 @@ import `is`.posctrl.posctrl_android.ui.BaseFragmentHandler
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.getAppDirectory
 import `is`.posctrl.posctrl_android.util.extensions.toast
+import android.Manifest
 import android.content.*
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
@@ -46,13 +48,19 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 // or a lateinit var in your onAttach() or onCreate() method.
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
-            Timber.d("permissions: write ${results[android.Manifest.permission.WRITE_EXTERNAL_STORAGE]}, read ${results[android.Manifest.permission.READ_EXTERNAL_STORAGE]}")
-            if (results[android.Manifest.permission.WRITE_EXTERNAL_STORAGE] != true ||
-                results[android.Manifest.permission.READ_EXTERNAL_STORAGE] != true
+            Timber.d("permissions: write ${results[Manifest.permission.WRITE_EXTERNAL_STORAGE]}, read ${results[Manifest.permission.READ_EXTERNAL_STORAGE]}")
+            if (results[Manifest.permission.WRITE_EXTERNAL_STORAGE] != true ||
+                results[Manifest.permission.READ_EXTERNAL_STORAGE] != true
             ) {
-                toast(getString(R.string.permission_not_granted))
+                toast(
+                    preferences.defaultPrefs()["permission_not_granted", getString(R.string.permission_not_granted)]
+                        ?: getString(R.string.permission_not_granted)
+                )
             } else {
-                toast(getString(R.string.permissions_granted))
+                toast(
+                    preferences.defaultPrefs()["permissions_granted", getString(R.string.permissions_granted)]
+                        ?: getString(R.string.permissions_granted)
+                )
                 globalViewModel.saveSettingsFromFile()
             }
 
@@ -130,12 +138,17 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         super.onCreate(savedInstanceState)
         initializeActivityComponent()
         activityComponent.inject(this)
-        requestPermissionLauncher.launch(
-            arrayOf(
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                android.Manifest.permission.READ_EXTERNAL_STORAGE
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+            checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                )
             )
-        )
+        }
+
     }
 
     override fun onResume() {
@@ -164,7 +177,10 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     private fun handleError(resultError: ResultWrapper.Error): Boolean {
         return when (resultError.code) {
             ErrorCode.NO_DATA_CONNECTION.code -> {
-                toast(getString(R.string.no_data_connection))
+                toast(
+                    preferences.defaultPrefs()["no_data_connection", getString(R.string.no_data_connection)]
+                        ?: getString(R.string.no_data_connection)
+                )
                 true
             }
             else -> false

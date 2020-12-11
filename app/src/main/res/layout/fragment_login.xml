@@ -26,7 +26,6 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_user"
                 style="@style/TextInputGeneral"
-                android:hint="@string/hint_user_id"
                 android:imeOptions="flagNoExtractUi|actionNext"
                 android:inputType="textAutoComplete"
                 tools:text="aron" />
@@ -44,9 +43,9 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_password"
                 style="@style/TextInputGeneral"
-                android:hint="@string/hint_password"
                 android:imeOptions="flagNoExtractUi|actionDone"
-                android:inputType="numberPassword" />
+                android:inputType="numberPassword"
+                tools:hint="@string/hint_password" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
@@ -54,7 +53,6 @@
             style="@style/ButtonGeneral"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@string/action_login"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/til_password" />

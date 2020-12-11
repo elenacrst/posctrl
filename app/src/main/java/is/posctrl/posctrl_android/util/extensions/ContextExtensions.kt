@@ -2,6 +2,8 @@ package `is`.posctrl.posctrl_android.util.extensions
 
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
+import `is`.posctrl.posctrl_android.data.local.PreferencesSource
+import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.databinding.DialogConfirmBinding
 import `is`.posctrl.posctrl_android.databinding.DialogEtBinding
 import `is`.posctrl.posctrl_android.databinding.DialogLoadingBinding
@@ -18,7 +20,8 @@ import java.io.File
 fun Context.toast(message: String) =
     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 
-fun Context.showInputDialog(titleRes: Int, positiveCallback: (input: String) -> Unit) {
+fun Context.showInputDialog(title: String, positiveCallback: (input: String) -> Unit) {
+    val prefs = PreferencesSource(applicationContext)
     val binding: DialogEtBinding = DataBindingUtil.inflate(
         LayoutInflater.from(this),
         R.layout.dialog_et,
@@ -31,9 +34,12 @@ fun Context.showInputDialog(titleRes: Int, positiveCallback: (input: String) -> 
         this,
         android.R.style.Theme_Material_Light_NoActionBar_Fullscreen
     )
-        .setTitle(titleRes)
+        .setTitle(title)
         .setView(binding.root)
-        .setPositiveButton(R.string.action_ok) { _, _ ->
+        .setPositiveButton(
+            prefs.defaultPrefs()["action_ok", applicationContext.getString(R.string.action_ok)]
+                ?: applicationContext.getString(R.string.action_ok)
+        ) { _, _ ->
             positiveCallback(binding.edit.text.toString())
         }
         .create()
@@ -41,6 +47,7 @@ fun Context.showInputDialog(titleRes: Int, positiveCallback: (input: String) -> 
 }
 
 fun Context.showConfirmDialog(title: String, positiveCallback: () -> Unit) {
+    val prefs = PreferencesSource(this)
     val binding: DialogConfirmBinding = DataBindingUtil.inflate(
         LayoutInflater.from(this),
         R.layout.dialog_confirm,
@@ -48,6 +55,8 @@ fun Context.showConfirmDialog(title: String, positiveCallback: () -> Unit) {
         false
     )
     binding.tvTitle.text = title
+    binding.btYes.text = prefs.defaultPrefs()["action_suspend", getString(R.string.action_suspend)]
+        ?: getString(R.string.action_suspend)
 
     val dialog = MaterialAlertDialogBuilder(
         this
@@ -84,6 +93,7 @@ fun Context.getAppDirectory(): File {
 }
 
 fun Context.showUpdateDialog(): androidx.appcompat.app.AlertDialog {
+    val prefs = PreferencesSource(this)
     val binding: DialogLoadingBinding = DataBindingUtil.inflate(
         LayoutInflater.from(this),
         R.layout.dialog_loading,
@@ -94,8 +104,14 @@ fun Context.showUpdateDialog(): androidx.appcompat.app.AlertDialog {
         this,
         android.R.style.Theme_Material_Light_NoActionBar_Fullscreen
     )
-        .setTitle(applicationContext.getString(R.string.title_downloading_update))
-        .setMessage(applicationContext.getString(R.string.message_wait_download))
+        .setTitle(
+            prefs.defaultPrefs()["title_downloading_update", applicationContext.getString(R.string.title_downloading_update)]
+                ?: applicationContext.getString(R.string.title_downloading_update)
+        )
+        .setMessage(
+            prefs.defaultPrefs()["message_wait_download", applicationContext.getString(R.string.message_wait_download)]
+                ?: applicationContext.getString(R.string.message_wait_download)
+        )
         .setView(binding.root)
         .setCancelable(false)
         .create()

@@ -1,9 +1,11 @@
 package `is`.posctrl.posctrl_android.service
 
+import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.clear
+import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.ui.base.BaseActivity
 import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsViewModel
@@ -20,10 +22,14 @@ import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import timber.log.Timber
+import javax.inject.Inject
 
 
 class ChargingService : Service() {
     private val chargeDetector = createChargingReceiver()
+
+    @Inject
+    lateinit var prefs: PreferencesSource
 
     private fun createChargingReceiver(): BroadcastReceiver {
         return ChargingReceiver()
@@ -47,8 +53,14 @@ class ChargingService : Service() {
             ) // don't forget create a notification channel first
                 .setOngoing(true)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle(getString(R.string.title_notification_charging))
-                .setContentText(getString(R.string.message_notification_charging))
+                .setContentTitle(
+                    prefs.defaultPrefs()["title_notification_charging", getString(R.string.title_notification_charging)]
+                        ?: getString(R.string.title_notification_charging)
+                )
+                .setContentText(
+                    prefs.defaultPrefs()["message_notification_charging", getString(R.string.message_notification_charging)]
+                        ?: getString(R.string.message_notification_charging)
+                )
                 .setContentIntent(pendingIntent)
                 .build()
         )
@@ -71,6 +83,7 @@ class ChargingService : Service() {
     override fun onCreate() {
         super.onCreate()
         Timber.d("started charging service")
+        (applicationContext as PosCtrlApplication).appComponent.inject(this)
         startForeground()
 
         val filter = IntentFilter()

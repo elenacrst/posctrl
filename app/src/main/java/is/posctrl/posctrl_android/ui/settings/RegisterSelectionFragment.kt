@@ -5,6 +5,7 @@ import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
+import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.RegisterResult
 import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.FragmentRegistersBinding
@@ -51,22 +52,33 @@ class RegisterSelectionFragment : BaseFragment() {
             requireArguments()
         )
         store = args.store
-        registersBinding.tvTitle.text = getString(R.string.title_select_suspend)
+        setupTexts()
 
         return registersBinding.root
+    }
+
+    private fun setupTexts() {
+        registersBinding.tvTitle.text =
+            prefs.defaultPrefs()["title_select_suspend", getString(R.string.title_select_suspend)]
+                ?: getString(R.string.title_select_suspend)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         adapter = RegistersAdapter(RegisterCellListener { register ->
-            requireContext().showConfirmDialog(
-                getString(
-                    R.string.confirm_suspend_register,
-                    register.registerNumber.toInt(),
-                    store.storeNumber
-                )
-            ) {
+            var confirmText = prefs.defaultPrefs()["confirm_suspend_register", getString(
+                R.string.confirm_suspend_register,
+                register.registerNumber.toInt(),
+                store.storeNumber
+            )] ?: getString(
+                R.string.confirm_suspend_register,
+                register.registerNumber.toInt(),
+                store.storeNumber
+            )
+            confirmText = confirmText.replace("%1\$d", register.registerNumber)
+            confirmText = confirmText.replace("%2\$d", store.storeNumber.toString())
+            requireContext().showConfirmDialog(confirmText) {
                 appOptionsViewModel.suspendRegister(
                     store.storeNumber, register.registerNumber.toInt()
                 )

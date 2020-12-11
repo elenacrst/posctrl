@@ -27,10 +27,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_small"
-            android:text="@string/action_suspend"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/guideline2" />
+            app:layout_constraintTop_toTopOf="@+id/guideline2"
+            tools:text="@string/action_suspend" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline2"

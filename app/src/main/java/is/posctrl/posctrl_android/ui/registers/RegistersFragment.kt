@@ -5,6 +5,7 @@ import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
+import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.RegisterResult
 import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.FragmentRegistersBinding
@@ -94,6 +95,22 @@ class RegistersFragment : BaseFragment() {
             )
         })
         handleRegisters(store.registers)
+        setupTexts()
+    }
+
+    private fun setupTexts() {
+        var emptyText = prefs.defaultPrefs()["error_registers_store", getString(
+            R.string.error_registers_store,
+            store.storeNumber,
+            store.storeName
+        )]
+            ?: getString(R.string.error_registers_store, store.storeNumber, store.storeName)
+        emptyText = emptyText.replace("%1\$d", store.storeNumber.toString())
+        emptyText = emptyText.replace("%2\$s", store.storeName)
+        registersBinding.tvEmptyView.text = emptyText
+        registersBinding.tvTitle.text =
+            prefs.defaultPrefs()["title_select_register", getString(R.string.title_select_register)]
+                ?: getString(R.string.title_select_register)
     }
 
     private fun startReceiptReceiverService() {

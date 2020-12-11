@@ -100,8 +100,14 @@ class LoginFragment : BaseFragment() {
                     findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it.store))
                 }
             }
+            for (item in it.texts) {
+                prefs.defaultPrefs()[item.id] = item.string
+            }
         } ?: kotlin.run {
-            requireContext().toast(requireActivity().getString(R.string.error_unknown))
+            requireContext().toast(
+                prefs.defaultPrefs()["error_unknown", requireActivity().getString(R.string.error_unknown)]
+                    ?: requireActivity().getString(R.string.error_unknown)
+            )
         }
 
     }
@@ -164,11 +170,18 @@ class LoginFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
         prefs.customPrefs()[getString(R.string.key_kiosk_mode)] = true
         loginBinding.clBase.setOnSwipeListener(onSwipeBottom = {
-            requireContext().showInputDialog(R.string.insert_security_code) {
+            requireContext().showInputDialog(
+                prefs.defaultPrefs()["insert_security_code", getString(
+                    R.string.insert_security_code
+                )] ?: getString(R.string.insert_security_code)
+            ) {
                 if (it == prefs.defaultPrefs()[requireActivity().getString(R.string.key_master_password), SECURITY_CODE] ?: SECURITY_CODE) {
                     findNavController().navigate(LoginFragmentDirections.toSettingsFragment())
                 } else {
-                    requireContext().toast(getString(R.string.error_wrong_code))
+                    requireContext().toast(
+                        prefs.defaultPrefs()["error_wrong_code", getString(R.string.error_wrong_code)]
+                            ?: getString(R.string.error_wrong_code)
+                    )
                 }
             }
         })
@@ -187,12 +200,28 @@ class LoginFragment : BaseFragment() {
         loginCountdownTimer = object : CountDownTimer(LOGIN_MAX_WAIT_MILLIS, 1000) {
             override fun onFinish() {
                 hideLoading()
-                requireContext().toast(requireActivity().getString(R.string.message_timed_out))
+                requireContext().toast(
+                    prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
+                        ?: getString(R.string.message_timed_out)
+                )
             }
 
             override fun onTick(millisUntilFinished: Long) {
             }
         }
+        setupTexts()
+    }
+
+    private fun setupTexts() {
+        loginBinding.etUser.hint =
+            prefs.defaultPrefs()["hint_user_id", getString(R.string.hint_user_id)]
+                ?: getString(R.string.hint_user_id)
+        loginBinding.btLogin.text =
+            prefs.defaultPrefs()["action_login", getString(R.string.action_login)]
+                ?: getString(R.string.action_login)
+        loginBinding.etPassword.hint =
+            prefs.defaultPrefs()["hint_password", getString(R.string.hint_password)]
+                ?: getString(R.string.hint_password)
     }
 
     private fun checkAlreadyLoggedIn() {
@@ -262,11 +291,15 @@ class LoginFragment : BaseFragment() {
         var valid = true
         if (loginBinding.etUser.text!!.isEmpty()) {
             valid = false
-            loginBinding.tilUser.error = getString(R.string.error_empty_user)
+            loginBinding.tilUser.error =
+                prefs.defaultPrefs()["error_empty_user", getString(R.string.error_empty_user)]
+                    ?: getString(R.string.error_empty_user)
         }
         if (loginBinding.etPassword.text!!.isEmpty()) {
             valid = false
-            loginBinding.tilPassword.error = getString(R.string.error_empty_password)
+            loginBinding.tilPassword.error =
+                prefs.defaultPrefs()["error_empty_password", getString(R.string.error_empty_password)]
+                    ?: getString(R.string.error_empty_password)
         }
         if (valid) {
             showLoading()

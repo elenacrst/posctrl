@@ -76,6 +76,18 @@ class FilterActivity : BaseActivity() {
             finish()
         }
         filterReactTimer = createFilterReactTimer()
+
+        setupTexts()
+    }
+
+    private fun setupTexts() {
+        filterBinding.tvStoreLabel.text = prefs.defaultPrefs()["label_store", getString(R.string.label_store)]?: getString(R.string.label_store)
+        filterBinding.tvRegisterLabel.text = prefs.defaultPrefs()["label_register", getString(R.string.label_register)]?: getString(R.string.label_register)
+        filterBinding.tvItemLabel.text = prefs.defaultPrefs()["label_item", getString(R.string.label_item)]?: getString(R.string.label_item)
+        filterBinding.tvQuantityLabel.text = prefs.defaultPrefs()["label_quantity", getString(R.string.label_quantity)]?: getString(R.string.label_quantity)
+        filterBinding.tvPriceLabel.text = prefs.defaultPrefs()["label_price", getString(R.string.label_price)]?: getString(R.string.label_price)
+        filterBinding.btYes.text = prefs.defaultPrefs()["action_accept", getString(R.string.action_accept)]?: getString(R.string.action_accept)
+        filterBinding.btNo.text = prefs.defaultPrefs()["action_reject", getString(R.string.action_reject)]?: getString(R.string.action_reject)
     }
 
     private fun initializeActivityComponent() {
@@ -93,7 +105,7 @@ class FilterActivity : BaseActivity() {
         override fun onFinish() {
             filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.TIMED_OUT)
             finish()
-            toast(getString(R.string.message_timed_out))
+            toast(prefs.defaultPrefs()["message_timed_out",getString(R.string.message_timed_out)]?:getString(R.string.message_timed_out))
         }
 
         override fun onTick(millisUntilFinished: Long) {
@@ -198,7 +210,7 @@ class FilterActivity : BaseActivity() {
                 picturesAdapter.setData(filterViewModel.bitmaps.value?.bitmaps?.toTypedArray())
             }
             if (filterViewModel.bitmaps.value?.errors != 0) {
-                toast(getString(R.string.error_partial_download))
+                toast(prefs.defaultPrefs()["error_partial_download",getString(R.string.error_partial_download)]?:getString(R.string.error_partial_download))
             }
             filterReactTimer?.start()
         }, errorListener = {

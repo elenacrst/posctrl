@@ -84,18 +84,46 @@ class AppOptionsFragment : BaseFragment() {
             preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true]
                 ?: true
         appOptionsBinding.tvKiosk.setOnClickListener {
-            requireContext().showInputDialog(R.string.insert_security_code) {
+            requireContext().showInputDialog(
+                preferencesSource.defaultPrefs()["insert_security_code", getString(
+                    R.string.insert_security_code
+                )] ?: getString(R.string.insert_security_code)
+            ) {
                 if (it == preferencesSource.defaultPrefs()[requireActivity().getString(R.string.key_master_password), SECURITY_CODE] ?: SECURITY_CODE) {
                     enableKioskMode(!appOptionsBinding.swKiosk.isChecked)
                 } else {
-                    requireContext().toast(getString(R.string.error_wrong_code))
+                    requireContext().toast(
+                        preferencesSource.defaultPrefs()["error_wrong_code", getString(
+                            R.string.error_wrong_code
+                        )] ?: getString(R.string.error_wrong_code)
+                    )
                 }
             }
 
         }
-        /*appOptionsBinding.clBase.setOnSwipeListener(onDoubleTap = {
-            baseFragmentHandler?.onDoubleTap()
-        })*/
+        setupTexts()
+    }
+
+    private fun setupTexts() {
+        appOptionsBinding.tvLogout.text =
+            preferencesSource.defaultPrefs()["action_logout", getString(R.string.action_logout)]
+                ?: getString(R.string.action_logout)
+        appOptionsBinding.tvSuspend.text =
+            preferencesSource.defaultPrefs()["action_suspend_register", getString(R.string.action_suspend_register)]
+                ?: getString(R.string.action_suspend_register)
+        appOptionsBinding.tvTitle.text =
+            preferencesSource.defaultPrefs()["title_app_options", getString(R.string.title_app_options)]
+                ?: getString(R.string.title_app_options)
+        appOptionsBinding.tvKiosk.text =
+            preferencesSource.defaultPrefs()["action_kiosk_mode", getString(R.string.action_kiosk_mode)]
+                ?: getString(R.string.action_kiosk_mode)
+
+        val user = preferencesSource.customPrefs()[getString(R.string.key_logged_username), "null"]
+            ?: "null"
+        appOptionsBinding.tvLoggedIn.text =
+            preferencesSource.defaultPrefs()["login_value", getString(R.string.login_value, user)]
+                ?: getString(R.string.login_value, user)
+                    .replace("%s", user)
     }
 
     private fun enableKioskMode(enable: Boolean) {
