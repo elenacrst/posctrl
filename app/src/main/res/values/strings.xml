@@ -97,4 +97,6 @@
     <string name="title_downloading_update">Downloading application update</string>
     <string name="message_wait_download">There is a newer version available. Please wait while the update is being downloaded.</string>
     <string name="key_header_settings">keyHeaderSettings</string>
+    <string name="key_last_filter">keyLastFilter</string>
+    <string name="filter_values">%1$s %2$s %3$s %4$s</string>
 </resources>

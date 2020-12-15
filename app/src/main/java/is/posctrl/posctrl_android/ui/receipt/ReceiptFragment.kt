@@ -6,31 +6,29 @@ import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.local.set
-import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
 import `is`.posctrl.posctrl_android.data.model.RegisterResult
 import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.FragmentReceiptBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
-import `is`.posctrl.posctrl_android.service.FilterReceiverService
-import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
+import `is`.posctrl.posctrl_android.ui.base.GlobalViewModel
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsViewModel
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import `is`.posctrl.posctrl_android.util.extensions.showConfirmDialog
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.DataBindingUtil
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import javax.inject.Inject
 
 
@@ -49,7 +47,8 @@ class ReceiptFragment : BaseFragment() {
 
     private lateinit var store: StoreResult
     private lateinit var register: RegisterResult
-    private var broadcastReceiver = createReceiptReceiver()
+
+    private val globalViewModel: GlobalViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -114,6 +113,16 @@ class ReceiptFragment : BaseFragment() {
 
         receiptBinding.tvTitle.text = incompleteValText
 
+        globalViewModel.receiptItems.observe(viewLifecycleOwner, createReceiptItemsObserver())
+
+    }
+
+    private fun createReceiptItemsObserver(): Observer<List<ReceiptResponse>> {
+        return Observer {
+            it.forEach { item ->
+                handleReceipt(item)
+            }
+        }
     }
 
     override fun onAttach(context: Context) {
@@ -121,26 +130,21 @@ class ReceiptFragment : BaseFragment() {
             ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
-    }
-
-    private fun createReceiptReceiver(): BroadcastReceiver {
-        return object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                val bundle = intent.extras
-                if (bundle != null) {
-                    if (intent.action == FilterReceiverService.ACTION_RECEIVE_FILTER) {
-                        val result =
-                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
-                        baseFragmentHandler?.handleFilter(result)
-                    } else if (intent.action == ReceiptReceiverService.ACTION_RECEIVE_RECEIPT) {
-                        val result =
-                            bundle.getParcelable<ReceiptResponse>(ReceiptReceiverService.EXTRA_RECEIPT)
-                        handleReceipt(result)
-                    }
-
-                }
+        val callback: OnBackPressedCallback = object : OnBackPressedCallback(
+            true // default to enabled
+        ) {
+            override fun handleOnBackPressed() {
+                receiptViewModel.sendReceiptInfoMessage(
+                    ReceiptAction.CLOSE, store.storeNumber,
+                    register.registerNumber.toInt()
+                )
+                findNavController().navigateUp()
             }
         }
+        requireActivity().onBackPressedDispatcher.addCallback(
+            this,  // LifecycleOwner
+            callback
+        )
     }
 
     private fun handleReceipt(result: ReceiptResponse?) {
@@ -238,30 +242,6 @@ class ReceiptFragment : BaseFragment() {
                 android.R.color.black
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val intentFilter = IntentFilter(ReceiptReceiverService.ACTION_RECEIVE_RECEIPT)
-        intentFilter.addAction(FilterReceiverService.ACTION_RECEIVE_FILTER)
-        LocalBroadcastManager.getInstance(requireContext().applicationContext).registerReceiver(
-            broadcastReceiver,
-            intentFilter
-        )
-    }
-
-    override fun onPause() {
-        super.onPause()
-        LocalBroadcastManager.getInstance(requireContext().applicationContext)
-            .unregisterReceiver(broadcastReceiver)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        receiptViewModel.sendReceiptInfoMessage(
-            ReceiptAction.CLOSE, store.storeNumber,
-            register.registerNumber.toInt()
-        )
     }
 }
 

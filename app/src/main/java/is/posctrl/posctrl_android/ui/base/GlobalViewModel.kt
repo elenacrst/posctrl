@@ -4,6 +4,7 @@ import `is`.posctrl.posctrl_android.data.ErrorCode
 import `is`.posctrl.posctrl_android.data.NoNetworkConnectionException
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.ResultWrapper
+import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
 import `is`.posctrl.posctrl_android.util.Event
 import android.app.Application
 import androidx.lifecycle.*
@@ -12,15 +13,22 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
-class GlobalViewModel @Inject constructor(private val repository: PosCtrlRepository) :
+class GlobalViewModel :
     ViewModel() {
     @Inject
     lateinit var appContext: Application
+
+    @Inject
+    lateinit var repository: PosCtrlRepository
 
     private var _downloadApkEvent: MutableLiveData<Event<ResultWrapper<*>>> =
         MutableLiveData(Event(ResultWrapper.None))
     val downloadApkEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _downloadApkEvent
+
+    private var _receiptItems: MutableLiveData<List<ReceiptResponse>> = MutableLiveData()
+    val receiptItems: LiveData<List<ReceiptResponse>>
+        get() = _receiptItems
 
     fun downloadApk() {
         viewModelScope.launch {
@@ -47,5 +55,16 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
             }
             Timber.d("Save settings from file duration $time")
         }
+    }
+
+    fun addReceiptResult(result: ReceiptResponse) {
+        if (receiptItems.value == null) {
+            _receiptItems.value = listOf()
+        }
+
+        if (!receiptItems.value.isNullOrEmpty() && receiptItems.value!!.last().clearTextFlag != result.clearTextFlag) {
+            _receiptItems.value = listOf()
+        }
+        _receiptItems.value = receiptItems.value!! + result
     }
 }

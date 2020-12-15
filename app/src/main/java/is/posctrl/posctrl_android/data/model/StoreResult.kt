@@ -2,6 +2,7 @@ package `is`.posctrl.posctrl_android.data.model
 
 import android.os.Parcelable
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
@@ -9,6 +10,7 @@ import kotlinx.android.parcel.Parcelize
 
 @JacksonXmlRootElement(localName = "Store")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Parcelize
 data class StoreResult(
     private var _storeNumber: Int = -1,

@@ -6,6 +6,7 @@ import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository.Companion.DEFAULT_FILTER_PORT
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.get
+import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.FilterResults
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import android.annotation.SuppressLint
@@ -71,6 +72,7 @@ class FilterReceiverService : Service() {
                     val msg = String(message).substring(0, p.length)
                     Timber.d("received filter $msg ${msg.length}")
                     publishResults(msg)
+                    // publishResults("<FilteredInfo><ItemLineID>15862</ItemLineID><StoreNumber>22</StoreNumber><StoreName>Bónus Hraunbæ</StoreName><RegisterNumber>3</RegisterNumber><TxnNumber>7</TxnNumber><ItemID>73721</ItemID><ItemName>COTTAGE CHEESE 250G</ItemName><ItemSeqNumber>7</ItemSeqNumber><Quantity>1,00</Quantity><TotalPrice>1,10</TotalPrice><FilterName>Item Number</FilterName><FilterQuestion>Is this correct Item ?</FilterQuestion><SnapShot></SnapShot></FilteredInfo>")
                 } catch (e: SocketTimeoutException) {
                 } catch (e: IOException) {
                     e.printStackTrace()
@@ -135,11 +137,21 @@ class FilterReceiverService : Service() {
     @Suppress("BlockingMethodInNonBlockingContext")
     private suspend fun publishResults(output: String) {
         val result = xmlMapper.readValue(output, FilteredInfoResponse::class.java)
-        sendFilterResultReceived(result.itemLineId)
+        sendFilterResultReceived(result.itemLineId!!)
         Timber.d("parsed filter $result")
-        val intent = Intent(ACTION_RECEIVE_FILTER)
-        intent.putExtra(EXTRA_FILTER, result)
-        LocalBroadcastManager.getInstance(appContext).sendBroadcast(intent)
+        val currentFilterString = getString(
+            R.string.filter_values,
+            result.storeNumber.toString(),
+            result.registerNumber.toString(),
+            result.txn.toString(),
+            result.itemSeqNumber.toString()
+        )
+        if (prefs.customPrefs()[getString(R.string.key_last_filter), ""] ?: "" != currentFilterString) {
+            val intent = Intent(ACTION_RECEIVE_FILTER)
+            intent.putExtra(EXTRA_FILTER, result)
+            LocalBroadcastManager.getInstance(appContext).sendBroadcast(intent)
+            prefs.customPrefs()[getString(R.string.key_last_filter)] = currentFilterString
+        }
     }
 
     override fun onDestroy() {

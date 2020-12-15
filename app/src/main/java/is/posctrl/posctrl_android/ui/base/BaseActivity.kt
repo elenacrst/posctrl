@@ -9,9 +9,13 @@ import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.clear
 import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
+import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
+import `is`.posctrl.posctrl_android.service.FilterReceiverService
+import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.ui.BaseFragmentHandler
+import `is`.posctrl.posctrl_android.ui.receipt.ReceiptViewModel
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.getAppDirectory
 import `is`.posctrl.posctrl_android.util.extensions.toast
@@ -21,6 +25,7 @@ import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Observer
@@ -32,14 +37,13 @@ import javax.inject.Inject
 
 abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     private lateinit var activityComponent: ActivityComponent
-    private var receiver = createLogoutReceiver()
+    private var logoutReceiver = createLogoutReceiver()
+    private var broadcastReceiver = createReceiptReceiver()
 
     @Inject
     lateinit var preferences: PreferencesSource
 
-    @Inject
-    lateinit var globalViewModel: GlobalViewModel
-
+    val globalViewModel: GlobalViewModel by viewModels()
     private var onApkDownloaded: () -> Unit = {}
 
     // Register the permissions callback, which handles the user's response to the
@@ -65,6 +69,29 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
             }
 
         }
+
+    private fun createReceiptReceiver(): BroadcastReceiver {
+        return object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                val bundle = intent.extras
+                if (bundle != null) {
+                    if (intent.action == FilterReceiverService.ACTION_RECEIVE_FILTER) {
+                        val result =
+                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
+                        handleFilter(result)
+                    } else if (intent.action == ReceiptReceiverService.ACTION_RECEIVE_RECEIPT) {
+                        val result =
+                            bundle.getParcelable<ReceiptResponse>(ReceiptReceiverService.EXTRA_RECEIPT)
+                        result?.let {
+                            globalViewModel.addReceiptResult(result)
+                        }
+
+                    }
+
+                }
+            }
+        }
+    }
 
     fun createDownloadObserver(): Observer<Event<ResultWrapper<*>>> {
         return createLoadingObserver(successListener = {
@@ -154,10 +181,20 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     override fun onResume() {
         super.onResume()
         LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-            receiver,
+            logoutReceiver,
             IntentFilter(ACTION_LOGOUT)
         )
 
+
+    }
+
+    override fun startReceivingReceipt() {
+        val intentFilter = IntentFilter(ReceiptReceiverService.ACTION_RECEIVE_RECEIPT)
+        intentFilter.addAction(FilterReceiverService.ACTION_RECEIVE_FILTER)
+        LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
+            broadcastReceiver,
+            intentFilter
+        )
     }
 
     private fun createLogoutReceiver(): BroadcastReceiver {

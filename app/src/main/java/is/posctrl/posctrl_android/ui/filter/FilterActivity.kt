@@ -15,6 +15,7 @@ import `is`.posctrl.posctrl_android.ui.base.BaseActivity
 import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.toast
+import android.app.ActivityManager
 import android.app.KeyguardManager
 import android.content.Context
 import android.media.MediaPlayer
@@ -81,13 +82,29 @@ class FilterActivity : BaseActivity() {
     }
 
     private fun setupTexts() {
-        filterBinding.tvStoreLabel.text = prefs.defaultPrefs()["label_store", getString(R.string.label_store)]?: getString(R.string.label_store)
-        filterBinding.tvRegisterLabel.text = prefs.defaultPrefs()["label_register", getString(R.string.label_register)]?: getString(R.string.label_register)
-        filterBinding.tvItemLabel.text = prefs.defaultPrefs()["label_item", getString(R.string.label_item)]?: getString(R.string.label_item)
-        filterBinding.tvQuantityLabel.text = prefs.defaultPrefs()["label_quantity", getString(R.string.label_quantity)]?: getString(R.string.label_quantity)
-        filterBinding.tvPriceLabel.text = prefs.defaultPrefs()["label_price", getString(R.string.label_price)]?: getString(R.string.label_price)
-        filterBinding.btYes.text = prefs.defaultPrefs()["action_accept", getString(R.string.action_accept)]?: getString(R.string.action_accept)
-        filterBinding.btNo.text = prefs.defaultPrefs()["action_reject", getString(R.string.action_reject)]?: getString(R.string.action_reject)
+        filterBinding.tvStoreLabel.text =
+            prefs.defaultPrefs()["label_store", getString(R.string.label_store)]
+                ?: getString(R.string.label_store)
+        filterBinding.tvRegisterLabel.text =
+            prefs.defaultPrefs()["label_register", getString(R.string.label_register)] ?: getString(
+                R.string.label_register
+            )
+        filterBinding.tvItemLabel.text =
+            prefs.defaultPrefs()["label_item", getString(R.string.label_item)]
+                ?: getString(R.string.label_item)
+        filterBinding.tvQuantityLabel.text =
+            prefs.defaultPrefs()["label_quantity", getString(R.string.label_quantity)] ?: getString(
+                R.string.label_quantity
+            )
+        filterBinding.tvPriceLabel.text =
+            prefs.defaultPrefs()["label_price", getString(R.string.label_price)]
+                ?: getString(R.string.label_price)
+        filterBinding.btYes.text =
+            prefs.defaultPrefs()["action_accept", getString(R.string.action_accept)]
+                ?: getString(R.string.action_accept)
+        filterBinding.btNo.text =
+            prefs.defaultPrefs()["action_reject", getString(R.string.action_reject)]
+                ?: getString(R.string.action_reject)
     }
 
     private fun initializeActivityComponent() {
@@ -105,7 +122,10 @@ class FilterActivity : BaseActivity() {
         override fun onFinish() {
             filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.TIMED_OUT)
             finish()
-            toast(prefs.defaultPrefs()["message_timed_out",getString(R.string.message_timed_out)]?:getString(R.string.message_timed_out))
+            toast(
+                prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
+                    ?: getString(R.string.message_timed_out)
+            )
         }
 
         override fun onTick(millisUntilFinished: Long) {
@@ -113,14 +133,14 @@ class FilterActivity : BaseActivity() {
     }
 
     private fun downloadFilterSnapshots(it: FilteredInfoResponse) {
-        val path = if (it.pictures.isNotEmpty()) {
-            it.pictures[0].imageAddress
+        val path = if (it.pictures?.isNullOrEmpty() == false) {
+            it.pictures!![0].imageAddress
         } else {
             ""
         }
         Timber.d("path $path")
-        filterViewModel.downloadBitmaps(path,
-            it.pictures.map { picture -> picture.imageAddress }
+        filterViewModel.downloadBitmaps(path!!,
+            it.pictures!!.map { picture -> picture.imageAddress!! }
         )
     }
 
@@ -210,7 +230,10 @@ class FilterActivity : BaseActivity() {
                 picturesAdapter.setData(filterViewModel.bitmaps.value?.bitmaps?.toTypedArray())
             }
             if (filterViewModel.bitmaps.value?.errors != 0) {
-                toast(prefs.defaultPrefs()["error_partial_download",getString(R.string.error_partial_download)]?:getString(R.string.error_partial_download))
+                toast(
+                    prefs.defaultPrefs()["error_partial_download", getString(R.string.error_partial_download)]
+                        ?: getString(R.string.error_partial_download)
+                )
             }
             filterReactTimer?.start()
         }, errorListener = {
@@ -257,6 +280,25 @@ class FilterActivity : BaseActivity() {
     override fun handleLogout() {
         setResult(MainActivity.RESULT_LOGOUT)
         finish()
+    }
+
+    private fun setupKiosk() {
+        if (prefs.customPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
+            val activityManager = applicationContext
+                .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            activityManager.moveTaskToFront(taskId, 0)
+
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        setupKiosk()
+    }
+
+    override fun onBackPressed() {
+        filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.ACCEPTED)
+        super.onBackPressed()
     }
 
     companion object {

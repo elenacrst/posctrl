@@ -95,6 +95,7 @@ class MainActivity : BaseActivity() {
                     }
                 }
                 R.id.receiptFragment -> {
+                    startReceivingReceipt()
                     mainReceiverDisabled = true
                 }
                 else -> {
@@ -189,7 +190,6 @@ class MainActivity : BaseActivity() {
             val activityManager = applicationContext
                 .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             activityManager.moveTaskToFront(taskId, 0)
-
         }
     }
 
@@ -229,4 +229,5 @@ interface BaseFragmentHandler {
 
     fun onDoubleTap()
     fun downloadApk(function: () -> Unit = {})
+    fun startReceivingReceipt() {}
 }
