@@ -12,10 +12,8 @@ import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
-import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.ui.BaseFragmentHandler
-import `is`.posctrl.posctrl_android.ui.receipt.ReceiptViewModel
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.getAppDirectory
 import `is`.posctrl.posctrl_android.util.extensions.toast
@@ -43,7 +41,10 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     @Inject
     lateinit var preferences: PreferencesSource
 
-    val globalViewModel: GlobalViewModel by viewModels()
+    @Inject
+    lateinit var repository: PosCtrlRepository
+
+    val globalViewModel: GlobalViewModel by viewModels { GlobalViewModelFactory(repository) }
     private var onApkDownloaded: () -> Unit = {}
 
     // Register the permissions callback, which handles the user's response to the
@@ -51,43 +52,37 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 // ActivityResultLauncher. You can use either a val, as shown in this snippet,
 // or a lateinit var in your onAttach() or onCreate() method.
     private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
-            Timber.d("permissions: write ${results[Manifest.permission.WRITE_EXTERNAL_STORAGE]}, read ${results[Manifest.permission.READ_EXTERNAL_STORAGE]}")
-            if (results[Manifest.permission.WRITE_EXTERNAL_STORAGE] != true ||
-                results[Manifest.permission.READ_EXTERNAL_STORAGE] != true
-            ) {
-                toast(
-                    preferences.defaultPrefs()["permission_not_granted", getString(R.string.permission_not_granted)]
-                        ?: getString(R.string.permission_not_granted)
-                )
-            } else {
-                toast(
-                    preferences.defaultPrefs()["permissions_granted", getString(R.string.permissions_granted)]
-                        ?: getString(R.string.permissions_granted)
-                )
-                globalViewModel.saveSettingsFromFile()
-            }
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+                Timber.d("permissions: write ${results[Manifest.permission.WRITE_EXTERNAL_STORAGE]}, read ${results[Manifest.permission.READ_EXTERNAL_STORAGE]}")
+                if (results[Manifest.permission.WRITE_EXTERNAL_STORAGE] != true ||
+                        results[Manifest.permission.READ_EXTERNAL_STORAGE] != true
+                ) {
+                    toast(
+                            preferences.defaultPrefs()["permission_not_granted", getString(R.string.permission_not_granted)]
+                                    ?: getString(R.string.permission_not_granted)
+                    )
+                } else {
+                    toast(
+                            preferences.defaultPrefs()["permissions_granted", getString(R.string.permissions_granted)]
+                                    ?: getString(R.string.permissions_granted)
+                    )
+                    globalViewModel.saveSettingsFromFile()
+                }
 
-        }
+            }
 
     private fun createReceiptReceiver(): BroadcastReceiver {
         return object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 val bundle = intent.extras
                 if (bundle != null) {
-                    if (intent.action == FilterReceiverService.ACTION_RECEIVE_FILTER) {
+                    if (intent.action == ReceiptReceiverService.ACTION_RECEIVE_RECEIPT) {
                         val result =
-                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
-                        handleFilter(result)
-                    } else if (intent.action == ReceiptReceiverService.ACTION_RECEIVE_RECEIPT) {
-                        val result =
-                            bundle.getParcelable<ReceiptResponse>(ReceiptReceiverService.EXTRA_RECEIPT)
+                                bundle.getParcelable<ReceiptResponse>(ReceiptReceiverService.EXTRA_RECEIPT)
                         result?.let {
                             globalViewModel.addReceiptResult(result)
                         }
-
                     }
-
                 }
             }
         }
@@ -137,27 +132,27 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     private fun openAPK() {
         val apkFile = File(getAppDirectory(), PosCtrlRepository.APK_FILE_NAME)
         val intent = Intent(Intent.ACTION_VIEW)
-            .apply {
-                val uri = FileProvider.getUriForFile(
-                    this@BaseActivity,
-                    "${applicationContext.packageName}.provider",
-                    apkFile
-                )
-                setDataAndType(uri, INTENT_TYPE_APK)
-                val resInfoList: List<ResolveInfo> =
-                    applicationContext.packageManager.queryIntentActivities(
-                        this,
-                        PackageManager.MATCH_DEFAULT_ONLY
+                .apply {
+                    val uri = FileProvider.getUriForFile(
+                            this@BaseActivity,
+                            "${applicationContext.packageName}.provider",
+                            apkFile
                     )
-                for (resolveInfo in resInfoList) {
-                    val packageName = resolveInfo.activityInfo.packageName
-                    applicationContext.grantUriPermission(
-                        packageName,
-                        uri,
-                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    )
+                    setDataAndType(uri, INTENT_TYPE_APK)
+                    val resInfoList: List<ResolveInfo> =
+                            applicationContext.packageManager.queryIntentActivities(
+                                    this,
+                                    PackageManager.MATCH_DEFAULT_ONLY
+                            )
+                    for (resolveInfo in resInfoList) {
+                        val packageName = resolveInfo.activityInfo.packageName
+                        applicationContext.grantUriPermission(
+                                packageName,
+                                uri,
+                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                    }
                 }
-            }
         startActivityForResult(intent, RC_OPEN_APK)
     }
 
@@ -166,14 +161,16 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         initializeActivityComponent()
         activityComponent.inject(this)
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-            checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
         ) {
             requestPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                )
+                    arrayOf(
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                    )
             )
+        } else {
+            globalViewModel.saveSettingsFromFile()
         }
 
     }
@@ -181,19 +178,16 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     override fun onResume() {
         super.onResume()
         LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-            logoutReceiver,
-            IntentFilter(ACTION_LOGOUT)
+                logoutReceiver,
+                IntentFilter(ACTION_LOGOUT)
         )
-
-
     }
 
     override fun startReceivingReceipt() {
         val intentFilter = IntentFilter(ReceiptReceiverService.ACTION_RECEIVE_RECEIPT)
-        intentFilter.addAction(FilterReceiverService.ACTION_RECEIVE_FILTER)
         LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-            broadcastReceiver,
-            intentFilter
+                broadcastReceiver,
+                intentFilter
         )
     }
 
@@ -208,15 +202,15 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-            .activityComponent(ActivityModule(this))
+                .activityComponent(ActivityModule(this))
     }
 
     private fun handleError(resultError: ResultWrapper.Error): Boolean {
         return when (resultError.code) {
             ErrorCode.NO_DATA_CONNECTION.code -> {
                 toast(
-                    preferences.defaultPrefs()["no_data_connection", getString(R.string.no_data_connection)]
-                        ?: getString(R.string.no_data_connection)
+                        preferences.defaultPrefs()["no_data_connection", getString(R.string.no_data_connection)]
+                                ?: getString(R.string.no_data_connection)
                 )
                 true
             }
@@ -230,8 +224,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     }*/
 
     override fun createLoadingObserver(
-        successListener: (ResultWrapper<*>?) -> Unit,
-        errorListener: () -> Unit
+            successListener: (ResultWrapper<*>?) -> Unit,
+            errorListener: () -> Unit
     ): Observer<Event<ResultWrapper<*>>> {
         return Observer { result ->
             when (val value = result.getContentIfNotHandled()) {
@@ -244,12 +238,12 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                 is ResultWrapper.Error -> {
                     hideLoading()
                     val resultError =
-                        result.peekContent() as ResultWrapper.Error
+                            result.peekContent() as ResultWrapper.Error
                     val resultHandled = handleError(resultError)
                     if (!resultHandled) {
                         toast(
-                            message = (result.peekContent() as
-                                    ResultWrapper.Error).message.toString()
+                                message = (result.peekContent() as
+                                        ResultWrapper.Error).message.toString()
                         )
                     }
                     errorListener()

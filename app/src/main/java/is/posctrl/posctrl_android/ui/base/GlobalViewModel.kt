@@ -13,16 +13,13 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
-class GlobalViewModel :
-    ViewModel() {
+class GlobalViewModel @Inject constructor(private val repository: PosCtrlRepository) :
+        ViewModel() {
     @Inject
     lateinit var appContext: Application
 
-    @Inject
-    lateinit var repository: PosCtrlRepository
-
     private var _downloadApkEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-        MutableLiveData(Event(ResultWrapper.None))
+            MutableLiveData(Event(ResultWrapper.None))
     val downloadApkEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _downloadApkEvent
 
@@ -61,7 +58,6 @@ class GlobalViewModel :
         if (receiptItems.value == null) {
             _receiptItems.value = listOf()
         }
-
         if (!receiptItems.value.isNullOrEmpty() && receiptItems.value!!.last().clearTextFlag != result.clearTextFlag) {
             _receiptItems.value = listOf()
         }

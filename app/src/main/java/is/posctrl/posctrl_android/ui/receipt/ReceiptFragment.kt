@@ -29,6 +29,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -49,29 +50,30 @@ class ReceiptFragment : BaseFragment() {
     private lateinit var register: RegisterResult
 
     private val globalViewModel: GlobalViewModel by activityViewModels()
+    private var shouldClearReceiptScreen: Boolean = false
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
 
         receiptBinding = DataBindingUtil
-            .inflate(inflater, R.layout.fragment_receipt, container, false)
+                .inflate(inflater, R.layout.fragment_receipt, container, false)
 
         val args = ReceiptFragmentArgs.fromBundle(
-            requireArguments()
+                requireArguments()
         )
         store = args.store
         register = args.register
         receiptViewModel.sendReceiptInfoMessage(
-            ReceiptAction.OPEN,
-            store.storeNumber,
-            register.registerNumber.toInt()
+                ReceiptAction.OPEN,
+                store.storeNumber,
+                register.registerNumber.toInt()
         )
         receiptViewModel.sendReceiptInfoALife(
-            store.storeNumber,
-            register.registerNumber.toInt()
+                store.storeNumber,
+                register.registerNumber.toInt()
         )
 
         return receiptBinding.root
@@ -82,31 +84,31 @@ class ReceiptFragment : BaseFragment() {
 
         receiptBinding.svBase.setOnSwipeListener(onSwipeLeft = {
             var confirmText = prefs.defaultPrefs()["confirm_suspend_register", getString(
-                R.string.confirm_suspend_register,
-                register.registerNumber.toInt(),
-                store.storeNumber
+                    R.string.confirm_suspend_register,
+                    register.registerNumber.toInt(),
+                    store.storeNumber
             )] ?: getString(
-                R.string.confirm_suspend_register,
-                register.registerNumber.toInt(),
-                store.storeNumber
+                    R.string.confirm_suspend_register,
+                    register.registerNumber.toInt(),
+                    store.storeNumber
             )
             confirmText = confirmText.replace("%1\$d", register.registerNumber)
             confirmText = confirmText.replace("%2\$d", store.storeNumber.toString())
             requireContext().showConfirmDialog(confirmText) {
                 appOptionsViewModel.suspendRegister(
-                    store.storeNumber, register.registerNumber.toInt()
+                        store.storeNumber, register.registerNumber.toInt()
                 )
             }
         })
         var incompleteValText = prefs.defaultPrefs()["title_receipt_incomplete_values",
                 getString(
-                    R.string.title_receipt_incomplete_values,
-                    store.storeNumber,
-                    register.registerNumber.toInt()
+                        R.string.title_receipt_incomplete_values,
+                        store.storeNumber,
+                        register.registerNumber.toInt()
                 )] ?: getString(
-            R.string.title_receipt_incomplete_values,
-            store.storeNumber,
-            register.registerNumber.toInt()
+                R.string.title_receipt_incomplete_values,
+                store.storeNumber,
+                register.registerNumber.toInt()
         )
         incompleteValText = incompleteValText.replace("%1\$d", store.storeNumber.toString())
         incompleteValText = incompleteValText.replace("%2\$d", register.registerNumber)
@@ -114,36 +116,41 @@ class ReceiptFragment : BaseFragment() {
         receiptBinding.tvTitle.text = incompleteValText
 
         globalViewModel.receiptItems.observe(viewLifecycleOwner, createReceiptItemsObserver())
-
+        shouldClearReceiptScreen = true
     }
 
     private fun createReceiptItemsObserver(): Observer<List<ReceiptResponse>> {
         return Observer {
-            it.forEach { item ->
-                handleReceipt(item)
+            if (!it.isNullOrEmpty()) {
+                receiptBinding.llReceipt.removeAllViews()
+                shouldClearReceiptScreen = false
+                it.forEach { item ->
+                    Timber.d("item ${item.line}")
+                    handleReceipt(item)
+                }
             }
         }
     }
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
-            ActivityModule(requireActivity())
+                ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
         val callback: OnBackPressedCallback = object : OnBackPressedCallback(
-            true // default to enabled
+                true // default to enabled
         ) {
             override fun handleOnBackPressed() {
                 receiptViewModel.sendReceiptInfoMessage(
-                    ReceiptAction.CLOSE, store.storeNumber,
-                    register.registerNumber.toInt()
+                        ReceiptAction.CLOSE, store.storeNumber,
+                        register.registerNumber.toInt()
                 )
                 findNavController().navigateUp()
             }
         }
         requireActivity().onBackPressedDispatcher.addCallback(
-            this,  // LifecycleOwner
-            callback
+                this,  // LifecycleOwner
+                callback
         )
     }
 
@@ -159,22 +166,20 @@ class ReceiptFragment : BaseFragment() {
                 receiptBinding.llReceipt.removeAllViews()
                 var receiptValuesText = prefs.defaultPrefs()["title_receipt_values",
                         getString(
-                            R.string.title_receipt_values,
-                            store.storeNumber,
-                            register.registerNumber.toInt(),
-                            it.clearTextFlag
+                                R.string.title_receipt_values,
+                                store.storeNumber,
+                                register.registerNumber.toInt(),
+                                it.clearTextFlag
                         )] ?: getString(
-                    R.string.title_receipt_values,
-                    store.storeNumber,
-                    register.registerNumber.toInt(),
-                    it.clearTextFlag
+                        R.string.title_receipt_values,
+                        store.storeNumber,
+                        register.registerNumber.toInt(),
+                        it.clearTextFlag
                 )
                 receiptValuesText = receiptValuesText.replace("%1\$d", store.storeNumber.toString())
                 receiptValuesText = receiptValuesText.replace("%2\$d", register.registerNumber)
                 receiptValuesText = receiptValuesText.replace("%3\$d", it.clearTextFlag.toString())
                 receiptBinding.tvTitle.text = receiptValuesText
-
-
             }
 
             val view = generateFormattedTextView(it, it.line)
@@ -195,10 +200,10 @@ class ReceiptFragment : BaseFragment() {
 
 
         textView.setTextColor(
-            ContextCompat.getColor(
-                requireContext(),
-                color
-            )
+                ContextCompat.getColor(
+                        requireContext(),
+                        color
+                )
         )
         textView.text = text
         if (it.bold == 1) {

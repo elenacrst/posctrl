@@ -46,8 +46,6 @@ class MainActivity : BaseActivity() {
 
     private var filterItemMessages: List<FilteredInfoResponse> = mutableListOf()
 
-    private var mainReceiverDisabled = false
-
     private lateinit var navHostFragment: NavHostFragment
 
     private var startsOtherIntent: Boolean = false
@@ -64,8 +62,8 @@ class MainActivity : BaseActivity() {
         mainBinding.lifecycleOwner = this
 
         LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-            broadcastReceiver,
-            IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
+                broadcastReceiver,
+                IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
         )
 
         setupNavController()
@@ -82,13 +80,11 @@ class MainActivity : BaseActivity() {
 
     private fun setupNavController() {
         navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
+                supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.registersFragment -> {
-                    mainReceiverDisabled = false
-
                     if (filterItemMessages.isNotEmpty()) {
                         navigateToFilter(filterItemMessages[0])
                         filterItemMessages = filterItemMessages - filterItemMessages[0]
@@ -96,10 +92,8 @@ class MainActivity : BaseActivity() {
                 }
                 R.id.receiptFragment -> {
                     startReceivingReceipt()
-                    mainReceiverDisabled = true
                 }
                 else -> {
-                    mainReceiverDisabled = false
                 }
             }
         }
@@ -114,16 +108,16 @@ class MainActivity : BaseActivity() {
         } else {
             @Suppress("DEPRECATION")
             this.window.addFlags(
-                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
     }//todo move to base activity
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-            .activityComponent(ActivityModule(this))
+                .activityComponent(ActivityModule(this))
     }
 
     override fun showLoading() {
@@ -137,14 +131,12 @@ class MainActivity : BaseActivity() {
     private fun createFilterReceiver(): BroadcastReceiver {
         return object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                if (!mainReceiverDisabled) {
-                    val bundle = intent.extras
-                    Timber.d("received filter 1")
-                    if (bundle != null) {
-                        val result =
+                val bundle = intent.extras
+                Timber.d("received filter 1")
+                if (bundle != null) {
+                    val result =
                             bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
-                        handleFilter(result)
-                    }
+                    handleFilter(result)
                 }
             }
         }
@@ -168,8 +160,8 @@ class MainActivity : BaseActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK &&
-            (navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
-            && preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true
+                (navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
+                && preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true
         ) {
             return true
         }
@@ -178,7 +170,7 @@ class MainActivity : BaseActivity() {
 
     override fun onBackPressed() {
         if ((navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
-            && preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true
+                && preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true
         ) {
             return
         }
@@ -188,7 +180,7 @@ class MainActivity : BaseActivity() {
     private fun setupKiosk() {
         if (preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
             val activityManager = applicationContext
-                .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                    .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             activityManager.moveTaskToFront(taskId, 0)
         }
     }
@@ -223,8 +215,8 @@ interface BaseFragmentHandler {
     fun hideLoading()
     fun handleFilter(result: FilteredInfoResponse?)
     fun createLoadingObserver(
-        successListener: (ResultWrapper<*>?) -> Unit = { },
-        errorListener: () -> Unit = { }
+            successListener: (ResultWrapper<*>?) -> Unit = { },
+            errorListener: () -> Unit = { }
     ): Observer<Event<ResultWrapper<*>>>
 
     fun onDoubleTap()
