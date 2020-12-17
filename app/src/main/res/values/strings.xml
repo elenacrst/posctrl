@@ -99,4 +99,7 @@
     <string name="key_header_settings">keyHeaderSettings</string>
     <string name="key_last_filter">keyLastFilter</string>
     <string name="filter_values">%1$s %2$s %3$s %4$s</string>
+    <string name="title_about">About</string>
+    <string name="current_store_value">Current store: %1$s, %2$s</string>
+    <string name="app_version_value">App version: %s</string>
 </resources>

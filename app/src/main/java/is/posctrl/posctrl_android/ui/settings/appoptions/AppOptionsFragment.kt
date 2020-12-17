@@ -15,6 +15,7 @@ import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.ui.login.LoginViewModel
+import `is`.posctrl.posctrl_android.util.extensions.getAppVersion
 import `is`.posctrl.posctrl_android.util.extensions.showInputDialog
 import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.content.ComponentName
@@ -27,6 +28,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.fragment.findNavController
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -34,6 +36,7 @@ class AppOptionsFragment : BaseFragment() {
 
     private lateinit var appOptionsBinding: FragmentAppOptionsBinding
     private var store: StoreResult? = null
+    private var options: Array<String> = arrayOf()
 
     @Inject
     lateinit var preferencesSource: PreferencesSource
@@ -44,18 +47,28 @@ class AppOptionsFragment : BaseFragment() {
     @Inject
     lateinit var loginViewModel: LoginViewModel
 
+    enum class AppOptions {
+        APP_VERSION,
+        KIOSK_MODE,
+        USER_INFO,
+        LOGOUT,
+        SUSPEND_REGISTER,
+        STORE_INFO
+    }
+
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         appOptionsBinding = DataBindingUtil
-            .inflate(inflater, R.layout.fragment_app_options, container, false)
+                .inflate(inflater, R.layout.fragment_app_options, container, false)
 
         val args = AppOptionsFragmentArgs.fromBundle(
-            requireArguments()
+                requireArguments()
         )
         store = args.store
+        options = args.options
 
         return appOptionsBinding.root
     }
@@ -70,66 +83,124 @@ class AppOptionsFragment : BaseFragment() {
             stopReceiptReceiverService()
             appOptionsViewModel.closeFilterNotifications()
         }
-        appOptionsBinding.tvSuspend.setOnClickListener {
+        appOptionsBinding.btSuspend.setOnClickListener {
             findNavController().navigate(
-                AppOptionsFragmentDirections.toRegisterSelectionFragment(
-                    store!!
-                )
+                    AppOptionsFragmentDirections.toRegisterSelectionFragment(
+                            store!!
+                    )
             )
         }
         appOptionsBinding.store = store
         appOptionsBinding.loggedInUser =
-            preferencesSource.customPrefs()[getString(R.string.key_logged_username)]
+                preferencesSource.customPrefs()[getString(R.string.key_logged_username)]
         appOptionsBinding.swKiosk.isChecked =
-            preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true]
-                ?: true
+                preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true]
+                        ?: true
         appOptionsBinding.tvKiosk.setOnClickListener {
             requireContext().showInputDialog(
-                preferencesSource.defaultPrefs()["insert_security_code", getString(
-                    R.string.insert_security_code
-                )] ?: getString(R.string.insert_security_code)
+                    preferencesSource.defaultPrefs()["insert_security_code", getString(
+                            R.string.insert_security_code
+                    )] ?: getString(R.string.insert_security_code)
             ) {
                 if (it == preferencesSource.defaultPrefs()[requireActivity().getString(R.string.key_master_password), SECURITY_CODE] ?: SECURITY_CODE) {
                     enableKioskMode(!appOptionsBinding.swKiosk.isChecked)
                 } else {
                     requireContext().toast(
-                        preferencesSource.defaultPrefs()["error_wrong_code", getString(
-                            R.string.error_wrong_code
-                        )] ?: getString(R.string.error_wrong_code)
+                            preferencesSource.defaultPrefs()["error_wrong_code", getString(
+                                    R.string.error_wrong_code
+                            )] ?: getString(R.string.error_wrong_code)
                     )
                 }
             }
 
         }
         setupTexts()
+        setupOptionsVisibility()
+    }
+
+    private fun setupOptionsVisibility() {
+        if (options.contains(AppOptions.USER_INFO.name)) {
+            appOptionsBinding.tvLoggedIn.visibility = View.VISIBLE
+        } else {
+            appOptionsBinding.tvLoggedIn.visibility = View.GONE
+        }
+        if (options.contains(AppOptions.STORE_INFO.name)) {
+            appOptionsBinding.tvStoreInfo.visibility = View.VISIBLE
+        } else {
+            appOptionsBinding.tvStoreInfo.visibility = View.GONE
+        }
+        if (options.contains(AppOptions.APP_VERSION.name)) {
+            appOptionsBinding.tvAppVersion.visibility = View.VISIBLE
+        } else {
+            appOptionsBinding.tvAppVersion.visibility = View.GONE
+        }
+        if (options.contains(AppOptions.LOGOUT.name)) {
+            appOptionsBinding.tvLogout.visibility = View.VISIBLE
+        } else {
+            appOptionsBinding.tvLogout.visibility = View.GONE
+        }
+        if (options.contains(AppOptions.KIOSK_MODE.name)) {
+            appOptionsBinding.tvKiosk.visibility = View.VISIBLE
+            appOptionsBinding.swKiosk.visibility = View.VISIBLE
+        } else {
+            appOptionsBinding.tvKiosk.visibility = View.GONE
+            appOptionsBinding.swKiosk.visibility = View.GONE
+        }
+        if (options.contains(AppOptions.SUSPEND_REGISTER.name)) {
+            appOptionsBinding.btSuspend.visibility = View.VISIBLE
+        } else {
+            appOptionsBinding.btSuspend.visibility = View.GONE
+        }
     }
 
     private fun setupTexts() {
         appOptionsBinding.tvLogout.text =
-            preferencesSource.defaultPrefs()["action_logout", getString(R.string.action_logout)]
-                ?: getString(R.string.action_logout)
-        appOptionsBinding.tvSuspend.text =
-            preferencesSource.defaultPrefs()["action_suspend_register", getString(R.string.action_suspend_register)]
-                ?: getString(R.string.action_suspend_register)
+                preferencesSource.defaultPrefs()["action_logout", getString(R.string.action_logout)]
+                        ?: getString(R.string.action_logout)
+        appOptionsBinding.btSuspend.text =
+                preferencesSource.defaultPrefs()["action_suspend_register", getString(R.string.action_suspend_register)]
+                        ?: getString(R.string.action_suspend_register)
         appOptionsBinding.tvTitle.text =
-            preferencesSource.defaultPrefs()["title_app_options", getString(R.string.title_app_options)]
-                ?: getString(R.string.title_app_options)
+                preferencesSource.defaultPrefs()["title_app_options", getString(R.string.title_app_options)]
+                        ?: getString(R.string.title_app_options)
         appOptionsBinding.tvKiosk.text =
-            preferencesSource.defaultPrefs()["action_kiosk_mode", getString(R.string.action_kiosk_mode)]
-                ?: getString(R.string.action_kiosk_mode)
+                preferencesSource.defaultPrefs()["action_kiosk_mode", getString(R.string.action_kiosk_mode)]
+                        ?: getString(R.string.action_kiosk_mode)
+        appOptionsBinding.tvAbout.text =
+                preferencesSource.defaultPrefs()["title_about", getString(R.string.title_about)]
+                        ?: getString(R.string.title_about)
 
         val user = preferencesSource.customPrefs()[getString(R.string.key_logged_username), "null"]
-            ?: "null"
+                ?: "null"
         var loggedInText =
-            preferencesSource.defaultPrefs()["login_value", getString(R.string.login_value, user)]
-                ?: getString(R.string.login_value, user)
+                preferencesSource.defaultPrefs()["login_value", getString(R.string.login_value, user)]
+                        ?: getString(R.string.login_value, user)
         loggedInText = loggedInText.replace("%s", user)
         appOptionsBinding.tvLoggedIn.text = loggedInText
+
+        store?.let {
+            var storeText =
+                    preferencesSource.defaultPrefs()["current_store_value", getString(R.string.current_store_value, it.storeNumber.toString(), it.storeName)]
+                            ?: getString(R.string.current_store_value, it.storeNumber.toString(), it.storeName)
+            storeText = storeText.replace("%1\$s", it.storeNumber.toString())
+            storeText = storeText.replace("%2\$s", it.storeName)
+            appOptionsBinding.tvStoreInfo.text = storeText
+        }
+
+        var versionText =
+                preferencesSource.defaultPrefs()["app_version_value", getString(R.string.app_version_value, requireContext().getAppVersion())]
+                        ?: getString(R.string.app_version_value, requireContext().getAppVersion())
+        versionText = versionText.replace("%s", requireContext().getAppVersion())
+        appOptionsBinding.tvAppVersion.text = versionText
+
+
     }
 
     private fun enableKioskMode(enable: Boolean) {
+        var kiosk = preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true]
+        Timber.d("kiosk enable start: $kiosk")
         if (enable) {
-            preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode)] = true
+            preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode)] = true
             appOptionsBinding.swKiosk.isChecked = true
 
             val homeIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
@@ -137,38 +208,40 @@ class AppOptionsFragment : BaseFragment() {
             val resolveInfo = pm.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY)
             if (resolveInfo?.activityInfo?.packageName != requireActivity().packageName) {
                 val compName = ComponentName(
-                    requireContext(),
+                        requireContext(),
 
-                    MainActivity::class.java
+                        MainActivity::class.java
                 )
                 pm.setComponentEnabledSetting(
-                    compName,
-                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                    PackageManager.DONT_KILL_APP
+                        compName,
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        PackageManager.DONT_KILL_APP
                 )
                 pm.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY)
                 pm.setComponentEnabledSetting(
-                    compName,
-                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                    PackageManager.DONT_KILL_APP
+                        compName,
+                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                        PackageManager.DONT_KILL_APP
                 )
 
             }
 
         } else {
-            preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode)] = false
+            preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode)] = false
             appOptionsBinding.swKiosk.isChecked = false
             val pm: PackageManager = requireActivity().applicationContext.packageManager
             val compName = ComponentName(
-                requireContext(),
-                MainActivity::class.java
+                    requireContext(),
+                    MainActivity::class.java
             )
             pm.setComponentEnabledSetting(
-                compName,
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED,
-                PackageManager.DONT_KILL_APP
+                    compName,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED,
+                    PackageManager.DONT_KILL_APP
             )
         }
+        kiosk = preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true]
+        Timber.d("kiosk enable end: $kiosk")
     }
 
     private fun stopReceiptReceiverService() {
@@ -178,7 +251,7 @@ class AppOptionsFragment : BaseFragment() {
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
-            ActivityModule(requireActivity())
+                ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
     }

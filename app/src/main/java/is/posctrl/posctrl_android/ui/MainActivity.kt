@@ -25,7 +25,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.databinding.DataBindingUtil
@@ -90,11 +89,6 @@ class MainActivity : BaseActivity() {
                         filterItemMessages = filterItemMessages - filterItemMessages[0]
                     }
                 }
-                R.id.receiptFragment -> {
-                    startReceivingReceipt()
-                }
-                else -> {
-                }
             }
         }
     }
@@ -158,19 +152,11 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK &&
-                (navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
-                && preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true
-        ) {
-            return true
-        }
-        return super.onKeyDown(keyCode, event)
-    }
-
     override fun onBackPressed() {
+        val kiosk = preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true]
+        Timber.d("kiosk main: $kiosk")
         if ((navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
-                && preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true
+                && kiosk == true
         ) {
             return
         }
@@ -178,7 +164,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun setupKiosk() {
-        if (preferencesSource.customPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
+        if (preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
             val activityManager = applicationContext
                     .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             activityManager.moveTaskToFront(taskId, 0)

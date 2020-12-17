@@ -119,6 +119,11 @@ class ReceiptFragment : BaseFragment() {
         shouldClearReceiptScreen = true
     }
 
+    /*   override fun onStop() {
+           super.onStop()
+           globalViewModel.receiptItems.removeObservers(viewLifecycleOwner)
+       }*/
+
     private fun createReceiptItemsObserver(): Observer<List<ReceiptResponse>> {
         return Observer {
             if (!it.isNullOrEmpty()) {
@@ -146,6 +151,8 @@ class ReceiptFragment : BaseFragment() {
                         register.registerNumber.toInt()
                 )
                 findNavController().navigateUp()
+                globalViewModel.receiptItems.removeObservers(viewLifecycleOwner)
+                //  globalViewModel.clearReceipt()
             }
         }
         requireActivity().onBackPressedDispatcher.addCallback(

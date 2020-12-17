@@ -181,14 +181,18 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                 logoutReceiver,
                 IntentFilter(ACTION_LOGOUT)
         )
+        startReceivingReceipt()
     }
 
     override fun startReceivingReceipt() {
-        val intentFilter = IntentFilter(ReceiptReceiverService.ACTION_RECEIVE_RECEIPT)
-        LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                broadcastReceiver,
-                intentFilter
-        )
+        if (globalViewModel.isReceivingReceipt.value != true) {
+            val intentFilter = IntentFilter(ReceiptReceiverService.ACTION_RECEIVE_RECEIPT)
+            LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
+                    broadcastReceiver,
+                    intentFilter
+            )
+            globalViewModel.setReceivingReceipt(true)
+        }
     }
 
     private fun createLogoutReceiver(): BroadcastReceiver {

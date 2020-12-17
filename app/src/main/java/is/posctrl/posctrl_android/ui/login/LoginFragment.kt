@@ -1,6 +1,7 @@
 package `is`.posctrl.posctrl_android.ui.login
 
 import `is`.posctrl.posctrl_android.BaseFragment
+import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
@@ -13,6 +14,7 @@ import `is`.posctrl.posctrl_android.databinding.FragmentLoginBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.LoginResultReceiverService
+import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsFragment
 import `is`.posctrl.posctrl_android.util.extensions.*
 import `is`.posctrl.posctrl_android.util.scheduleLogout
 import android.content.BroadcastReceiver
@@ -57,7 +59,7 @@ class LoginFragment : BaseFragment() {
                     loginCountdownTimer?.cancel()
                     if (activity != null && isVisible) {
                         val result =
-                            bundle.getParcelable<LoginResult>(LoginResultReceiverService.EXTRA_LOGIN)
+                                bundle.getParcelable<LoginResult>(LoginResultReceiverService.EXTRA_LOGIN)
                         handleLogin(result)
                     }
 
@@ -79,7 +81,7 @@ class LoginFragment : BaseFragment() {
             } else {
                 stopLoginService()
                 LocalBroadcastManager.getInstance(requireContext())
-                    .unregisterReceiver(loginBroadcastReceiver)
+                        .unregisterReceiver(loginBroadcastReceiver)
 
                 if (it.isReceivingNotifications()) {
                     startFilterReceiverService()
@@ -105,62 +107,61 @@ class LoginFragment : BaseFragment() {
             }
         } ?: kotlin.run {
             requireContext().toast(
-                prefs.defaultPrefs()["error_unknown", requireActivity().getString(R.string.error_unknown)]
-                    ?: requireActivity().getString(R.string.error_unknown)
+                    prefs.defaultPrefs()["error_unknown", requireActivity().getString(R.string.error_unknown)]
+                            ?: requireActivity().getString(R.string.error_unknown)
             )
         }
-
     }
 
     private fun storeLoginResultData(it: LoginResult, fullStore: Boolean = true) {
         if (fullStore) {
             prefs.customPrefs()[requireActivity().getString(R.string.key_logged_user)] =
-                loginBinding.etUser.text.toString()
+                    loginBinding.etUser.text.toString()
             prefs.customPrefs()[requireActivity().getString(R.string.key_logged_username)] =
-                it.username
+                    it.username
         }
 
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_path)] =
-            it.serverPath
+                it.serverPath
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_port)] =
-            it.serverPort
+                it.serverPort
         prefs.customPrefs()[requireActivity().getString(R.string.key_filter_respond_time)] =
-            it.filterRespondTime
+                it.filterRespondTime
         prefs.customPrefs()[requireActivity().getString(R.string.key_app_version)] =
-            it.appVersion
+                it.appVersion
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_user)] =
-            it.serverUser
+                it.serverUser
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_domain)] =
-            it.serverUserDomain
+                it.serverUserDomain
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_password)] =
-            it.serverPassword
+                it.serverPassword
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_snapshot_path)] =
-            it.serverSnapshotPath
+                it.serverSnapshotPath
 
         prefs.defaultPrefs()[requireActivity().getString(R.string.key_master_password)] =
-            it.masterPassword
+                it.masterPassword
 
         prefs.customPrefs()[requireActivity().getString(R.string.key_time_zone)] =
-            it.timeZone
+                it.timeZone
         prefs.customPrefs()[requireActivity().getString(R.string.key_receive_notifications)] =
-            it.isReceivingNotifications()
+                it.isReceivingNotifications()
         prefs.customPrefs()[requireActivity().getString(R.string.key_notification_sound)] =
-            it.isNotificationSoundEnabled()
+                it.isNotificationSoundEnabled()
         prefs.customPrefs()[requireActivity().getString(R.string.key_store_name)] =
-            it.store.storeName
+                it.store.storeName
         prefs.customPrefs()[requireActivity().getString(R.string.key_store_number)] =
-            it.store.storeNumber
+                it.store.storeNumber
         prefs.customPrefs()[requireActivity().getString(R.string.key_registers)] =
-            it.store.registers.joinToString(",") { reg -> reg.registerNumber }
+                it.store.registers.joinToString(",") { reg -> reg.registerNumber }
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         loginBinding = DataBindingUtil
-            .inflate(inflater, R.layout.fragment_login, container, false)
+                .inflate(inflater, R.layout.fragment_login, container, false)
         requireContext().scheduleLogout()
 
         return loginBinding.root
@@ -168,22 +169,29 @@ class LoginFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        prefs.customPrefs()[getString(R.string.key_kiosk_mode)] = true
         loginBinding.clBase.setOnSwipeListener(onSwipeBottom = {
             requireContext().showInputDialog(
-                prefs.defaultPrefs()["insert_security_code", getString(
-                    R.string.insert_security_code
-                )] ?: getString(R.string.insert_security_code)
+                    prefs.defaultPrefs()["insert_security_code", getString(
+                            R.string.insert_security_code
+                    )] ?: getString(R.string.insert_security_code)
             ) {
                 if (it == prefs.defaultPrefs()[requireActivity().getString(R.string.key_master_password), SECURITY_CODE] ?: SECURITY_CODE) {
                     findNavController().navigate(LoginFragmentDirections.toSettingsFragment())
                 } else {
                     requireContext().toast(
-                        prefs.defaultPrefs()["error_wrong_code", getString(R.string.error_wrong_code)]
-                            ?: getString(R.string.error_wrong_code)
+                            prefs.defaultPrefs()["error_wrong_code", getString(R.string.error_wrong_code)]
+                                    ?: getString(R.string.error_wrong_code)
                     )
                 }
             }
+        }, onSwipeLeft = {
+            findNavController().navigate(
+                    NavigationMainContainerDirections.toAppOptionsFragment(
+                            arrayOf(AppOptionsFragment.AppOptions.APP_VERSION.name, AppOptionsFragment.AppOptions.KIOSK_MODE.name),
+                            null,
+                            null
+                    )
+            )
         })
         loginBinding.btLogin.setOnClickListener {
             validateLogin()
@@ -201,8 +209,8 @@ class LoginFragment : BaseFragment() {
             override fun onFinish() {
                 hideLoading()
                 requireContext().toast(
-                    prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
-                        ?: getString(R.string.message_timed_out)
+                        prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
+                                ?: getString(R.string.message_timed_out)
                 )
             }
 
@@ -214,40 +222,41 @@ class LoginFragment : BaseFragment() {
 
     private fun setupTexts() {
         loginBinding.etUser.hint =
-            prefs.defaultPrefs()["hint_user_id", getString(R.string.hint_user_id)]
-                ?: getString(R.string.hint_user_id)
+                prefs.defaultPrefs()["hint_user_id", getString(R.string.hint_user_id)]
+                        ?: getString(R.string.hint_user_id)
         loginBinding.btLogin.text =
-            prefs.defaultPrefs()["action_login", getString(R.string.action_login)]
-                ?: getString(R.string.action_login)
+                prefs.defaultPrefs()["action_login", getString(R.string.action_login)]
+                        ?: getString(R.string.action_login)
         loginBinding.etPassword.hint =
-            prefs.defaultPrefs()["hint_password", getString(R.string.hint_password)]
-                ?: getString(R.string.hint_password)
+                prefs.defaultPrefs()["hint_password", getString(R.string.hint_password)]
+                        ?: getString(R.string.hint_password)
     }
 
     private fun checkAlreadyLoggedIn() {
         if (prefs.customPrefs()[getString(R.string.key_logged_user), ""].isNullOrEmpty() || prefs.customPrefs()[getString(
-                R.string.key_registers
-            ), ""].isNullOrEmpty()
+                        R.string.key_registers
+                ), ""].isNullOrEmpty()
         ) {
             loginBinding.clBase.visibility = View.VISIBLE
             return
         }
         loginViewModel.sendFilterProcessOpenMessage()
         val receivesNotifications =
-            prefs.customPrefs()[getString(R.string.key_receive_notifications), true]
-                ?: true
+                prefs.customPrefs()[getString(R.string.key_receive_notifications), true]
+                        ?: true
         if (receivesNotifications) {
             startFilterReceiverService()
         }
 
         val store =
-            StoreResult(_storeName = prefs.customPrefs()[getString(R.string.key_store_name), ""]
-                ?: "",
-                _storeNumber = prefs.customPrefs()[getString(R.string.key_store_number), -1] ?: -1,
-                _registers = prefs.customPrefs()[getString(R.string.key_registers), ""]?.split(",")
-                    ?.map { RegisterResult(_registerNumber = it) } ?: listOf())
+                StoreResult(_storeName = prefs.customPrefs()[getString(R.string.key_store_name), ""]
+                        ?: "",
+                        _storeNumber = prefs.customPrefs()[getString(R.string.key_store_number), -1]
+                                ?: -1,
+                        _registers = prefs.customPrefs()[getString(R.string.key_registers), ""]?.split(",")
+                                ?.map { RegisterResult(_registerNumber = it) } ?: listOf())
         LocalBroadcastManager.getInstance(requireContext())
-            .unregisterReceiver(loginBroadcastReceiver)
+                .unregisterReceiver(loginBroadcastReceiver)
         findNavController().navigate(LoginFragmentDirections.toRegistersFragment(store = store))
     }
 
@@ -285,27 +294,27 @@ class LoginFragment : BaseFragment() {
     private fun validateLogin() {
         startLoginResultReceiverService()
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
-            loginBroadcastReceiver,
-            IntentFilter(LoginResultReceiverService.ACTION_RECEIVE_LOGIN)
+                loginBroadcastReceiver,
+                IntentFilter(LoginResultReceiverService.ACTION_RECEIVE_LOGIN)
         )
         var valid = true
         if (loginBinding.etUser.text!!.isEmpty()) {
             valid = false
             loginBinding.tilUser.error =
-                prefs.defaultPrefs()["error_empty_user", getString(R.string.error_empty_user)]
-                    ?: getString(R.string.error_empty_user)
+                    prefs.defaultPrefs()["error_empty_user", getString(R.string.error_empty_user)]
+                            ?: getString(R.string.error_empty_user)
         }
         if (loginBinding.etPassword.text!!.isEmpty()) {
             valid = false
             loginBinding.tilPassword.error =
-                prefs.defaultPrefs()["error_empty_password", getString(R.string.error_empty_password)]
-                    ?: getString(R.string.error_empty_password)
+                    prefs.defaultPrefs()["error_empty_password", getString(R.string.error_empty_password)]
+                            ?: getString(R.string.error_empty_password)
         }
         if (valid) {
             showLoading()
             loginViewModel.login(
-                loginBinding.etUser.text!!.toString(),
-                loginBinding.etPassword.text!!.toString()
+                    loginBinding.etUser.text!!.toString(),
+                    loginBinding.etPassword.text!!.toString()
             )
 
             loginCountdownTimer?.start()
@@ -314,7 +323,7 @@ class LoginFragment : BaseFragment() {
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
-            ActivityModule(requireActivity())
+                ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
     }

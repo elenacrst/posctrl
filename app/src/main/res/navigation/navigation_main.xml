@@ -44,6 +44,9 @@
         android:label="App options"
         tools:layout="@layout/fragment_app_options">
         <argument
+            android:name="options"
+            app:argType="string[]" />
+        <argument
             android:name="register"
             app:argType="is.posctrl.posctrl_android.data.model.RegisterResult"
             app:nullable="true" />
@@ -51,6 +54,7 @@
             android:name="store"
             app:argType="is.posctrl.posctrl_android.data.model.StoreResult"
             app:nullable="true" />
+
         <action
             android:id="@+id/toRegisterSelectionFragment"
             app:destination="@id/registerSelectionFragment" />

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
@@ -15,83 +16,142 @@
             type="String" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/cl_base"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/tv_logged_in"
-            style="@style/TitleText"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_base"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:paddingStart="@dimen/margin_small"
-            android:paddingEnd="@dimen/margin_small"
-            android:textColor="@color/teal_700"
-            app:layout_constraintTop_toBottomOf="@id/tv_title"
-            tools:text="Logged in as aron" />
+            android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/tv_title"
-            style="@style/TitleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:paddingStart="@dimen/margin_small"
-            android:paddingTop="@dimen/margin_small"
-            android:paddingEnd="@dimen/margin_small"
-            android:textColor="@color/teal_700"
-            android:textStyle="bold"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="@string/title_app_options" />
+            <TextView
+                android:id="@+id/tv_logged_in"
+                style="@style/TitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:paddingStart="@dimen/margin_small"
+                android:paddingTop="@dimen/margin_extra_small"
+                android:paddingEnd="@dimen/margin_small"
+                android:paddingBottom="@dimen/margin_extra_small"
+                app:layout_constraintTop_toBottomOf="@id/tv_about"
+                tools:text="Logged in as aron" />
+
+            <TextView
+                android:id="@+id/tv_store_info"
+                style="@style/TitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:paddingStart="@dimen/margin_small"
+                android:paddingTop="@dimen/margin_extra_small"
+                android:paddingEnd="@dimen/margin_small"
+                android:paddingBottom="@dimen/margin_extra_small"
+                app:layout_constraintTop_toBottomOf="@id/tv_logged_in"
+                tools:text="Current store: 22, Bonus" />
+
+            <TextView
+                android:id="@+id/tv_app_version"
+                style="@style/TitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:paddingStart="@dimen/margin_small"
+                android:paddingTop="@dimen/margin_extra_small"
+                android:paddingEnd="@dimen/margin_small"
+                android:paddingBottom="@dimen/margin_extra_small"
+                app:layout_constraintTop_toBottomOf="@id/tv_store_info"
+                tools:text="App version: 1.16" />
+
+            <TextView
+                android:id="@+id/tv_about"
+                style="@style/TitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/margin_small"
+                android:paddingTop="@dimen/margin_small"
+                android:paddingEnd="@dimen/margin_small"
+                android:textColor="@color/teal_700"
+                android:textStyle="bold"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="@string/title_about" />
+
+            <TextView
+                android:id="@+id/tv_title"
+                style="@style/TitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/margin_small"
+                android:paddingTop="@dimen/margin_small"
+                android:paddingEnd="@dimen/margin_small"
+                android:textColor="@color/teal_700"
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@id/tv_app_version"
+                tools:text="@string/title_app_options" />
 
 
-        <TextView
-            android:id="@+id/tv_logout"
-            style="@style/TitleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:padding="@dimen/margin_small"
-            app:layout_constraintTop_toBottomOf="@id/tv_logged_in" />
+            <TextView
+                android:id="@+id/tv_logout"
+                style="@style/TitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/margin_small"
+                android:paddingTop="@dimen/margin_extra_small"
+                android:paddingEnd="@dimen/margin_small"
+                android:paddingBottom="@dimen/margin_extra_small"
+                app:layout_constraintTop_toBottomOf="@+id/tv_title"
+                tools:text="@string/action_logout" />
 
-        <TextView
-            android:id="@+id/tv_suspend"
-            style="@style/TitleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:padding="@dimen/margin_small"
-            android:visibility="@{store==null?View.GONE:View.VISIBLE}"
-            app:layout_constraintTop_toBottomOf="@+id/tv_logout"
-            tools:visibility="gone" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/bt_suspend"
+                style="@style/ButtonGeneral"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/margin_extra_small"
+                android:visibility="@{store==null?View.GONE:View.VISIBLE}"
+                app:layout_constraintTop_toBottomOf="@+id/tv_kiosk"
+                tools:text="@string/action_suspend"
+                tools:visibility="visible" />
 
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/sw_kiosk"
-            style="@style/TitleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:padding="@dimen/margin_small"
-            app:layout_constraintTop_toBottomOf="@+id/tv_suspend" />
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/sw_kiosk"
+                style="@style/TitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:paddingStart="@dimen/margin_small"
+                android:paddingTop="@dimen/margin_extra_small"
+                android:paddingEnd="@dimen/margin_small"
+                android:paddingBottom="@dimen/margin_extra_small"
+                app:layout_constraintTop_toBottomOf="@+id/tv_logout" />
 
-        <TextView
-            android:id="@+id/tv_kiosk"
-            style="@style/TitleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:padding="@dimen/margin_small"
-            app:layout_constraintTop_toBottomOf="@+id/tv_suspend"
-            tools:text="@string/action_kiosk_mode" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <TextView
+                android:id="@+id/tv_kiosk"
+                style="@style/TitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/margin_small"
+                android:paddingTop="@dimen/margin_extra_small"
+                android:paddingEnd="@dimen/margin_small"
+                android:paddingBottom="@dimen/margin_extra_small"
+                android:translationZ="20dp"
+                app:layout_constraintTop_toBottomOf="@+id/tv_logout"
+                tools:text="@string/action_kiosk_mode" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </ScrollView>
+
 </layout>

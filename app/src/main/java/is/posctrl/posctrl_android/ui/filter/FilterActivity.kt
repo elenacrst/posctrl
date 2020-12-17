@@ -83,48 +83,50 @@ class FilterActivity : BaseActivity() {
 
     private fun setupTexts() {
         filterBinding.tvStoreLabel.text =
-            prefs.defaultPrefs()["label_store", getString(R.string.label_store)]
-                ?: getString(R.string.label_store)
+                prefs.defaultPrefs()["label_store", getString(R.string.label_store)]
+                        ?: getString(R.string.label_store)
         filterBinding.tvRegisterLabel.text =
-            prefs.defaultPrefs()["label_register", getString(R.string.label_register)] ?: getString(
-                R.string.label_register
-            )
+                prefs.defaultPrefs()["label_register", getString(R.string.label_register)]
+                        ?: getString(
+                                R.string.label_register
+                        )
         filterBinding.tvItemLabel.text =
-            prefs.defaultPrefs()["label_item", getString(R.string.label_item)]
-                ?: getString(R.string.label_item)
+                prefs.defaultPrefs()["label_item", getString(R.string.label_item)]
+                        ?: getString(R.string.label_item)
         filterBinding.tvQuantityLabel.text =
-            prefs.defaultPrefs()["label_quantity", getString(R.string.label_quantity)] ?: getString(
-                R.string.label_quantity
-            )
+                prefs.defaultPrefs()["label_quantity", getString(R.string.label_quantity)]
+                        ?: getString(
+                                R.string.label_quantity
+                        )
         filterBinding.tvPriceLabel.text =
-            prefs.defaultPrefs()["label_price", getString(R.string.label_price)]
-                ?: getString(R.string.label_price)
+                prefs.defaultPrefs()["label_price", getString(R.string.label_price)]
+                        ?: getString(R.string.label_price)
         filterBinding.btYes.text =
-            prefs.defaultPrefs()["action_accept", getString(R.string.action_accept)]
-                ?: getString(R.string.action_accept)
+                prefs.defaultPrefs()["action_accept", getString(R.string.action_accept)]
+                        ?: getString(R.string.action_accept)
         filterBinding.btNo.text =
-            prefs.defaultPrefs()["action_reject", getString(R.string.action_reject)]
-                ?: getString(R.string.action_reject)
+                prefs.defaultPrefs()["action_reject", getString(R.string.action_reject)]
+                        ?: getString(R.string.action_reject)
     }
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-            .activityComponent(ActivityModule(this))
+                .activityComponent(ActivityModule(this))
     }
 
     private fun createFilterReactTimer() = object : CountDownTimer(
-        TimeUnit.SECONDS.toMillis(
-            (prefs.customPrefs()[getString(R.string.key_filter_respond_time), DEFAULT_FILTER_RESPOND_TIME_SECONDS]
-                ?: DEFAULT_FILTER_RESPOND_TIME_SECONDS).toLong()
-        ),
-        1000
+            TimeUnit.SECONDS.toMillis(
+                    (prefs.customPrefs()[getString(R.string.key_filter_respond_time), DEFAULT_FILTER_RESPOND_TIME_SECONDS]
+                            ?: DEFAULT_FILTER_RESPOND_TIME_SECONDS).toLong()
+            ),
+            1000
     ) {
         override fun onFinish() {
             filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.TIMED_OUT)
             finish()
             toast(
-                prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
-                    ?: getString(R.string.message_timed_out)
+                    prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
+                            ?: getString(R.string.message_timed_out)
             )
         }
 
@@ -140,7 +142,7 @@ class FilterActivity : BaseActivity() {
         }
         Timber.d("path $path")
         filterViewModel.downloadBitmaps(path!!,
-            it.pictures!!.map { picture -> picture.imageAddress!! }
+                it.pictures!!.map { picture -> picture.imageAddress!! }
         )
     }
 
@@ -187,14 +189,14 @@ class FilterActivity : BaseActivity() {
         if (vibrator?.hasVibrator() == true) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator?.vibrate(
-                    VibrationEffect.createWaveform(
-                        longArrayOf(
-                            200L,
-                            100L,
-                            200L,
-                            100L
-                        ), -1
-                    )
+                        VibrationEffect.createWaveform(
+                                longArrayOf(
+                                        200L,
+                                        100L,
+                                        200L,
+                                        100L
+                                ), -1
+                        )
                 )
             } else {
                 @Suppress("DEPRECATION")
@@ -207,14 +209,14 @@ class FilterActivity : BaseActivity() {
         if (vibrator?.hasVibrator() == true) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator?.vibrate(
-                    VibrationEffect.createWaveform(
-                        longArrayOf(
-                            200L,
-                            100L,
-                            200L,
-                            100L
-                        ), -1
-                    )
+                        VibrationEffect.createWaveform(
+                                longArrayOf(
+                                        200L,
+                                        100L,
+                                        200L,
+                                        100L
+                                ), -1
+                        )
                 )
             } else {
                 @Suppress("DEPRECATION")
@@ -231,8 +233,8 @@ class FilterActivity : BaseActivity() {
             }
             if (filterViewModel.bitmaps.value?.errors != 0) {
                 toast(
-                    prefs.defaultPrefs()["error_partial_download", getString(R.string.error_partial_download)]
-                        ?: getString(R.string.error_partial_download)
+                        prefs.defaultPrefs()["error_partial_download", getString(R.string.error_partial_download)]
+                                ?: getString(R.string.error_partial_download)
                 )
             }
             filterReactTimer?.start()
@@ -253,9 +255,9 @@ class FilterActivity : BaseActivity() {
         } else {
             @Suppress("DEPRECATION")
             this.window.addFlags(
-                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
     }
@@ -283,9 +285,9 @@ class FilterActivity : BaseActivity() {
     }
 
     private fun setupKiosk() {
-        if (prefs.customPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
+        if (prefs.defaultPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
             val activityManager = applicationContext
-                .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                    .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             activityManager.moveTaskToFront(taskId, 0)
 
         }

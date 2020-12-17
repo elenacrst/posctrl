@@ -27,6 +27,10 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
     val receiptItems: LiveData<List<ReceiptResponse>>
         get() = _receiptItems
 
+    private var _isReceivingReceipt: MutableLiveData<Boolean> = MutableLiveData(false)
+    val isReceivingReceipt: LiveData<Boolean>
+        get() = _isReceivingReceipt
+
     fun downloadApk() {
         viewModelScope.launch {
             _downloadApkEvent.value = Event(ResultWrapper.Loading)
@@ -55,12 +59,19 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
     }
 
     fun addReceiptResult(result: ReceiptResponse) {
-        if (receiptItems.value == null) {
-            _receiptItems.value = listOf()
+        if (receiptItems.value.isNullOrEmpty() || receiptItems.value!!.last().clearTextFlag != result.clearTextFlag) {
+            _receiptItems.value = listOf(result)
+        } else {
+            _receiptItems.value = receiptItems.value!! + result
         }
-        if (!receiptItems.value.isNullOrEmpty() && receiptItems.value!!.last().clearTextFlag != result.clearTextFlag) {
-            _receiptItems.value = listOf()
-        }
-        _receiptItems.value = receiptItems.value!! + result
+
+    }
+
+    fun clearReceipt() {
+        _receiptItems.value = listOf()
+    }
+
+    fun setReceivingReceipt(b: Boolean) {
+        _isReceivingReceipt.value = b
     }
 }
