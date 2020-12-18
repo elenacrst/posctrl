@@ -4,6 +4,8 @@ import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.get
+import `is`.posctrl.posctrl_android.data.local.set
+import `is`.posctrl.posctrl_android.data.model.RememberedUser
 import `is`.posctrl.posctrl_android.databinding.DialogConfirmBinding
 import `is`.posctrl.posctrl_android.databinding.DialogEtBinding
 import `is`.posctrl.posctrl_android.databinding.DialogLoadingBinding
@@ -16,53 +18,55 @@ import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.File
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 fun Context.toast(message: String) =
-    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 
 fun Context.showInputDialog(title: String, positiveCallback: (input: String) -> Unit) {
     val prefs = PreferencesSource(applicationContext)
     val binding: DialogEtBinding = DataBindingUtil.inflate(
-        LayoutInflater.from(this),
-        R.layout.dialog_et,
-        null,
-        false
+            LayoutInflater.from(this),
+            R.layout.dialog_et,
+            null,
+            false
     )
     binding.edit.inputType = InputType.TYPE_CLASS_NUMBER
 
     val dialog = MaterialAlertDialogBuilder(
-        this,
-        android.R.style.Theme_Material_Light_NoActionBar_Fullscreen
+            this,
+            android.R.style.Theme_Material_Light_NoActionBar_Fullscreen
     )
-        .setTitle(title)
-        .setView(binding.root)
-        .setPositiveButton(
-            prefs.defaultPrefs()["action_ok", applicationContext.getString(R.string.action_ok)]
-                ?: applicationContext.getString(R.string.action_ok)
-        ) { _, _ ->
-            positiveCallback(binding.edit.text.toString())
-        }
-        .create()
+            .setTitle(title)
+            .setView(binding.root)
+            .setPositiveButton(
+                    prefs.defaultPrefs()["action_ok", applicationContext.getString(R.string.action_ok)]
+                            ?: applicationContext.getString(R.string.action_ok)
+            ) { _, _ ->
+                positiveCallback(binding.edit.text.toString())
+            }
+            .create()
     dialog.show()
 }
 
 fun Context.showConfirmDialog(title: String, positiveCallback: () -> Unit) {
     val prefs = PreferencesSource(this)
     val binding: DialogConfirmBinding = DataBindingUtil.inflate(
-        LayoutInflater.from(this),
-        R.layout.dialog_confirm,
-        null,
-        false
+            LayoutInflater.from(this),
+            R.layout.dialog_confirm,
+            null,
+            false
     )
     binding.tvTitle.text = title
     binding.btYes.text = prefs.defaultPrefs()["action_suspend", getString(R.string.action_suspend)]
-        ?: getString(R.string.action_suspend)
+            ?: getString(R.string.action_suspend)
 
     val dialog = MaterialAlertDialogBuilder(
-        this
+            this
     )
-        .setView(binding.root)
-        .create()
+            .setView(binding.root)
+            .create()
     binding.btYes.setOnClickListener {
         dialog.dismiss()
         positiveCallback()
@@ -73,7 +77,7 @@ fun Context.showConfirmDialog(title: String, positiveCallback: () -> Unit) {
 fun Context.getAppVersion(): String {
     return try {
         val pInfo: PackageInfo =
-            packageManager.getPackageInfo(packageName, 0)
+                packageManager.getPackageInfo(packageName, 0)
         pInfo.versionName
     } catch (e: PackageManager.NameNotFoundException) {
         e.printStackTrace()
@@ -83,8 +87,8 @@ fun Context.getAppVersion(): String {
 
 fun Context.getAppDirectory(): File {
     val directory = File(
-        applicationContext.getExternalFilesDir(null)
-            .toString() + PosCtrlRepository.APP_DIR
+            applicationContext.getExternalFilesDir(null)
+                    .toString() + PosCtrlRepository.APP_DIR
     )
     if (!directory.exists()) {
         directory.mkdirs()
@@ -95,26 +99,47 @@ fun Context.getAppDirectory(): File {
 fun Context.showUpdateDialog(): androidx.appcompat.app.AlertDialog {
     val prefs = PreferencesSource(this)
     val binding: DialogLoadingBinding = DataBindingUtil.inflate(
-        LayoutInflater.from(this),
-        R.layout.dialog_loading,
-        null,
-        false
+            LayoutInflater.from(this),
+            R.layout.dialog_loading,
+            null,
+            false
     )
     val dialog = MaterialAlertDialogBuilder(
-        this,
-        android.R.style.Theme_Material_Light_NoActionBar_Fullscreen
+            this,
+            android.R.style.Theme_Material_Light_NoActionBar_Fullscreen
     )
-        .setTitle(
-            prefs.defaultPrefs()["title_downloading_update", applicationContext.getString(R.string.title_downloading_update)]
-                ?: applicationContext.getString(R.string.title_downloading_update)
-        )
-        .setMessage(
-            prefs.defaultPrefs()["message_wait_download", applicationContext.getString(R.string.message_wait_download)]
-                ?: applicationContext.getString(R.string.message_wait_download)
-        )
-        .setView(binding.root)
-        .setCancelable(false)
-        .create()
+            .setTitle(
+                    prefs.defaultPrefs()["title_downloading_update", applicationContext.getString(R.string.title_downloading_update)]
+                            ?: applicationContext.getString(R.string.title_downloading_update)
+            )
+            .setMessage(
+                    prefs.defaultPrefs()["message_wait_download", applicationContext.getString(R.string.message_wait_download)]
+                            ?: applicationContext.getString(R.string.message_wait_download)
+            )
+            .setView(binding.root)
+            .setCancelable(false)
+            .create()
     dialog.show()
     return dialog
+}
+
+fun Context.getRememberedUsers(prefs: PreferencesSource): List<RememberedUser> {
+    val list = mutableListOf<RememberedUser>()
+
+    var rememberedUsersString = (prefs.defaultPrefs()[getString(R.string.key_users), ""] ?: "")
+    val rememberedUsers = rememberedUsersString.split(";")
+    rememberedUsers.forEach {
+        if (it.split(",").size == 3) {
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = it.split(",")[2].toLong()
+            if (System.currentTimeMillis() - calendar.timeInMillis <= TimeUnit.DAYS.toMillis(14)) {
+                list.add(RememberedUser(it.split(",")[0], it.split(",")[1], it.split(",")[2].toLong()))
+            } else {
+                rememberedUsersString = rememberedUsersString.replace(it, "")
+            }
+        }
+
+    }
+    prefs.defaultPrefs()[getString(R.string.key_users)] = rememberedUsersString
+    return list
 }

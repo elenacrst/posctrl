@@ -152,7 +152,7 @@ class ReceiptFragment : BaseFragment() {
                 )
                 findNavController().navigateUp()
                 globalViewModel.receiptItems.removeObservers(viewLifecycleOwner)
-                //  globalViewModel.clearReceipt()
+                globalViewModel.clearReceipt()
             }
         }
         requireActivity().onBackPressedDispatcher.addCallback(

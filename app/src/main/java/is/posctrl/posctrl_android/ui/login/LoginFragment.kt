@@ -25,17 +25,18 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.inputmethod.EditorInfo
+import androidx.appcompat.widget.PopupMenu
 import androidx.databinding.DataBindingUtil
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import timber.log.Timber
+import java.util.*
 import javax.inject.Inject
 
-class LoginFragment : BaseFragment() {
+
+class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
 
     private lateinit var loginBinding: FragmentLoginBinding
 
@@ -101,6 +102,7 @@ class LoginFragment : BaseFragment() {
                     loginViewModel.sendFilterProcessOpenMessage()
                     findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it.store))
                 }
+                addToRememberedUsers()
             }
             for (item in it.texts) {
                 prefs.defaultPrefs()[item.id] = item.string
@@ -110,6 +112,20 @@ class LoginFragment : BaseFragment() {
                     prefs.defaultPrefs()["error_unknown", requireActivity().getString(R.string.error_unknown)]
                             ?: requireActivity().getString(R.string.error_unknown)
             )
+        }
+    }
+
+    private fun addToRememberedUsers() {
+        var rememberedUsersString = (prefs.defaultPrefs()[getString(R.string.key_users), ""] ?: "")
+        val rememberedUsers = rememberedUsersString.split(";")
+        //store as user,password,date;user2,pass2,date2;etc
+        val existingUser = rememberedUsers.find { userLine -> userLine.split(",").isNotEmpty() && userLine.split(",")[0] == loginBinding.etUser.text.toString() }
+        if (existingUser == null) {
+            if (rememberedUsers.isNotEmpty()) {
+                rememberedUsersString += ";"
+            }
+            rememberedUsersString += loginBinding.etUser.text.toString() + "," + loginBinding.etPassword.text.toString() + "," + System.currentTimeMillis()
+            prefs.defaultPrefs()[getString(R.string.key_users)] = rememberedUsersString
         }
     }
 
@@ -218,6 +234,11 @@ class LoginFragment : BaseFragment() {
             }
         }
         setupTexts()
+        loginBinding.etUser.setOnClickListener {
+            if (loginBinding.etUser.text.isNullOrEmpty() && requireContext().getRememberedUsers(prefs).isNotEmpty()) {
+                showPopup(it)
+            }
+        }
     }
 
     private fun setupTexts() {
@@ -344,8 +365,35 @@ class LoginFragment : BaseFragment() {
         requireContext().stopService(intent)
     }
 
+    private fun showPopup(v: View) {
+        val popup = PopupMenu(requireContext(), v)
+        val inflater: MenuInflater = popup.menuInflater
+        inflater.inflate(R.menu.suggested_users, popup.menu)
+        popup.setOnMenuItemClickListener(this)
+
+        val users = requireContext().getRememberedUsers(prefs)
+        for (i in users.indices) {
+            popup.menu.add(0, MENU_FIRST_ITEM + i, Menu.NONE, users[i].userId)
+        }
+
+        popup.show()
+    }
+
+    override fun onMenuItemClick(item: MenuItem?): Boolean {
+        item?.title?.let {
+            if (it.isNotEmpty()) {
+                loginBinding.etUser.setText(it)
+                loginBinding.etPassword.requestFocus()
+                return true
+            }
+
+        }
+        return false
+    }
+
     companion object {
         const val LOGIN_MAX_WAIT_MILLIS = 5000L
+        const val MENU_FIRST_ITEM = Menu.FIRST
     }
 }
 

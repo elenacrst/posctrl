@@ -62,10 +62,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                                     ?: getString(R.string.permission_not_granted)
                     )
                 } else {
-                    toast(
-                            preferences.defaultPrefs()["permissions_granted", getString(R.string.permissions_granted)]
-                                    ?: getString(R.string.permissions_granted)
-                    )
                     globalViewModel.saveSettingsFromFile()
                 }
 

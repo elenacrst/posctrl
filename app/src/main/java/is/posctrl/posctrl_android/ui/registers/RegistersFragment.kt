@@ -55,12 +55,19 @@ class RegistersFragment : BaseFragment() {
 
     private fun handleRegisters(registers: List<RegisterResult>) {
         if (registers.isNotEmpty()) {
-            if (registers.size > 6) {
-                registersBinding.rvRegisters.layoutManager =
-                        GridLayoutManager(requireContext(), 3)
-            } else {
-                registersBinding.rvRegisters.layoutManager =
-                        GridLayoutManager(requireContext(), 2)
+            when {
+                registers.size > 12 -> {
+                    registersBinding.rvRegisters.layoutManager =
+                            GridLayoutManager(requireContext(), 4)
+                }
+                registers.size > 6 -> {
+                    registersBinding.rvRegisters.layoutManager =
+                            GridLayoutManager(requireContext(), 3)
+                }
+                else -> {
+                    registersBinding.rvRegisters.layoutManager =
+                            GridLayoutManager(requireContext(), 2)
+                }
             }
             adapter.setData(registers.toTypedArray())
             registersBinding.registers.visibility = View.VISIBLE

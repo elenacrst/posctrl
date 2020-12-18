@@ -102,4 +102,5 @@
     <string name="title_about">About</string>
     <string name="current_store_value">Current store: %1$s, %2$s</string>
     <string name="app_version_value">App version: %s</string>
+    <string name="key_users">keyUsers</string>
 </resources>
