@@ -23,7 +23,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/cl_base"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:paddingBottom="@dimen/margin_small">
 
             <TextView
                 android:id="@+id/tv_logged_in"
@@ -35,8 +36,8 @@
                 android:paddingTop="@dimen/margin_extra_small"
                 android:paddingEnd="@dimen/margin_small"
                 android:paddingBottom="@dimen/margin_extra_small"
-                app:layout_constraintTop_toBottomOf="@id/tv_about"
-                tools:text="Logged in as aron" />
+                app:layout_constraintTop_toBottomOf="@id/iv_logo"
+                tools:text="User: 1 - Aron" />
 
             <TextView
                 android:id="@+id/tv_store_info"
@@ -64,7 +65,7 @@
                 app:layout_constraintTop_toBottomOf="@id/tv_store_info"
                 tools:text="App version: 1.16" />
 
-            <TextView
+            <!--<TextView
                 android:id="@+id/tv_about"
                 style="@style/TitleText"
                 android:layout_width="match_parent"
@@ -78,23 +79,23 @@
                 android:textColor="@color/teal_700"
                 android:textStyle="bold"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="@string/title_about" />
+                tools:text="@string/title_about" />-->
 
-            <TextView
-                android:id="@+id/tv_title"
-                style="@style/TitleText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:focusable="true"
-                android:paddingStart="@dimen/margin_small"
-                android:paddingTop="@dimen/margin_small"
-                android:paddingEnd="@dimen/margin_small"
-                android:textColor="@color/teal_700"
-                android:textStyle="bold"
-                app:layout_constraintTop_toBottomOf="@id/tv_app_version"
-                tools:text="@string/title_app_options" />
+            <!-- <TextView
+                 android:id="@+id/tv_title"
+                 style="@style/TitleText"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:background="?android:attr/selectableItemBackgroundBorderless"
+                 android:clickable="true"
+                 android:focusable="true"
+                 android:paddingStart="@dimen/margin_small"
+                 android:paddingTop="@dimen/margin_small"
+                 android:paddingEnd="@dimen/margin_small"
+                 android:textColor="@color/teal_700"
+                 android:textStyle="bold"
+                 app:layout_constraintTop_toBottomOf="@id/tv_app_version"
+                 tools:text="@string/title_app_options" />-->
 
 
             <TextView
@@ -109,7 +110,7 @@
                 android:paddingTop="@dimen/margin_extra_small"
                 android:paddingEnd="@dimen/margin_small"
                 android:paddingBottom="@dimen/margin_extra_small"
-                app:layout_constraintTop_toBottomOf="@+id/tv_title"
+                app:layout_constraintTop_toBottomOf="@id/tv_app_version"
                 tools:text="@string/action_logout" />
 
             <com.google.android.material.button.MaterialButton
@@ -119,9 +120,21 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/margin_extra_small"
                 android:visibility="@{store==null?View.GONE:View.VISIBLE}"
-                app:layout_constraintTop_toBottomOf="@+id/tv_kiosk"
+                app:layout_constraintTop_toBottomOf="@id/sw_kiosk"
                 tools:text="@string/action_suspend"
                 tools:visibility="visible" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/iv_logo"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:maxHeight="120dp"
+                android:scaleType="fitCenter"
+                app:layout_constraintBottom_toTopOf="@+id/tv_logged_in"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:src="@drawable/logo" />
 
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/sw_kiosk"
@@ -133,7 +146,7 @@
                 android:paddingTop="@dimen/margin_extra_small"
                 android:paddingEnd="@dimen/margin_small"
                 android:paddingBottom="@dimen/margin_extra_small"
-                app:layout_constraintTop_toBottomOf="@+id/tv_logout" />
+                app:layout_constraintTop_toBottomOf="@id/tv_logout" />
 
             <TextView
                 android:id="@+id/tv_kiosk"
@@ -148,7 +161,7 @@
                 android:paddingEnd="@dimen/margin_small"
                 android:paddingBottom="@dimen/margin_extra_small"
                 android:translationZ="20dp"
-                app:layout_constraintTop_toBottomOf="@+id/tv_logout"
+                app:layout_constraintTop_toTopOf="@id/sw_kiosk"
                 tools:text="@string/action_kiosk_mode" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 

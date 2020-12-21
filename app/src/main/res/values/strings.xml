@@ -67,7 +67,7 @@
     <string name="error_partial_download">Partially downloaded</string>
     <string name="title_receipt_incomplete_values">Store %1$d, Register %2$d</string>
     <string name="title_receipt_values">Store %1$d, Register %2$d, Txn %3$d</string>
-    <string name="login_value">Logged in as %s</string>
+
     <string name="action_confirm">Confirm</string>
     <string name="action_suspend">Suspend</string>
     <string name="key_login_server" translatable="false">keyLoginServer</string>
@@ -103,4 +103,7 @@
     <string name="current_store_value">Current store: %1$s, %2$s</string>
     <string name="app_version_value">App version: %s</string>
     <string name="key_users">keyUsers</string>
+    <string name="key_registers_columns">keyRegistersColumns</string>
+    <string name="login_value">User: %1$s - %2$s</string>
+    <string name="wifi_signal_value">WiFi signal: %d/5</string>
 </resources>

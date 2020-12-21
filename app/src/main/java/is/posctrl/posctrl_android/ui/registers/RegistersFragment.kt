@@ -54,21 +54,17 @@ class RegistersFragment : BaseFragment() {
     }
 
     private fun handleRegisters(registers: List<RegisterResult>) {
+
         if (registers.isNotEmpty()) {
-            when {
-                registers.size > 12 -> {
-                    registersBinding.rvRegisters.layoutManager =
-                            GridLayoutManager(requireContext(), 4)
-                }
-                registers.size > 6 -> {
-                    registersBinding.rvRegisters.layoutManager =
-                            GridLayoutManager(requireContext(), 3)
-                }
-                else -> {
-                    registersBinding.rvRegisters.layoutManager =
-                            GridLayoutManager(requireContext(), 2)
-                }
+            val columns = prefs.customPrefs()[getString(R.string.key_registers_columns), -1] ?: -1
+            if (columns in 1..4) {
+                registersBinding.rvRegisters.layoutManager =
+                        GridLayoutManager(requireContext(), columns)
+            } else {
+                registersBinding.rvRegisters.layoutManager =
+                        GridLayoutManager(requireContext(), DEFAULT_COLUMN_COUNT)
             }
+
             adapter.setData(registers.toTypedArray())
             registersBinding.registers.visibility = View.VISIBLE
             registersBinding.tvEmptyView.visibility = View.GONE
@@ -134,6 +130,10 @@ class RegistersFragment : BaseFragment() {
                 ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
+    }
+
+    companion object {
+        const val DEFAULT_COLUMN_COUNT = 3
     }
 }
 

@@ -13,6 +13,7 @@ import `is`.posctrl.posctrl_android.databinding.FragmentReceiptBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.ui.base.GlobalViewModel
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsViewModel
+import `is`.posctrl.posctrl_android.util.extensions.getWifiLevel
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import `is`.posctrl.posctrl_android.util.extensions.showConfirmDialog
 import android.content.Context
@@ -114,15 +115,20 @@ class ReceiptFragment : BaseFragment() {
         incompleteValText = incompleteValText.replace("%2\$d", register.registerNumber)
 
         receiptBinding.tvTitle.text = incompleteValText
+        receiptBinding.tvTitle.append(", ")
+        receiptBinding.tvTitle.append(globalViewModel.wifiSignalString.value!!)
 
         globalViewModel.receiptItems.observe(viewLifecycleOwner, createReceiptItemsObserver())
         shouldClearReceiptScreen = true
+
+        globalViewModel.wifiSignalString.observe(viewLifecycleOwner, createWifiObserver())
+        globalViewModel.setWifiSignal(requireContext().getWifiLevel())
     }
 
-    /*   override fun onStop() {
-           super.onStop()
-           globalViewModel.receiptItems.removeObservers(viewLifecycleOwner)
-       }*/
+    private fun createWifiObserver(): Observer<String> {
+        return Observer {
+        }
+    }
 
     private fun createReceiptItemsObserver(): Observer<List<ReceiptResponse>> {
         return Observer {
@@ -187,6 +193,8 @@ class ReceiptFragment : BaseFragment() {
                 receiptValuesText = receiptValuesText.replace("%2\$d", register.registerNumber)
                 receiptValuesText = receiptValuesText.replace("%3\$d", it.clearTextFlag.toString())
                 receiptBinding.tvTitle.text = receiptValuesText
+                receiptBinding.tvTitle.append(", ")
+                receiptBinding.tvTitle.append(globalViewModel.wifiSignalString.value!!)
             }
 
             val view = generateFormattedTextView(it, it.line)

@@ -16,11 +16,14 @@ import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.ui.BaseFragmentHandler
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.getAppDirectory
+import `is`.posctrl.posctrl_android.util.extensions.getWifiLevel
 import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.Manifest
+import android.app.Application
 import android.content.*
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.net.wifi.WifiManager
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -36,7 +39,8 @@ import javax.inject.Inject
 abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     private lateinit var activityComponent: ActivityComponent
     private var logoutReceiver = createLogoutReceiver()
-    private var broadcastReceiver = createReceiptReceiver()
+    private var receiptReceiver = createReceiptReceiver()
+    private var wifiReceiver = createWifiReceiver()
 
     @Inject
     lateinit var preferences: PreferencesSource
@@ -44,13 +48,13 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     @Inject
     lateinit var repository: PosCtrlRepository
 
-    val globalViewModel: GlobalViewModel by viewModels { GlobalViewModelFactory(repository) }
-    private var onApkDownloaded: () -> Unit = {}
+    @Inject
+    lateinit var appContext: Application
 
-    // Register the permissions callback, which handles the user's response to the
-// system permissions dialog. Save the return value, an instance of
-// ActivityResultLauncher. You can use either a val, as shown in this snippet,
-// or a lateinit var in your onAttach() or onCreate() method.
+    val globalViewModel: GlobalViewModel by viewModels { GlobalViewModelFactory(repository, appContext) }
+    private var onApkDownloaded: () -> Unit = {}
+    private lateinit var wifiManager: WifiManager
+
     private val requestPermissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
                 Timber.d("permissions: write ${results[Manifest.permission.WRITE_EXTERNAL_STORAGE]}, read ${results[Manifest.permission.READ_EXTERNAL_STORAGE]}")
@@ -66,6 +70,23 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                 }
 
             }
+
+    private fun createWifiReceiver(): BroadcastReceiver {
+        return object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                // if (intent.action == NETWORK_STATE_CHANGED_ACTION){
+                notifyWifiState()
+//                wifiManager.startScan()
+                //  }
+            }
+        }
+    }
+
+    private fun notifyWifiState() {
+        val level = getWifiLevel()
+        Timber.d("wifi info: level = $level/5")
+        globalViewModel.setWifiSignal(level)
+    }
 
     private fun createReceiptReceiver(): BroadcastReceiver {
         return object : BroadcastReceiver() {
@@ -168,7 +189,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         } else {
             globalViewModel.saveSettingsFromFile()
         }
-
+        wifiManager = getSystemService(WIFI_SERVICE) as WifiManager
+        notifyWifiState()
     }
 
     override fun onResume() {
@@ -178,13 +200,25 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                 IntentFilter(ACTION_LOGOUT)
         )
         startReceivingReceipt()
+        startReceivingWifiUpdates()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        LocalBroadcastManager.getInstance(applicationContext).unregisterReceiver(wifiReceiver)
+    }
+
+    private fun startReceivingWifiUpdates() {
+        val intentFilter = IntentFilter()
+        intentFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION)
+        LocalBroadcastManager.getInstance(applicationContext).registerReceiver(wifiReceiver, intentFilter)
     }
 
     override fun startReceivingReceipt() {
         if (globalViewModel.isReceivingReceipt.value != true) {
             val intentFilter = IntentFilter(ReceiptReceiverService.ACTION_RECEIVE_RECEIPT)
             LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                    broadcastReceiver,
+                    receiptReceiver,
                     intentFilter
             )
             globalViewModel.setReceivingReceipt(true)
@@ -217,11 +251,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
             else -> false
         }
     }
-
-/*    override fun onStart() {
-        super.onStart()
-     //   preferences.defaultPrefs()[getString(R.string.key_app_visible)] = true
-    }*/
 
     override fun createLoadingObserver(
             successListener: (ResultWrapper<*>?) -> Unit,

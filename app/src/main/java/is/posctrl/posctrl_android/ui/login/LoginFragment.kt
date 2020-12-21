@@ -14,8 +14,10 @@ import `is`.posctrl.posctrl_android.databinding.FragmentLoginBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.LoginResultReceiverService
+import `is`.posctrl.posctrl_android.ui.base.GlobalViewModel
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsFragment
 import `is`.posctrl.posctrl_android.util.extensions.*
+import `is`.posctrl.posctrl_android.util.glide.load
 import `is`.posctrl.posctrl_android.util.scheduleLogout
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -26,9 +28,12 @@ import android.os.CountDownTimer
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.*
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.PopupMenu
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import timber.log.Timber
@@ -50,6 +55,8 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
 
     private var loginCountdownTimer: CountDownTimer? = null
     private var updateDialog: androidx.appcompat.app.AlertDialog? = null
+
+    private val globalViewModel: GlobalViewModel by activityViewModels()
 
     private fun createLoginReceiver(): BroadcastReceiver {
         return object : BroadcastReceiver() {
@@ -169,6 +176,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                 it.store.storeNumber
         prefs.customPrefs()[requireActivity().getString(R.string.key_registers)] =
                 it.store.registers.joinToString(",") { reg -> reg.registerNumber }
+        prefs.customPrefs()[requireActivity().getString(R.string.key_registers_columns)] = it.store.registersColumns
     }
 
     override fun onCreateView(
@@ -234,10 +242,24 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
             }
         }
         setupTexts()
+        loginBinding.etUser.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus && loginBinding.etUser.text.isNullOrEmpty() && requireContext().getRememberedUsers(prefs).isNotEmpty()) {
+                showPopup(v)
+            }
+        }
         loginBinding.etUser.setOnClickListener {
             if (loginBinding.etUser.text.isNullOrEmpty() && requireContext().getRememberedUsers(prefs).isNotEmpty()) {
                 showPopup(it)
             }
+        }
+        loginBinding.ivLogo.load(requireContext(), R.drawable.logo)
+        globalViewModel.wifiSignalString.observe(viewLifecycleOwner, createWifiObserver())
+        globalViewModel.setWifiSignal(requireContext().getWifiLevel())
+    }
+
+    private fun createWifiObserver(): Observer<String> {
+        return Observer {
+            loginBinding.tvWifi.text = globalViewModel.wifiSignalString.value!!
         }
     }
 
@@ -295,6 +317,9 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
 
             override fun afterTextChanged(s: Editable?) {
                 loginBinding.tilUser.error = ""
+                if (s.isNullOrEmpty()) {
+                    showPopup(loginBinding.etUser)
+                }
             }
 
         })
@@ -366,7 +391,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     }
 
     private fun showPopup(v: View) {
-        val popup = PopupMenu(requireContext(), v)
+        val popup = PopupMenu(requireContext(), v, Gravity.BOTTOM or Gravity.START)
         val inflater: MenuInflater = popup.menuInflater
         inflater.inflate(R.menu.suggested_users, popup.menu)
         popup.setOnMenuItemClickListener(this)
@@ -375,7 +400,6 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         for (i in users.indices) {
             popup.menu.add(0, MENU_FIRST_ITEM + i, Menu.NONE, users[i].userId)
         }
-
         popup.show()
     }
 

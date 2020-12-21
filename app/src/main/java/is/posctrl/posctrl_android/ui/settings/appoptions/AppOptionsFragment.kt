@@ -18,6 +18,7 @@ import `is`.posctrl.posctrl_android.ui.login.LoginViewModel
 import `is`.posctrl.posctrl_android.util.extensions.getAppVersion
 import `is`.posctrl.posctrl_android.util.extensions.showInputDialog
 import `is`.posctrl.posctrl_android.util.extensions.toast
+import `is`.posctrl.posctrl_android.util.glide.load
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -116,6 +117,7 @@ class AppOptionsFragment : BaseFragment() {
         }
         setupTexts()
         setupOptionsVisibility()
+        appOptionsBinding.ivLogo.load(requireContext(), R.drawable.logo)
     }
 
     private fun setupOptionsVisibility() {
@@ -160,22 +162,25 @@ class AppOptionsFragment : BaseFragment() {
         appOptionsBinding.btSuspend.text =
                 preferencesSource.defaultPrefs()["action_suspend_register", getString(R.string.action_suspend_register)]
                         ?: getString(R.string.action_suspend_register)
-        appOptionsBinding.tvTitle.text =
-                preferencesSource.defaultPrefs()["title_app_options", getString(R.string.title_app_options)]
-                        ?: getString(R.string.title_app_options)
+//        appOptionsBinding.tvTitle.text =
+//                preferencesSource.defaultPrefs()["title_app_options", getString(R.string.title_app_options)]
+//                        ?: getString(R.string.title_app_options)
         appOptionsBinding.tvKiosk.text =
                 preferencesSource.defaultPrefs()["action_kiosk_mode", getString(R.string.action_kiosk_mode)]
                         ?: getString(R.string.action_kiosk_mode)
-        appOptionsBinding.tvAbout.text =
-                preferencesSource.defaultPrefs()["title_about", getString(R.string.title_about)]
-                        ?: getString(R.string.title_about)
+//        appOptionsBinding.tvAbout.text =
+//                preferencesSource.defaultPrefs()["title_about", getString(R.string.title_about)]
+//                        ?: getString(R.string.title_about)
 
         val user = preferencesSource.customPrefs()[getString(R.string.key_logged_username), "null"]
                 ?: "null"
+        val userId = preferencesSource.customPrefs()[getString(R.string.key_logged_user), "null"]
+                ?: "null"
         var loggedInText =
-                preferencesSource.defaultPrefs()["login_value", getString(R.string.login_value, user)]
-                        ?: getString(R.string.login_value, user)
-        loggedInText = loggedInText.replace("%s", user)
+                preferencesSource.defaultPrefs()["login_value", getString(R.string.login_value, userId, user)]
+                        ?: getString(R.string.login_value, userId, user)
+        loggedInText = loggedInText.replace("%1\$s", userId)
+        loggedInText = loggedInText.replace("%2\$s", user)
         appOptionsBinding.tvLoggedIn.text = loggedInText
 
         store?.let {

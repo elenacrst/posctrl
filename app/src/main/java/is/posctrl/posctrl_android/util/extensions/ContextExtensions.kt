@@ -12,6 +12,7 @@ import `is`.posctrl.posctrl_android.databinding.DialogLoadingBinding
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.net.wifi.WifiManager
 import android.text.InputType
 import android.view.LayoutInflater
 import android.widget.Toast
@@ -20,6 +21,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
+
 
 fun Context.toast(message: String) =
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
@@ -141,5 +143,12 @@ fun Context.getRememberedUsers(prefs: PreferencesSource): List<RememberedUser> {
 
     }
     prefs.defaultPrefs()[getString(R.string.key_users)] = rememberedUsersString
+    list.sortBy { it.userId }
     return list
+}
+
+fun Context.getWifiLevel(): Int {
+    val wifiManager = getSystemService(Context.WIFI_SERVICE) as WifiManager
+    val linkSpeed = wifiManager.connectionInfo.rssi
+    return WifiManager.calculateSignalLevel(linkSpeed, 5)
 }

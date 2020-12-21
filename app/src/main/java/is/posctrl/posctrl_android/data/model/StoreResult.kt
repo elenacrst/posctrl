@@ -13,9 +13,10 @@ import kotlinx.android.parcel.Parcelize
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Parcelize
 data class StoreResult(
-    private var _storeNumber: Int = -1,
-    private var _storeName: String = "",
-    private var _registers: List<RegisterResult> = listOf()
+        private var _storeNumber: Int = -1,
+        private var _storeName: String = "",
+        private var _registers: List<RegisterResult> = listOf(),
+        private var _registersColumns: Int = -1
 ) : Parcelable {
     @get:JacksonXmlProperty(localName = "StoreNumber")
     var storeNumber: Int
@@ -37,4 +38,11 @@ data class StoreResult(
             _registers = value
         }
         get() = _registers
+
+    @get:JacksonXmlProperty(localName = "RegCol")
+    var registersColumns: Int
+        set(value) {
+            _registersColumns = value
+        }
+        get() = _registersColumns
 }
