@@ -1,6 +1,6 @@
 package `is`.posctrl.posctrl_android.ui.registers
 
-import `is`.posctrl.posctrl_android.BaseFragment
+import `is`.posctrl.posctrl_android.ui.base.BaseFragment
 import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
@@ -11,7 +11,9 @@ import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.FragmentRegistersBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
+import `is`.posctrl.posctrl_android.ui.base.GlobalViewModel
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsFragment
+import `is`.posctrl.posctrl_android.util.extensions.getWifiLevel
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import android.content.Context
 import android.content.Intent
@@ -20,6 +22,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import javax.inject.Inject
@@ -35,6 +39,8 @@ class RegistersFragment : BaseFragment() {
     lateinit var prefs: PreferencesSource
 
     private lateinit var store: StoreResult
+
+    private val globalViewModel: GlobalViewModel by activityViewModels()
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -103,6 +109,14 @@ class RegistersFragment : BaseFragment() {
         })
         handleRegisters(store.registers)
         setupTexts()
+        globalViewModel.wifiSignalString.observe(viewLifecycleOwner, createWifiObserver())
+        globalViewModel.setWifiSignal(requireContext().getWifiLevel())
+    }
+
+    private fun createWifiObserver(): Observer<String> {
+        return Observer {
+            registersBinding.tvWifi.text = globalViewModel.wifiSignalString.value!!
+        }
     }
 
     private fun setupTexts() {

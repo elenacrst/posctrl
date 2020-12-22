@@ -1,4 +1,4 @@
-package `is`.posctrl.posctrl_android
+package `is`.posctrl.posctrl_android.ui.base
 
 import `is`.posctrl.posctrl_android.ui.BaseFragmentHandler
 import android.content.Context

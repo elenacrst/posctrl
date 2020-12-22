@@ -5,6 +5,7 @@ import `is`.posctrl.posctrl_android.data.ErrorCode
 import `is`.posctrl.posctrl_android.data.NoNetworkConnectionException
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.ResultWrapper
+import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
 import `is`.posctrl.posctrl_android.util.Event
 import android.app.Application
@@ -33,6 +34,14 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
     private var _wifiSignalString: MutableLiveData<String> = MutableLiveData("")
     val wifiSignalString: LiveData<String>
         get() = _wifiSignalString
+
+    private var _isReceivingFilter: MutableLiveData<Boolean> = MutableLiveData(false)
+    val isReceivingFilter: LiveData<Boolean>
+        get() = _isReceivingFilter
+
+    private var _filterItemMessages: MutableLiveData<List<FilteredInfoResponse>> = MutableLiveData(mutableListOf())
+    val filterItemMessages: LiveData<List<FilteredInfoResponse>>
+        get() = _filterItemMessages
 
     fun downloadApk() {
         viewModelScope.launch {
@@ -67,7 +76,6 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
         } else {
             _receiptItems.value = receiptItems.value!! + result
         }
-
     }
 
     fun clearReceipt() {
@@ -80,5 +88,25 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
 
     fun setWifiSignal(level: Int) {
         _wifiSignalString.value = appContext.getString(R.string.wifi_signal_value, level)
+    }
+
+    fun setReceivingFilter(b: Boolean) {
+        _isReceivingFilter.value = b
+    }
+
+    fun addFilter(item: FilteredInfoResponse) {
+        val list = mutableListOf<FilteredInfoResponse>()
+        filterItemMessages.value?.let {
+            list.addAll(filterItemMessages.value!!)
+        }
+        list.add(item)
+        _filterItemMessages.value = list
+    }
+
+    fun removeFirstFilter() {
+        if (filterItemMessages.value.isNullOrEmpty()) {
+            return
+        }
+        _filterItemMessages.value = filterItemMessages.value!! - filterItemMessages.value!![0]
     }
 }

@@ -12,6 +12,8 @@ import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
+import `is`.posctrl.posctrl_android.receiver.WifiReceiver.Companion.ACTION_WIFI_CHANGE
+import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.ui.BaseFragmentHandler
 import `is`.posctrl.posctrl_android.util.Event
@@ -20,11 +22,14 @@ import `is`.posctrl.posctrl_android.util.extensions.getWifiLevel
 import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.Manifest
 import android.app.Application
+import android.app.KeyguardManager
 import android.content.*
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -54,6 +59,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     val globalViewModel: GlobalViewModel by viewModels { GlobalViewModelFactory(repository, appContext) }
     private var onApkDownloaded: () -> Unit = {}
     private lateinit var wifiManager: WifiManager
+    private var broadcastReceiver: BroadcastReceiver = createFilterReceiver()
 
     private val requestPermissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
@@ -74,10 +80,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     private fun createWifiReceiver(): BroadcastReceiver {
         return object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                // if (intent.action == NETWORK_STATE_CHANGED_ACTION){
                 notifyWifiState()
-//                wifiManager.startScan()
-                //  }
             }
         }
     }
@@ -86,6 +89,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         val level = getWifiLevel()
         Timber.d("wifi info: level = $level/5")
         globalViewModel.setWifiSignal(level)
+        @Suppress("DEPRECATION")
+        wifiManager.startScan()
     }
 
     private fun createReceiptReceiver(): BroadcastReceiver {
@@ -175,6 +180,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        allowScreenUnlock()
         initializeActivityComponent()
         activityComponent.inject(this)
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
@@ -191,6 +197,30 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         }
         wifiManager = getSystemService(WIFI_SERVICE) as WifiManager
         notifyWifiState()
+
+        if (globalViewModel.isReceivingFilter.value != true) {
+            LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
+                    broadcastReceiver,
+                    IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
+            )
+            globalViewModel.setReceivingFilter(true)
+        }
+    }
+
+    private fun allowScreenUnlock() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+            val keyguardManager = getSystemService(KEYGUARD_SERVICE) as KeyguardManager
+            keyguardManager.requestDismissKeyguard(this, null)
+        } else {
+            @Suppress("DEPRECATION")
+            this.window.addFlags(
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            )
+        }
     }
 
     override fun onResume() {
@@ -210,7 +240,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
     private fun startReceivingWifiUpdates() {
         val intentFilter = IntentFilter()
-        intentFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION)
+        intentFilter.addAction(ACTION_WIFI_CHANGE)
         LocalBroadcastManager.getInstance(applicationContext).registerReceiver(wifiReceiver, intentFilter)
     }
 
@@ -293,7 +323,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         hideLoading()
     }
 
-    override fun handleFilter(result: FilteredInfoResponse?) {
+    override fun handleFilter() {
     }
 
     abstract fun handleLogout()
@@ -304,6 +334,32 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     override fun downloadApk(function: () -> Unit) {
         globalViewModel.downloadApk()
         onApkDownloaded = function
+    }
+
+    private fun createFilterReceiver(): BroadcastReceiver {
+        return object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                val bundle = intent.extras
+                Timber.d("received filter 1")
+                if (bundle != null) {
+                    val result =
+                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
+                    result?.let {
+                        globalViewModel.addFilter(result)
+                    }
+                    handleFilter()
+                }
+            }
+        }
+    }
+
+    protected fun getFirstFilter(): FilteredInfoResponse? {
+        if (globalViewModel.filterItemMessages.value.isNullOrEmpty()) {
+            return null
+        }
+        val first = globalViewModel.filterItemMessages.value!![0]
+        globalViewModel.removeFirstFilter()
+        return first
     }
 
     companion object {

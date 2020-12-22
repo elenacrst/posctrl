@@ -1,6 +1,6 @@
 package `is`.posctrl.posctrl_android.ui.settings
 
-import `is`.posctrl.posctrl_android.BaseFragment
+import `is`.posctrl.posctrl_android.ui.base.BaseFragment
 import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R

@@ -18,18 +18,13 @@ import `is`.posctrl.posctrl_android.ui.registers.RegistersFragment
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.activitycontracts.InstallUnknownContract
 import android.app.ActivityManager
-import android.app.KeyguardManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.view.WindowManager
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import timber.log.Timber
@@ -41,10 +36,6 @@ class MainActivity : BaseActivity() {
     private lateinit var mainBinding: ActivityMainBinding
     private lateinit var navController: NavController
     private lateinit var activityComponent: ActivityComponent
-    private var broadcastReceiver = createFilterReceiver()
-
-    private var filterItemMessages: List<FilteredInfoResponse> = mutableListOf()
-
     private lateinit var navHostFragment: NavHostFragment
 
     private var startsOtherIntent: Boolean = false
@@ -56,14 +47,9 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        allowScreenUnlock()
+
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         mainBinding.lifecycleOwner = this
-
-        LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                broadcastReceiver,
-                IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
-        )
 
         setupNavController()
         initializeActivityComponent()
@@ -84,30 +70,14 @@ class MainActivity : BaseActivity() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.registersFragment -> {
-                    if (filterItemMessages.isNotEmpty()) {
-                        navigateToFilter(filterItemMessages[0])
-                        filterItemMessages = filterItemMessages - filterItemMessages[0]
+                    val first = getFirstFilter()
+                    if (first != null) {
+                        navigateToFilter(first)
                     }
                 }
             }
         }
     }
-
-    private fun allowScreenUnlock() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
-            setTurnScreenOn(true)
-            val keyguardManager = getSystemService(KEYGUARD_SERVICE) as KeyguardManager
-            keyguardManager.requestDismissKeyguard(this, null)
-        } else {
-            @Suppress("DEPRECATION")
-            this.window.addFlags(
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-            )
-        }
-    }//todo move to base activity
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
@@ -122,20 +92,6 @@ class MainActivity : BaseActivity() {
         mainBinding.pbLoading.visibility = View.GONE
     }
 
-    private fun createFilterReceiver(): BroadcastReceiver {
-        return object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                val bundle = intent.extras
-                Timber.d("received filter 1")
-                if (bundle != null) {
-                    val result =
-                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
-                    handleFilter(result)
-                }
-            }
-        }
-    }
-
     private fun navigateToFilter(filter: FilteredInfoResponse) {
         startsOtherIntent = true
         val intent = Intent(this, FilterActivity::class.java)
@@ -144,12 +100,16 @@ class MainActivity : BaseActivity() {
         startActivityForResult(intent, RC_FILTER)//todo use activity result api
     }
 
-    override fun handleFilter(result: FilteredInfoResponse?) {
-        result?.let {
-            filterItemMessages = filterItemMessages + result
-            filterItemMessages = filterItemMessages - filterItemMessages[0]
+    override fun handleFilter() {
+        val filter = getFirstFilter()
+        filter?.let {
             navigateToFilter(it)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        handleFilter()
     }
 
     override fun onBackPressed() {
@@ -199,7 +159,7 @@ class MainActivity : BaseActivity() {
 interface BaseFragmentHandler {
     fun showLoading()
     fun hideLoading()
-    fun handleFilter(result: FilteredInfoResponse?)
+    fun handleFilter()
     fun createLoadingObserver(
             successListener: (ResultWrapper<*>?) -> Unit = { },
             errorListener: () -> Unit = { }

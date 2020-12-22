@@ -16,12 +16,10 @@ import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.toast
 import android.app.ActivityManager
-import android.app.KeyguardManager
 import android.content.Context
 import android.media.MediaPlayer
 import android.os.*
 import android.view.View
-import android.view.WindowManager
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import timber.log.Timber
@@ -51,7 +49,6 @@ class FilterActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        allowScreenUnlock()
         filterBinding = DataBindingUtil.setContentView(this, R.layout.activity_filter)
 
         initializeActivityComponent()
@@ -246,21 +243,6 @@ class FilterActivity : BaseActivity() {
         })
     }
 
-    private fun allowScreenUnlock() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
-            setTurnScreenOn(true)
-            val keyguardManager = getSystemService(KEYGUARD_SERVICE) as KeyguardManager
-            keyguardManager.requestDismissKeyguard(this, null)
-        } else {
-            @Suppress("DEPRECATION")
-            this.window.addFlags(
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-            )
-        }
-    }
 
     override fun showLoading() {
         filterBinding.pbLoading.visibility = View.VISIBLE

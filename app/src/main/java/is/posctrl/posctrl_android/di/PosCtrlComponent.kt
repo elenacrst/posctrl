@@ -9,9 +9,9 @@ import javax.inject.Scope
 
 @ApplicationScope
 @Component(
-    modules = [
-        AppModule::class,
-    ]
+        modules = [
+            AppModule::class,
+        ]
 )
 interface PosCtrlComponent {
     fun activityComponent(activityModule: ActivityModule): ActivityComponent

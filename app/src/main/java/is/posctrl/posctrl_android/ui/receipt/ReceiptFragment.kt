@@ -1,6 +1,6 @@
 package `is`.posctrl.posctrl_android.ui.receipt
 
-import `is`.posctrl.posctrl_android.BaseFragment
+import `is`.posctrl.posctrl_android.ui.base.BaseFragment
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
@@ -127,6 +127,15 @@ class ReceiptFragment : BaseFragment() {
 
     private fun createWifiObserver(): Observer<String> {
         return Observer {
+            val oldTexts = receiptBinding.tvTitle.text.split(",")
+            if (oldTexts.size >= 4) {
+                var text = receiptBinding.tvTitle.text.toString()
+                text = text.replace(oldTexts[3], it)
+                receiptBinding.tvTitle.text = text
+            } else {
+                receiptBinding.tvTitle.append(", ")
+                receiptBinding.tvTitle.append(it)
+            }
         }
     }
 
