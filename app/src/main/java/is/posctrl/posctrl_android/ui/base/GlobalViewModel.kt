@@ -1,6 +1,5 @@
 package `is`.posctrl.posctrl_android.ui.base
 
-import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.ErrorCode
 import `is`.posctrl.posctrl_android.data.NoNetworkConnectionException
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
@@ -15,7 +14,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
-class GlobalViewModel @Inject constructor(private val repository: PosCtrlRepository, private val appContext: Application) :
+class GlobalViewModel @Inject constructor(private val repository: PosCtrlRepository, private val appContext: Application) ://todo remove argument if not used
         ViewModel() {
 
     private var _downloadApkEvent: MutableLiveData<Event<ResultWrapper<*>>> =
@@ -31,9 +30,9 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
     val isReceivingReceipt: LiveData<Boolean>
         get() = _isReceivingReceipt
 
-    private var _wifiSignalString: MutableLiveData<String> = MutableLiveData("")
-    val wifiSignalString: LiveData<String>
-        get() = _wifiSignalString
+    private var _wifiSignal: MutableLiveData<Int> = MutableLiveData(0)
+    val wifiSignal: LiveData<Int>
+        get() = _wifiSignal
 
     private var _isReceivingFilter: MutableLiveData<Boolean> = MutableLiveData(false)
     val isReceivingFilter: LiveData<Boolean>
@@ -87,7 +86,7 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
     }
 
     fun setWifiSignal(level: Int) {
-        _wifiSignalString.value = appContext.getString(R.string.wifi_signal_value, level)
+        _wifiSignal.value = level
     }
 
     fun setReceivingFilter(b: Boolean) {

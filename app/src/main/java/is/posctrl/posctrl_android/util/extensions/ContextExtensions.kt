@@ -150,5 +150,5 @@ fun Context.getRememberedUsers(prefs: PreferencesSource): List<RememberedUser> {
 fun Context.getWifiLevel(): Int {
     val wifiManager = getSystemService(Context.WIFI_SERVICE) as WifiManager
     val linkSpeed = wifiManager.connectionInfo.rssi
-    return WifiManager.calculateSignalLevel(linkSpeed, 5)
+    return WifiManager.calculateSignalLevel(linkSpeed, 4)
 }

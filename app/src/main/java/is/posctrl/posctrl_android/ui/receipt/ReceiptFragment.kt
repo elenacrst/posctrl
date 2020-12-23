@@ -12,13 +12,16 @@ import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.FragmentReceiptBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.ui.base.GlobalViewModel
+import `is`.posctrl.posctrl_android.ui.login.LoginFragment
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsViewModel
 import `is`.posctrl.posctrl_android.util.extensions.getWifiLevel
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import `is`.posctrl.posctrl_android.util.extensions.showConfirmDialog
 import android.content.Context
 import android.graphics.Typeface
+import android.os.BatteryManager
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,6 +34,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
@@ -52,6 +56,18 @@ class ReceiptFragment : BaseFragment() {
 
     private val globalViewModel: GlobalViewModel by activityViewModels()
     private var shouldClearReceiptScreen: Boolean = false
+
+    private var batteryCheckTimer: CountDownTimer = createBatteryCheckTimer()
+
+    private fun createBatteryCheckTimer() =
+            object : CountDownTimer(TimeUnit.MINUTES.toMillis(LoginFragment.BATTERY_CHECK_INTERVAL_MINUTES), 1000) {
+                override fun onFinish() {
+                    startBatteryTimer()
+                }
+
+                override fun onTick(millisUntilFinished: Long) {
+                }
+            }
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -115,26 +131,32 @@ class ReceiptFragment : BaseFragment() {
         incompleteValText = incompleteValText.replace("%2\$d", register.registerNumber)
 
         receiptBinding.tvTitle.text = incompleteValText
-        receiptBinding.tvTitle.append(", ")
-        receiptBinding.tvTitle.append(globalViewModel.wifiSignalString.value!!)
 
         globalViewModel.receiptItems.observe(viewLifecycleOwner, createReceiptItemsObserver())
         shouldClearReceiptScreen = true
 
-        globalViewModel.wifiSignalString.observe(viewLifecycleOwner, createWifiObserver())
+        globalViewModel.wifiSignal.observe(viewLifecycleOwner, createWifiObserver())
         globalViewModel.setWifiSignal(requireContext().getWifiLevel())
     }
 
-    private fun createWifiObserver(): Observer<String> {
+    private fun createWifiObserver(): Observer<Int> {
         return Observer {
-            val oldTexts = receiptBinding.tvTitle.text.split(",")
-            if (oldTexts.size >= 4) {
-                var text = receiptBinding.tvTitle.text.toString()
-                text = text.replace(oldTexts[3], it)
-                receiptBinding.tvTitle.text = text
-            } else {
-                receiptBinding.tvTitle.append(", ")
-                receiptBinding.tvTitle.append(it)
+            when (it) {
+                0 -> {
+                    receiptBinding.ivWifi.setImageResource(R.drawable.ic_wifi_1)
+                }
+                1 -> {
+                    receiptBinding.ivWifi.setImageResource(R.drawable.ic_wifi_2)
+                }
+                2 -> {
+                    receiptBinding.ivWifi.setImageResource(R.drawable.ic_wifi_3)
+                }
+                3 -> {
+                    receiptBinding.ivWifi.setImageResource(R.drawable.ic_wifi_4)
+                }
+                4 -> {
+                    receiptBinding.ivWifi.setImageResource(R.drawable.ic_wifi_5)
+                }
             }
         }
     }
@@ -202,8 +224,6 @@ class ReceiptFragment : BaseFragment() {
                 receiptValuesText = receiptValuesText.replace("%2\$d", register.registerNumber)
                 receiptValuesText = receiptValuesText.replace("%3\$d", it.clearTextFlag.toString())
                 receiptBinding.tvTitle.text = receiptValuesText
-                receiptBinding.tvTitle.append(", ")
-                receiptBinding.tvTitle.append(globalViewModel.wifiSignalString.value!!)
             }
 
             val view = generateFormattedTextView(it, it.line)
@@ -271,6 +291,47 @@ class ReceiptFragment : BaseFragment() {
                 android.R.color.black
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        hideLoading()
+        startBatteryTimer()
+    }
+
+    private fun startBatteryTimer() {
+        batteryCheckTimer.start()
+        val bm = requireContext().getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+        val batLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        Timber.d("battery level is $batLevel")
+        when (batLevel) {
+            in 20..39 -> {
+                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            in 40..59 -> {
+                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            in 60..79 -> {
+                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            in 80..99 -> {
+                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            100 -> {
+                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            else -> {
+                //0-19
+                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+        }
+        receiptBinding.tvBattery.text = batLevel.toString()
+        receiptBinding.tvBattery.append("%")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        batteryCheckTimer.cancel()
     }
 }
 

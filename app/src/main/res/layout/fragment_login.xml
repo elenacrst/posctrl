@@ -23,8 +23,8 @@
             android:layout_marginStart="@dimen/margin_medium"
             android:layout_marginEnd="@dimen/margin_medium"
             android:layout_marginBottom="@dimen/margin_smallest"
-            app:layout_constraintBottom_toTopOf="@+id/til_password"
-            app:layout_constraintStart_toStartOf="parent">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayoutCompat">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_user"
@@ -41,9 +41,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_medium"
             android:layout_marginEnd="@dimen/margin_medium"
-            android:layout_marginBottom="@dimen/margin_small"
-            app:layout_constraintBottom_toTopOf="@+id/bt_login"
-            app:layout_constraintStart_toStartOf="parent">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/til_user">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_password"
@@ -52,7 +51,18 @@
                 android:imeOptions="flagNoExtractUi|actionDone"
                 android:inputType="numberPassword"
                 tools:hint="@string/hint_password" />
+
+
         </com.google.android.material.textfield.TextInputLayout>
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/iv_logo"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toTopOf="@id/bt_login"
+            app:layout_constraintTop_toBottomOf="@id/til_password"
+            tools:src="@drawable/logo" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/bt_login"
@@ -65,47 +75,34 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/iv_logo"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toTopOf="@+id/til_user"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayoutCompat"
-            app:layout_constraintVertical_bias="0.0"
-            tools:src="@drawable/logo" />
-
         <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/linearLayoutCompat"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:alpha="0.7"
-            android:background="@color/black"
+            android:layout_marginEnd="@dimen/margin_extra_small"
+            android:gravity="end"
             android:orientation="horizontal"
-            android:padding="@dimen/margin_smallest"
             android:weightSum="1"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                android:id="@+id/tv_wifi"
-                style="@style/InfoText"
-                android:layout_width="0dp"
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/iv_wifi"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.6"
-                tools:text="Wifi level: 1/5, 1Mbps" />
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_wifi_1" />
 
             <TextView
                 android:id="@+id/tv_battery"
-                style="@style/InfoText"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.4"
-                android:gravity="end"
-                tools:text="Battery 65%" />
+                android:layout_marginStart="@dimen/margin_extra_small"
+                android:drawablePadding="@dimen/margin_smallest"
+                android:gravity="center"
+                android:textColor="@color/black"
+                app:drawableStartCompat="@drawable/ic_battery_2"
+                tools:text="0%" />
         </androidx.appcompat.widget.LinearLayoutCompat>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

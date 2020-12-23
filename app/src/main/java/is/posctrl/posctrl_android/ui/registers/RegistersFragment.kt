@@ -12,20 +12,26 @@ import `is`.posctrl.posctrl_android.databinding.FragmentRegistersBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.ui.base.GlobalViewModel
+import `is`.posctrl.posctrl_android.ui.login.LoginFragment
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsFragment
 import `is`.posctrl.posctrl_android.util.extensions.getWifiLevel
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import android.content.Context
 import android.content.Intent
+import android.os.BatteryManager
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
@@ -41,6 +47,58 @@ class RegistersFragment : BaseFragment() {
     private lateinit var store: StoreResult
 
     private val globalViewModel: GlobalViewModel by activityViewModels()
+    private var batteryCheckTimer: CountDownTimer = createBatteryCheckTimer()
+
+    private fun createBatteryCheckTimer() =
+            object : CountDownTimer(TimeUnit.MINUTES.toMillis(LoginFragment.BATTERY_CHECK_INTERVAL_MINUTES), 1000) {
+                override fun onFinish() {
+                    startBatteryTimer()
+                }
+
+                override fun onTick(millisUntilFinished: Long) {
+                }
+            }
+
+    override fun onResume() {
+        super.onResume()
+        hideLoading()
+        startBatteryTimer()
+    }
+
+    private fun startBatteryTimer() {
+        batteryCheckTimer.start()
+        val bm = requireContext().getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+        val batLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        Timber.d("battery level is $batLevel")
+        when (batLevel) {
+            in 20..39 -> {
+                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            in 40..59 -> {
+                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            in 60..79 -> {
+                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            in 80..99 -> {
+                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            100 -> {
+                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            else -> {
+                //0-19
+                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+        }
+        registersBinding.tvBattery.text = batLevel.toString()
+        registersBinding.tvBattery.append("%")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        batteryCheckTimer.cancel()
+    }
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -109,13 +167,29 @@ class RegistersFragment : BaseFragment() {
         })
         handleRegisters(store.registers)
         setupTexts()
-        globalViewModel.wifiSignalString.observe(viewLifecycleOwner, createWifiObserver())
+        globalViewModel.wifiSignal.observe(viewLifecycleOwner, createWifiObserver())
         globalViewModel.setWifiSignal(requireContext().getWifiLevel())
     }
 
-    private fun createWifiObserver(): Observer<String> {
+    private fun createWifiObserver(): Observer<Int> {
         return Observer {
-            registersBinding.tvWifi.text = globalViewModel.wifiSignalString.value!!
+            when (it) {
+                0 -> {
+                    registersBinding.ivWifi.setImageResource(R.drawable.ic_wifi_1)
+                }
+                1 -> {
+                    registersBinding.ivWifi.setImageResource(R.drawable.ic_wifi_2)
+                }
+                2 -> {
+                    registersBinding.ivWifi.setImageResource(R.drawable.ic_wifi_3)
+                }
+                3 -> {
+                    registersBinding.ivWifi.setImageResource(R.drawable.ic_wifi_4)
+                }
+                4 -> {
+                    registersBinding.ivWifi.setImageResource(R.drawable.ic_wifi_5)
+                }
+            }
         }
     }
 

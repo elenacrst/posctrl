@@ -1,6 +1,5 @@
 package `is`.posctrl.posctrl_android.ui.login
 
-import `is`.posctrl.posctrl_android.ui.base.BaseFragment
 import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
@@ -14,6 +13,7 @@ import `is`.posctrl.posctrl_android.databinding.FragmentLoginBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.LoginResultReceiverService
+import `is`.posctrl.posctrl_android.ui.base.BaseFragment
 import `is`.posctrl.posctrl_android.ui.base.GlobalViewModel
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsFragment
 import `is`.posctrl.posctrl_android.util.extensions.*
@@ -21,8 +21,10 @@ import `is`.posctrl.posctrl_android.util.glide.load
 import `is`.posctrl.posctrl_android.util.scheduleLogout
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Context.BATTERY_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.BatteryManager
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.text.Editable
@@ -31,6 +33,7 @@ import android.view.*
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
@@ -38,6 +41,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import timber.log.Timber
 import java.util.*
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
@@ -58,6 +62,18 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
 
     private val globalViewModel: GlobalViewModel by activityViewModels()
 
+    private var batteryCheckTimer: CountDownTimer = createBatteryCheckTimer()
+
+    private fun createBatteryCheckTimer() =
+            object : CountDownTimer(TimeUnit.MINUTES.toMillis(BATTERY_CHECK_INTERVAL_MINUTES), 1000) {
+                override fun onFinish() {
+                    startBatteryTimer()
+                }
+
+                override fun onTick(millisUntilFinished: Long) {
+                }
+            }
+
     private fun createLoginReceiver(): BroadcastReceiver {
         return object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -70,7 +86,6 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                                 bundle.getParcelable<LoginResult>(LoginResultReceiverService.EXTRA_LOGIN)
                         handleLogin(result)
                     }
-
                 }
             }
         }
@@ -79,6 +94,42 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     override fun onResume() {
         super.onResume()
         hideLoading()
+        startBatteryTimer()
+    }
+
+    private fun startBatteryTimer() {
+        batteryCheckTimer.start()
+        val bm = requireContext().getSystemService(BATTERY_SERVICE) as BatteryManager
+        val batLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        Timber.d("battery level is $batLevel")
+        when (batLevel) {
+            in 20..39 -> {
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            in 40..59 -> {
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            in 60..79 -> {
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            in 80..99 -> {
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            100 -> {
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+            else -> {
+                //0-19
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+            }
+        }
+        loginBinding.tvBattery.text = batLevel.toString()
+        loginBinding.tvBattery.append("%")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        batteryCheckTimer.cancel()
     }
 
     private fun handleLogin(result: LoginResult?) {
@@ -253,13 +304,29 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
             }
         }
         loginBinding.ivLogo.load(requireContext(), R.drawable.logo)
-        globalViewModel.wifiSignalString.observe(viewLifecycleOwner, createWifiObserver())
+        globalViewModel.wifiSignal.observe(viewLifecycleOwner, createWifiObserver())
         globalViewModel.setWifiSignal(requireContext().getWifiLevel())
     }
 
-    private fun createWifiObserver(): Observer<String> {
+    private fun createWifiObserver(): Observer<Int> {
         return Observer {
-            loginBinding.tvWifi.text = globalViewModel.wifiSignalString.value!!
+            when (it) {
+                0 -> {
+                    loginBinding.ivWifi.setImageResource(R.drawable.ic_wifi_1)
+                }
+                1 -> {
+                    loginBinding.ivWifi.setImageResource(R.drawable.ic_wifi_2)
+                }
+                2 -> {
+                    loginBinding.ivWifi.setImageResource(R.drawable.ic_wifi_3)
+                }
+                3 -> {
+                    loginBinding.ivWifi.setImageResource(R.drawable.ic_wifi_4)
+                }
+                4 -> {
+                    loginBinding.ivWifi.setImageResource(R.drawable.ic_wifi_5)
+                }
+            }
         }
     }
 
@@ -418,6 +485,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     companion object {
         const val LOGIN_MAX_WAIT_MILLIS = 5000L
         const val MENU_FIRST_ITEM = Menu.FIRST
+        const val BATTERY_CHECK_INTERVAL_MINUTES = 10L
     }
 }
 

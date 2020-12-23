@@ -87,7 +87,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
     private fun notifyWifiState() {
         val level = getWifiLevel()
-        Timber.d("wifi info: level = $level/5")
+        Timber.d("wifi info: level = $level/4")
         globalViewModel.setWifiSignal(level)
         @Suppress("DEPRECATION")
         wifiManager.startScan()
