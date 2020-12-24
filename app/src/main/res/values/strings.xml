@@ -50,7 +50,7 @@
     <string name="title_select_suspend">Select register to suspend</string>
     <string name="action_yes">Yes</string>
     <string name="action_no">No</string>
-    <string name="confirm_suspend_register">Please confirm suspending register %1$d, from store %2$d</string>
+
     <string name="key_filter_port">keyFilterPort</string>
     <string name="label_store">Store</string>
     <string name="label_register">Register</string>
@@ -65,8 +65,7 @@
     <string name="key_send_alife_filter">keySendALifeFilter</string>
     <string name="message_timed_out">Timed out</string>
     <string name="error_partial_download">Partially downloaded</string>
-    <string name="title_receipt_incomplete_values">Store %1$d, Register %2$d</string>
-    <string name="title_receipt_values">Store %1$d, Register %2$d, Txn %3$d</string>
+
 
     <string name="action_confirm">Confirm</string>
     <string name="action_suspend">Suspend</string>
@@ -107,4 +106,8 @@
     <string name="login_value">User: %1$s - %2$s</string>
     <string name="wifi_signal_value">WiFi signal: %d/5</string>
     <string name="title_notification_wifi">Monitoring WiFi</string>
+
+    <string name="confirm_suspend_register">Please confirm</string>
+    <string name="title_receipt_incomplete_values">Register %d</string>
+    <string name="title_receipt_values">Register %1$d, Txn %2$d</string>
 </resources>

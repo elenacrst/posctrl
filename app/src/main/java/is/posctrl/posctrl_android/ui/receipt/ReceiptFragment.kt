@@ -100,18 +100,12 @@ class ReceiptFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         receiptBinding.svBase.setOnSwipeListener(onSwipeLeft = {
-            var confirmText = prefs.defaultPrefs()["confirm_suspend_register", getString(
-                    R.string.confirm_suspend_register,
-                    register.registerNumber.toInt(),
-                    store.storeNumber
+            val confirmText = prefs.defaultPrefs()["confirm_suspend_register", getString(
+                    R.string.confirm_suspend_register
             )] ?: getString(
-                    R.string.confirm_suspend_register,
-                    register.registerNumber.toInt(),
-                    store.storeNumber
+                    R.string.confirm_suspend_register
             )
-            confirmText = confirmText.replace("%1\$d", register.registerNumber)
-            confirmText = confirmText.replace("%2\$d", store.storeNumber.toString())
-            requireContext().showConfirmDialog(confirmText) {
+            requireContext().showConfirmDialog(confirmText, register.registerNumber.toInt()) {
                 appOptionsViewModel.suspendRegister(
                         store.storeNumber, register.registerNumber.toInt()
                 )
@@ -120,15 +114,12 @@ class ReceiptFragment : BaseFragment() {
         var incompleteValText = prefs.defaultPrefs()["title_receipt_incomplete_values",
                 getString(
                         R.string.title_receipt_incomplete_values,
-                        store.storeNumber,
                         register.registerNumber.toInt()
                 )] ?: getString(
                 R.string.title_receipt_incomplete_values,
-                store.storeNumber,
                 register.registerNumber.toInt()
         )
-        incompleteValText = incompleteValText.replace("%1\$d", store.storeNumber.toString())
-        incompleteValText = incompleteValText.replace("%2\$d", register.registerNumber)
+        incompleteValText = incompleteValText.replace("%d", register.registerNumber)
 
         receiptBinding.tvTitle.text = incompleteValText
 
@@ -137,6 +128,7 @@ class ReceiptFragment : BaseFragment() {
 
         globalViewModel.wifiSignal.observe(viewLifecycleOwner, createWifiObserver())
         globalViewModel.setWifiSignal(requireContext().getWifiLevel())
+        startBatteryTimer()
     }
 
     private fun createWifiObserver(): Observer<Int> {
@@ -206,23 +198,20 @@ class ReceiptFragment : BaseFragment() {
 
             val lastTxn: Int = prefs.customPrefs()[getString(R.string.key_last_txn)] ?: -1
 
-            if (lastTxn != it.clearTextFlag && lastTxn != -1) {
+            if (lastTxn != it.clearTextFlag) {
                 receiptBinding.llReceipt.removeAllViews()
                 var receiptValuesText = prefs.defaultPrefs()["title_receipt_values",
                         getString(
                                 R.string.title_receipt_values,
-                                store.storeNumber,
                                 register.registerNumber.toInt(),
                                 it.clearTextFlag
                         )] ?: getString(
                         R.string.title_receipt_values,
-                        store.storeNumber,
                         register.registerNumber.toInt(),
                         it.clearTextFlag
                 )
-                receiptValuesText = receiptValuesText.replace("%1\$d", store.storeNumber.toString())
-                receiptValuesText = receiptValuesText.replace("%2\$d", register.registerNumber)
-                receiptValuesText = receiptValuesText.replace("%3\$d", it.clearTextFlag.toString())
+                receiptValuesText = receiptValuesText.replace("%1\$d", register.registerNumber)
+                receiptValuesText = receiptValuesText.replace("%2\$d", it.clearTextFlag.toString())
                 receiptBinding.tvTitle.text = receiptValuesText
             }
 
@@ -296,7 +285,6 @@ class ReceiptFragment : BaseFragment() {
     override fun onResume() {
         super.onResume()
         hideLoading()
-        startBatteryTimer()
     }
 
     private fun startBatteryTimer() {
@@ -309,28 +297,28 @@ class ReceiptFragment : BaseFragment() {
                 receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
             }
             in 40..59 -> {
-                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_2, null), null, null, null)
             }
             in 60..79 -> {
-                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_3, null), null, null, null)
             }
             in 80..99 -> {
-                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_4, null), null, null, null)
             }
             100 -> {
-                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_5, null), null, null, null)
             }
             else -> {
                 //0-19
-                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                receiptBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_0, null), null, null, null)
             }
         }
         receiptBinding.tvBattery.text = batLevel.toString()
         receiptBinding.tvBattery.append("%")
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onDetach() {
+        super.onDetach()
         batteryCheckTimer.cancel()
     }
 }

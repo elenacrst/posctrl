@@ -101,7 +101,7 @@
                 android:drawablePadding="@dimen/margin_smallest"
                 android:gravity="center"
                 android:textColor="@color/black"
-                app:drawableStartCompat="@drawable/ic_battery_2"
+                tools:drawableStartCompat="@drawable/ic_battery_2"
                 tools:text="0%" />
         </androidx.appcompat.widget.LinearLayoutCompat>
     </androidx.constraintlayout.widget.ConstraintLayout>

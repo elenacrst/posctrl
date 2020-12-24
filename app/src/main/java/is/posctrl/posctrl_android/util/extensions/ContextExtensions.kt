@@ -52,7 +52,7 @@ fun Context.showInputDialog(title: String, positiveCallback: (input: String) -> 
     dialog.show()
 }
 
-fun Context.showConfirmDialog(title: String, positiveCallback: () -> Unit) {
+fun Context.showConfirmDialog(title: String, registerNumber: Int, positiveCallback: () -> Unit) {
     val prefs = PreferencesSource(this)
     val binding: DialogConfirmBinding = DataBindingUtil.inflate(
             LayoutInflater.from(this),
@@ -61,6 +61,7 @@ fun Context.showConfirmDialog(title: String, positiveCallback: () -> Unit) {
             false
     )
     binding.tvTitle.text = title
+    binding.tvRegister.text = registerNumber.toString()
     binding.btYes.text = prefs.defaultPrefs()["action_suspend", getString(R.string.action_suspend)]
             ?: getString(R.string.action_suspend)
 

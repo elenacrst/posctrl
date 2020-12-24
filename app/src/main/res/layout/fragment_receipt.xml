@@ -19,6 +19,7 @@
             android:gravity="end|center_vertical"
             android:orientation="horizontal"
             android:weightSum="1"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_title"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
@@ -36,13 +37,13 @@
                 android:drawablePadding="@dimen/margin_smallest"
                 android:gravity="center"
                 android:textColor="@color/black"
-                app:drawableStartCompat="@drawable/ic_battery_2"
+                tools:drawableStartCompat="@drawable/ic_battery_2"
                 tools:text="0%" />
         </androidx.appcompat.widget.LinearLayoutCompat>
 
         <TextView
             android:id="@+id/tv_title"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:fontFamily="@font/courier_prime"
             android:padding="@dimen/margin_extra_small"
@@ -50,8 +51,9 @@
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@+id/ll_status"
-            app:layout_constraintTop_toBottomOf="@id/ll_status"
-            tools:text="Store XX, Register YY, Txn ZZ" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Register YY, Txn ZZ" />
 
         <ScrollView
             android:id="@+id/sv_base"

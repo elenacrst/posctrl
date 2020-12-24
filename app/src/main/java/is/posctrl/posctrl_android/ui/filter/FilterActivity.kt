@@ -79,14 +79,6 @@ class FilterActivity : BaseActivity() {
     }
 
     private fun setupTexts() {
-        filterBinding.tvStoreLabel.text =
-                prefs.defaultPrefs()["label_store", getString(R.string.label_store)]
-                        ?: getString(R.string.label_store)
-        filterBinding.tvRegisterLabel.text =
-                prefs.defaultPrefs()["label_register", getString(R.string.label_register)]
-                        ?: getString(
-                                R.string.label_register
-                        )
         filterBinding.tvItemLabel.text =
                 prefs.defaultPrefs()["label_item", getString(R.string.label_item)]
                         ?: getString(R.string.label_item)

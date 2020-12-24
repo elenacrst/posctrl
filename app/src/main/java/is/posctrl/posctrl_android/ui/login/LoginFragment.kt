@@ -22,6 +22,7 @@ import `is`.posctrl.posctrl_android.util.scheduleLogout
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Context.BATTERY_SERVICE
+import android.content.Context.INPUT_METHOD_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
@@ -32,6 +33,7 @@ import android.text.TextWatcher
 import android.view.*
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.DataBindingUtil
@@ -94,7 +96,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     override fun onResume() {
         super.onResume()
         hideLoading()
-        startBatteryTimer()
+
     }
 
     private fun startBatteryTimer() {
@@ -107,29 +109,24 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                 loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
             }
             in 40..59 -> {
-                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_2, null), null, null, null)
             }
             in 60..79 -> {
-                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_3, null), null, null, null)
             }
             in 80..99 -> {
-                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_4, null), null, null, null)
             }
             100 -> {
-                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_5, null), null, null, null)
             }
             else -> {
                 //0-19
-                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_0, null), null, null, null)
             }
         }
         loginBinding.tvBattery.text = batLevel.toString()
         loginBinding.tvBattery.append("%")
-    }
-
-    override fun onPause() {
-        super.onPause()
-        batteryCheckTimer.cancel()
     }
 
     private fun handleLogin(result: LoginResult?) {
@@ -306,6 +303,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         loginBinding.ivLogo.load(requireContext(), R.drawable.logo)
         globalViewModel.wifiSignal.observe(viewLifecycleOwner, createWifiObserver())
         globalViewModel.setWifiSignal(requireContext().getWifiLevel())
+        startBatteryTimer()
     }
 
     private fun createWifiObserver(): Observer<Int> {
@@ -449,7 +447,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         super.onDetach()
         stopLoginService()
         loginCountdownTimer?.cancel()
-
+        batteryCheckTimer.cancel()
     }
 
     private fun stopLoginService() {
@@ -475,6 +473,8 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
             if (it.isNotEmpty()) {
                 loginBinding.etUser.setText(it)
                 loginBinding.etPassword.requestFocus()
+                val imm = requireContext().getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager?
+                imm!!.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY)
                 return true
             }
 

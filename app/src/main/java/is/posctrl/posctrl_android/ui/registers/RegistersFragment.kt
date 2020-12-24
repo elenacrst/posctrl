@@ -62,7 +62,6 @@ class RegistersFragment : BaseFragment() {
     override fun onResume() {
         super.onResume()
         hideLoading()
-        startBatteryTimer()
     }
 
     private fun startBatteryTimer() {
@@ -75,28 +74,28 @@ class RegistersFragment : BaseFragment() {
                 registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
             }
             in 40..59 -> {
-                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_2, null), null, null, null)
             }
             in 60..79 -> {
-                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_3, null), null, null, null)
             }
             in 80..99 -> {
-                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_4, null), null, null, null)
             }
             100 -> {
-                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_5, null), null, null, null)
             }
             else -> {
                 //0-19
-                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                registersBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_0, null), null, null, null)
             }
         }
         registersBinding.tvBattery.text = batLevel.toString()
         registersBinding.tvBattery.append("%")
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onDetach() {
+        super.onDetach()
         batteryCheckTimer.cancel()
     }
 
@@ -141,7 +140,7 @@ class RegistersFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        adapter = RegistersAdapter(RegisterCellListener { register ->
+        adapter = RegistersAdapter(requireContext(), RegisterCellListener { register ->
             startReceiptReceiverService()
             findNavController().navigate(
                     RegistersFragmentDirections.toReceiptFragment(
@@ -149,7 +148,7 @@ class RegistersFragment : BaseFragment() {
                             store
                     )
             )
-        })
+        }, false)
         registersBinding.rvRegisters.adapter = adapter
         adapter.setData(arrayOf())
         registersBinding.store = store
@@ -169,6 +168,7 @@ class RegistersFragment : BaseFragment() {
         setupTexts()
         globalViewModel.wifiSignal.observe(viewLifecycleOwner, createWifiObserver())
         globalViewModel.setWifiSignal(requireContext().getWifiLevel())
+        startBatteryTimer()
     }
 
     private fun createWifiObserver(): Observer<Int> {

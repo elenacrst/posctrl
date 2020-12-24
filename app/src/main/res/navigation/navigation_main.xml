@@ -57,7 +57,8 @@
 
         <action
             android:id="@+id/toRegisterSelectionFragment"
-            app:destination="@id/registerSelectionFragment" />
+            app:destination="@id/registerSelectionFragment"
+            app:popUpTo="@id/registersFragment" />
     </fragment>
     <action
         android:id="@+id/toAppOptionsFragment"

@@ -1,14 +1,17 @@
 package `is`.posctrl.posctrl_android.ui.registers
 
+import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.model.RegisterResult
 import `is`.posctrl.posctrl_android.databinding.ItemRegisterBinding
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 
 import androidx.recyclerview.widget.RecyclerView
 
-class RegistersAdapter(private val clickListener: RegisterCellListener) :
-    RecyclerView.Adapter<RegisterViewHolder>() {
+class RegistersAdapter(private val context: Context, private val clickListener: RegisterCellListener, private val isSuspendSelection: Boolean = false) :
+        RecyclerView.Adapter<RegisterViewHolder>() {
 
     private var data = ArrayList<RegisterResult>()
 
@@ -33,7 +36,7 @@ class RegistersAdapter(private val clickListener: RegisterCellListener) :
 
     override fun onBindViewHolder(holder: RegisterViewHolder, position: Int) {
         val currentItem = data[position]
-        holder.bind(clickListener, currentItem)
+        holder.bind(context, clickListener, currentItem, isSuspendSelection)
     }
 }
 
@@ -42,11 +45,16 @@ open class RegisterCellListener(val clickListener: (register: RegisterResult) ->
 }
 
 class RegisterViewHolder(private val binding: ItemRegisterBinding) :
-    RecyclerView.ViewHolder(binding.root) {
+        RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(clickListener: RegisterCellListener, item: RegisterResult) {
+    fun bind(context: Context, clickListener: RegisterCellListener, item: RegisterResult, isSuspendSelection: Boolean) {
         binding.clickListener = clickListener
         binding.item = item
+        if (isSuspendSelection) {
+            binding.cardView.setCardBackgroundColor(ContextCompat.getColor(context.applicationContext, android.R.color.holo_red_dark))
+        } else {
+            binding.cardView.setCardBackgroundColor(ContextCompat.getColor(context.applicationContext, R.color.purple_700))
+        }
     }
 }
 
