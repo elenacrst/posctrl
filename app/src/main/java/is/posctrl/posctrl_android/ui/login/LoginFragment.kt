@@ -18,7 +18,6 @@ import `is`.posctrl.posctrl_android.ui.base.GlobalViewModel
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsFragment
 import `is`.posctrl.posctrl_android.util.extensions.*
 import `is`.posctrl.posctrl_android.util.glide.load
-import `is`.posctrl.posctrl_android.util.scheduleLogout
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Context.BATTERY_SERVICE
@@ -239,7 +238,6 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     ): View {
         loginBinding = DataBindingUtil
                 .inflate(inflater, R.layout.fragment_login, container, false)
-        requireContext().scheduleLogout()
 
         return loginBinding.root
     }
