@@ -135,6 +135,11 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
             if (it.errorMessage.isNotEmpty()) {
                 requireContext().toast(it.errorMessage)
             } else {
+                if (it.serverPath != prefs.defaultPrefs()[getString(R.string.key_login_server), ""]) {
+                    prefs.defaultPrefs()[getString(R.string.key_login_server)] = it.serverPath
+                    login()
+                    return@let
+                }
                 stopLoginService()
                 LocalBroadcastManager.getInstance(requireContext())
                         .unregisterReceiver(loginBroadcastReceiver)
@@ -422,14 +427,18 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                             ?: getString(R.string.error_empty_password)
         }
         if (valid) {
-            showLoading()
-            loginViewModel.login(
-                    loginBinding.etUser.text!!.toString(),
-                    loginBinding.etPassword.text!!.toString()
-            )
-
-            loginCountdownTimer?.start()
+            login()
         }
+    }
+
+    private fun login() {
+        showLoading()
+        loginViewModel.login(
+                loginBinding.etUser.text!!.toString(),
+                loginBinding.etPassword.text!!.toString()
+        )
+
+        loginCountdownTimer?.start()
     }
 
     override fun onAttach(context: Context) {
