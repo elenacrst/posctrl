@@ -137,7 +137,7 @@ class RegisterSelectionFragment : BaseFragment() {
             )
             requireContext().showConfirmDialog(confirmText, register.registerNumber.toInt()) {
                 appOptionsViewModel.suspendRegister(
-                        store.storeNumber, register.registerNumber.toInt()
+                        store.storeNumber, register.registerNumber
                 )
                 findNavController().navigateUp()
             }

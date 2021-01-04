@@ -362,8 +362,8 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         val store =
                 StoreResult(_storeName = prefs.customPrefs()[getString(R.string.key_store_name), ""]
                         ?: "",
-                        _storeNumber = prefs.customPrefs()[getString(R.string.key_store_number), -1]
-                                ?: -1,
+                        _storeNumber = prefs.customPrefs()[getString(R.string.key_store_number), ""]
+                                ?: "",
                         _registers = prefs.customPrefs()[getString(R.string.key_registers), ""]?.split(",")
                                 ?.map { RegisterResult(_registerNumber = it) } ?: listOf())
         LocalBroadcastManager.getInstance(requireContext())

@@ -27,7 +27,7 @@ class ReceiptViewModel @Inject constructor(private val repository: PosCtrlReposi
     @Inject
     lateinit var appContext: Application
 
-    fun sendReceiptInfoMessage(action: ReceiptAction, storeNumber: Int, registerNumber: Int) {
+    fun sendReceiptInfoMessage(action: ReceiptAction, storeNumber: String, registerNumber: String) {
         viewModelScope.launch {
             val time = measureTimeMillis {
                 try {
@@ -41,7 +41,7 @@ class ReceiptViewModel @Inject constructor(private val repository: PosCtrlReposi
         }
     }
 
-    fun sendReceiptInfoALife(storeNumber: Int, registerNumber: Int) {
+    fun sendReceiptInfoALife(storeNumber: String, registerNumber: String) {
         viewModelScope.launch {
             val isAlreadySending = prefs.customPrefs()[appContext.getString(R.string.key_send_alife, storeNumber, registerNumber)]
                     ?: false

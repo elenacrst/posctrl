@@ -11,7 +11,7 @@ data class RegisterSuspendedBody(
         @field:JacksonXmlProperty(localName = "Message")
         val message: String,
         @field:JacksonXmlProperty(localName = "StoreNumber")
-        val storeNumber: Int,
+        val storeNumber: String,
         @field:JacksonXmlProperty(localName = "RegisterNumber")
-        val registerNumber: Int
+        val registerNumber: String
 ) : Parcelable

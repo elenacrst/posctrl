@@ -13,7 +13,7 @@ import kotlin.system.measureTimeMillis
 
 class AppOptionsViewModel @Inject constructor(private val repository: PosCtrlRepository) :
         ViewModel() {
-    fun suspendRegister(storeNumber: Int, registerNumber: Int) {
+    fun suspendRegister(storeNumber: String, registerNumber: String) {
         viewModelScope.launch {
             val time = measureTimeMillis {
                 try {

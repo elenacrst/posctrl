@@ -15,9 +15,9 @@ data class ReceiptInfoBody(
         @field:JacksonXmlProperty(localName = "Action")
         val action: String,
         @field:JacksonXmlProperty(localName = "StoreNumber")
-        val storeNumber: Int,
+        val storeNumber: String,
         @field:JacksonXmlProperty(localName = "RegisterNumber")
-        val registerNumber: Int,
+        val registerNumber: String,
         @field:JacksonXmlProperty(localName = "HostName")
         val hostName: String,
         @field:JacksonXmlProperty(localName = "Port")

@@ -59,7 +59,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     val globalViewModel: GlobalViewModel by viewModels { GlobalViewModelFactory(repository, appContext) }
     private var onApkDownloaded: () -> Unit = {}
     private lateinit var wifiManager: WifiManager
-    private var broadcastReceiver: BroadcastReceiver = createFilterReceiver()
+    private var filterReceiver: BroadcastReceiver = createFilterReceiver()
 
     private val requestPermissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
@@ -200,7 +200,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
         if (globalViewModel.isReceivingFilter.value != true) {
             LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                    broadcastReceiver,
+                    filterReceiver,
                     IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
             )
             globalViewModel.setReceivingFilter(true)

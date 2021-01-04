@@ -1,5 +1,6 @@
 package `is`.posctrl.posctrl_android.ui
 
+import `is`.posctrl.posctrl_android.NavigationMainContainerDirections
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.ResultWrapper
@@ -139,7 +140,9 @@ class MainActivity : BaseActivity() {
     override fun handleLogout() {
         startsOtherIntent = true
         val openAppIntent = Intent(this, MainActivity::class.java)
-        openAppIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        openAppIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        openAppIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+        navController.navigate(NavigationMainContainerDirections.toLoginFragment())
         startActivity(openAppIntent)
     }
 

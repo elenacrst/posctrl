@@ -94,12 +94,17 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
     }
 
     fun addFilter(item: FilteredInfoResponse) {
-        val list = mutableListOf<FilteredInfoResponse>()
-        filterItemMessages.value?.let {
-            list.addAll(filterItemMessages.value!!)
+        val existing = filterItemMessages.value?.firstOrNull {
+            it.storeNumber == item.storeNumber && it.registerNumber == item.registerNumber && it.txn == item.txn && it.itemSeqNumber == item.itemSeqNumber
         }
-        list.add(item)
-        _filterItemMessages.value = list
+        if (existing == null) {
+            val list = mutableListOf<FilteredInfoResponse>()
+            filterItemMessages.value?.let {
+                list.addAll(filterItemMessages.value!!)
+            }
+            list.add(item)
+            _filterItemMessages.value = list
+        }
     }
 
     fun removeFirstFilter() {

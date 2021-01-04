@@ -185,9 +185,9 @@ class AppOptionsFragment : BaseFragment() {
 
         store?.let {
             var storeText =
-                    preferencesSource.defaultPrefs()["current_store_value", getString(R.string.current_store_value, it.storeNumber.toString(), it.storeName)]
-                            ?: getString(R.string.current_store_value, it.storeNumber.toString(), it.storeName)
-            storeText = storeText.replace("%1\$s", it.storeNumber.toString())
+                    preferencesSource.defaultPrefs()["current_store_value", getString(R.string.current_store_value, it.storeNumber, it.storeName)]
+                            ?: getString(R.string.current_store_value, it.storeNumber, it.storeName)
+            storeText = storeText.replace("%1\$s", it.storeNumber)
             storeText = storeText.replace("%2\$s", it.storeName)
             appOptionsBinding.tvStoreInfo.text = storeText
         }

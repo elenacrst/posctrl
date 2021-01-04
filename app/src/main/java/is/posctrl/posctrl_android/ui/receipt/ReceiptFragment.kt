@@ -86,11 +86,11 @@ class ReceiptFragment : BaseFragment() {
         receiptViewModel.sendReceiptInfoMessage(
                 ReceiptAction.OPEN,
                 store.storeNumber,
-                register.registerNumber.toInt()
+                register.registerNumber
         )
         receiptViewModel.sendReceiptInfoALife(
                 store.storeNumber,
-                register.registerNumber.toInt()
+                register.registerNumber
         )
 
         return receiptBinding.root
@@ -107,19 +107,19 @@ class ReceiptFragment : BaseFragment() {
             )
             requireContext().showConfirmDialog(confirmText, register.registerNumber.toInt()) {
                 appOptionsViewModel.suspendRegister(
-                        store.storeNumber, register.registerNumber.toInt()
+                        store.storeNumber, register.registerNumber
                 )
             }
         })
         var incompleteValText = prefs.defaultPrefs()["title_receipt_incomplete_values",
                 getString(
                         R.string.title_receipt_incomplete_values,
-                        register.registerNumber.toInt()
+                        register.registerNumber
                 )] ?: getString(
                 R.string.title_receipt_incomplete_values,
-                register.registerNumber.toInt()
+                register.registerNumber
         )
-        incompleteValText = incompleteValText.replace("%d", register.registerNumber)
+        incompleteValText = incompleteValText.replace("%s", register.registerNumber)
 
         receiptBinding.tvTitle.text = incompleteValText
 
@@ -177,7 +177,7 @@ class ReceiptFragment : BaseFragment() {
             override fun handleOnBackPressed() {
                 receiptViewModel.sendReceiptInfoMessage(
                         ReceiptAction.CLOSE, store.storeNumber,
-                        register.registerNumber.toInt()
+                        register.registerNumber
                 )
                 findNavController().navigateUp()
                 globalViewModel.receiptItems.removeObservers(viewLifecycleOwner)
@@ -203,14 +203,14 @@ class ReceiptFragment : BaseFragment() {
                 var receiptValuesText = prefs.defaultPrefs()["title_receipt_values",
                         getString(
                                 R.string.title_receipt_values,
-                                register.registerNumber.toInt(),
+                                register.registerNumber,
                                 it.clearTextFlag
                         )] ?: getString(
                         R.string.title_receipt_values,
-                        register.registerNumber.toInt(),
+                        register.registerNumber,
                         it.clearTextFlag
                 )
-                receiptValuesText = receiptValuesText.replace("%1\$d", register.registerNumber)
+                receiptValuesText = receiptValuesText.replace("%1\$s", register.registerNumber)
                 receiptValuesText = receiptValuesText.replace("%2\$d", it.clearTextFlag.toString())
                 receiptBinding.tvTitle.text = receiptValuesText
             }

@@ -33,10 +33,8 @@
     <string name="message_success_login">Successfully logged in</string>
     <string name="error_no_stores">No stores found for this user</string>
     <string name="key_logged_user" translatable="false">keyLoggedInUser</string>
-    <string name="message_store_value">Detected store %1$d %2$s</string>
-    <string name="store_value">%1$d, %2$s</string>
     <string name="error_no_registers">No registers found for selected store</string>
-    <string name="error_registers_store">No registers were found for store %1$d, %2$s</string>
+    <string name="error_registers_store">No registers were found for store %1$s, %2$s</string>
     <string name="title_select_register">Please select a register</string>
     <string name="key_store_number" translatable="false">keyStoreNumber</string>
     <string name="key_store_name" translatable="false">keyStoreName</string>
@@ -46,7 +44,7 @@
     <string name="title_app_options">App options</string>
     <string name="key_listen_port" translatable="false">keyListenPort</string>
     <string name="key_last_txn" translatable="false">keyLastTxn</string>
-    <string name="key_send_alife" translatable="false">keySendALife-store%1$d-register%2$d</string>
+    <string name="key_send_alife" translatable="false">keySendALife-store%1$s-register%2$s</string>
     <string name="title_select_suspend">Select register to suspend</string>
     <string name="action_yes">Yes</string>
     <string name="action_no">No</string>
@@ -108,6 +106,6 @@
     <string name="title_notification_wifi">Monitoring WiFi</string>
 
     <string name="confirm_suspend_register">Please confirm</string>
-    <string name="title_receipt_incomplete_values">Register %d</string>
-    <string name="title_receipt_values">Register %1$d, Txn %2$d</string>
+    <string name="title_receipt_incomplete_values">Register %s</string>
+    <string name="title_receipt_values">Register %1$s, Txn %2$d</string>
 </resources>

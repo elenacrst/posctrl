@@ -13,13 +13,13 @@ import kotlinx.android.parcel.Parcelize
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Parcelize
 data class StoreResult(
-        private var _storeNumber: Int = -1,
+        private var _storeNumber: String = "",
         private var _storeName: String = "",
         private var _registers: List<RegisterResult> = listOf(),
         private var _registersColumns: Int = -1
 ) : Parcelable {
     @get:JacksonXmlProperty(localName = "StoreNumber")
-    var storeNumber: Int
+    var storeNumber: String
         set(value) {
             _storeNumber = value
         }

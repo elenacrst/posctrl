@@ -12,18 +12,18 @@ import kotlinx.android.parcel.Parcelize
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Parcelize
 data class ReceiptResponse(
-    private var _storeNumber: Int = -1,
-    private var _registerNumber: Int = -1,
-    private var _clearTextFlag: Int = -1,//if it's different from the one received before, clear text before appending this line
-    private var _color: String = "",
-    private var _bold: Int = -1,//if 1, bold text
-    private var _italic: Int = -1,//if 1, italic text
-    private var _endFlag: Int = -1,
-    private var _line: String = "",
+        private var _storeNumber: String = "",
+        private var _registerNumber: Int = -1,
+        private var _clearTextFlag: Int = -1,//if it's different from the one received before, clear text before appending this line
+        private var _color: String = "",
+        private var _bold: Int = -1,//if 1, bold text
+        private var _italic: Int = -1,//if 1, italic text
+        private var _endFlag: Int = -1,
+        private var _line: String = "",
 
-    ) : Parcelable {
+        ) : Parcelable {
     @get:JacksonXmlProperty(localName = "StoreNumber")
-    var storeNumber: Int
+    var storeNumber: String
         set(value) {
             _storeNumber = value
         }
@@ -80,6 +80,4 @@ data class ReceiptResponse(
             _line = value
         }
         get() = _line
-
-
 }

@@ -47,12 +47,12 @@ class PosCtrlRepository @Inject constructor(
     @Throws(Exception::class)
     suspend fun sendReceiptInfoMessage(
             action: ReceiptAction = ReceiptAction.OPEN,
-            storeNumber: Int = -1,
-            registerNumber: Int = -1,
+            storeNumber: String = "",
+            registerNumber: String = "",
     ): ResultWrapper<*> {
         withContext(Dispatchers.Default) {
             try {
-                if (storeNumber == -1 || registerNumber == -1) {
+                if (storeNumber.isEmpty() || registerNumber.isEmpty()) {
                     return@withContext ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
                 }
                 val receiptInfo = ReceiptInfoBody(
@@ -151,8 +151,8 @@ class PosCtrlRepository @Inject constructor(
     @Suppress("BlockingMethodInNonBlockingContext")
     @Throws(Exception::class)
     suspend fun sendReceiptInfoALife(
-            storeNumber: Int,
-            registerNumber: Int,
+            storeNumber: String,
+            registerNumber: String,
     ) {
         withContext(Dispatchers.Default) {
             try {
@@ -211,8 +211,8 @@ class PosCtrlRepository @Inject constructor(
 
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun sendSuspendRegisterMessage(
-            storeNumber: Int,
-            registerNumber: Int,
+            storeNumber: String,
+            registerNumber: String,
     ) {
         withContext(Dispatchers.Default) {
             try {

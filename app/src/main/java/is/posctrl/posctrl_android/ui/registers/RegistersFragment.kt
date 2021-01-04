@@ -200,7 +200,7 @@ class RegistersFragment : BaseFragment() {
                 store.storeName
         )]
                 ?: getString(R.string.error_registers_store, store.storeNumber, store.storeName)
-        emptyText = emptyText.replace("%1\$d", store.storeNumber.toString())
+        emptyText = emptyText.replace("%1\$s", store.storeNumber)
         emptyText = emptyText.replace("%2\$s", store.storeName)
         registersBinding.tvEmptyView.text = emptyText
         registersBinding.tvTitle.text =
