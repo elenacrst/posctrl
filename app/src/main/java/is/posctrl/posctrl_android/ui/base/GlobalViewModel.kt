@@ -14,11 +14,14 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
-class GlobalViewModel @Inject constructor(private val repository: PosCtrlRepository, private val appContext: Application) ://todo remove argument if not used
-        ViewModel() {
+class GlobalViewModel @Inject constructor(
+    private val repository: PosCtrlRepository,
+    private val appContext: Application
+) ://todo remove argument if not used
+    ViewModel() {
 
     private var _downloadApkEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-            MutableLiveData(Event(ResultWrapper.None))
+        MutableLiveData(Event(ResultWrapper.None))
     val downloadApkEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _downloadApkEvent
 
@@ -38,9 +41,14 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
     val isReceivingFilter: LiveData<Boolean>
         get() = _isReceivingFilter
 
-    private var _filterItemMessages: MutableLiveData<List<FilteredInfoResponse>> = MutableLiveData(mutableListOf())
+    private var _filterItemMessages: MutableLiveData<List<FilteredInfoResponse>> =
+        MutableLiveData(mutableListOf())
     val filterItemMessages: LiveData<List<FilteredInfoResponse>>
         get() = _filterItemMessages
+
+    private var _shouldReceiveLoginResult: MutableLiveData<Boolean> = MutableLiveData(true)
+    val shouldReceiveLoginResult: LiveData<Boolean>
+        get() = _shouldReceiveLoginResult
 
     fun downloadApk() {
         viewModelScope.launch {
@@ -112,5 +120,9 @@ class GlobalViewModel @Inject constructor(private val repository: PosCtrlReposit
             return
         }
         _filterItemMessages.value = filterItemMessages.value!! - filterItemMessages.value!![0]
+    }
+
+    fun setShouldReceiveLoginResult(b: Boolean) {
+        _shouldReceiveLoginResult.value = b
     }
 }

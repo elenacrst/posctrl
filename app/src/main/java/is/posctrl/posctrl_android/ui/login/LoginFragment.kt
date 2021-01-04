@@ -66,14 +66,14 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     private var batteryCheckTimer: CountDownTimer = createBatteryCheckTimer()
 
     private fun createBatteryCheckTimer() =
-            object : CountDownTimer(TimeUnit.MINUTES.toMillis(BATTERY_CHECK_INTERVAL_MINUTES), 1000) {
-                override fun onFinish() {
-                    startBatteryTimer()
-                }
-
-                override fun onTick(millisUntilFinished: Long) {
-                }
+        object : CountDownTimer(TimeUnit.MINUTES.toMillis(BATTERY_CHECK_INTERVAL_MINUTES), 1000) {
+            override fun onFinish() {
+                startBatteryTimer()
             }
+
+            override fun onTick(millisUntilFinished: Long) {
+            }
+        }
 
     private fun createLoginReceiver(): BroadcastReceiver {
         return object : BroadcastReceiver() {
@@ -84,7 +84,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                     loginCountdownTimer?.cancel()
                     if (activity != null && isVisible) {
                         val result =
-                                bundle.getParcelable<LoginResult>(LoginResultReceiverService.EXTRA_LOGIN)
+                            bundle.getParcelable<LoginResult>(LoginResultReceiverService.EXTRA_LOGIN)
                         handleLogin(result)
                     }
                 }
@@ -105,23 +105,59 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         Timber.d("battery level is $batLevel")
         when (batLevel) {
             in 20..39 -> {
-                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_1, null), null, null, null)
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.ic_battery_1,
+                        null
+                    ), null, null, null
+                )
             }
             in 40..59 -> {
-                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_2, null), null, null, null)
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.ic_battery_2,
+                        null
+                    ), null, null, null
+                )
             }
             in 60..79 -> {
-                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_3, null), null, null, null)
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.ic_battery_3,
+                        null
+                    ), null, null, null
+                )
             }
             in 80..99 -> {
-                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_4, null), null, null, null)
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.ic_battery_4,
+                        null
+                    ), null, null, null
+                )
             }
             100 -> {
-                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_5, null), null, null, null)
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.ic_battery_5,
+                        null
+                    ), null, null, null
+                )
             }
             else -> {
                 //0-19
-                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(ResourcesCompat.getDrawable(resources, R.drawable.ic_battery_0, null), null, null, null)
+                loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.ic_battery_0,
+                        null
+                    ), null, null, null
+                )
             }
         }
         loginBinding.tvBattery.text = batLevel.toString()
@@ -140,9 +176,9 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                     return@let
                 }
                 stopLoginService()
-                LocalBroadcastManager.getInstance(requireContext())
-                        .unregisterReceiver(loginBroadcastReceiver)
-
+//                LocalBroadcastManager.getInstance(requireContext())
+//                        .unregisterReceiver(loginBroadcastReceiver)
+                globalViewModel.setShouldReceiveLoginResult(false)
                 if (it.isReceivingNotifications()) {
                     startFilterReceiverService()
                 }
@@ -168,8 +204,8 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
             }
         } ?: kotlin.run {
             requireContext().toast(
-                    prefs.defaultPrefs()["error_unknown", requireActivity().getString(R.string.error_unknown)]
-                            ?: requireActivity().getString(R.string.error_unknown)
+                prefs.defaultPrefs()["error_unknown", requireActivity().getString(R.string.error_unknown)]
+                    ?: requireActivity().getString(R.string.error_unknown)
             )
         }
     }
@@ -178,7 +214,10 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         var rememberedUsersString = (prefs.defaultPrefs()[getString(R.string.key_users), ""] ?: "")
         val rememberedUsers = rememberedUsersString.split(";")
         //store as user,password,date;user2,pass2,date2;etc
-        val existingUser = rememberedUsers.find { userLine -> userLine.split(",").isNotEmpty() && userLine.split(",")[0] == loginBinding.etUser.text.toString() }
+        val existingUser = rememberedUsers.find { userLine ->
+            userLine.split(",")
+                .isNotEmpty() && userLine.split(",")[0] == loginBinding.etUser.text.toString()
+        }
         if (existingUser == null) {
             if (rememberedUsers.isNotEmpty()) {
                 rememberedUsersString += ";"
@@ -191,81 +230,88 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     private fun storeLoginResultData(it: LoginResult, fullStore: Boolean = true) {
         if (fullStore) {
             prefs.customPrefs()[requireActivity().getString(R.string.key_logged_user)] =
-                    loginBinding.etUser.text.toString()
+                loginBinding.etUser.text.toString()
             prefs.customPrefs()[requireActivity().getString(R.string.key_logged_username)] =
-                    it.username
+                it.username
         }
 
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_path)] =
-                it.serverPath
+            it.serverPath
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_port)] =
-                it.serverPort
+            it.serverPort
         prefs.customPrefs()[requireActivity().getString(R.string.key_filter_respond_time)] =
-                it.filterRespondTime
+            it.filterRespondTime
         prefs.customPrefs()[requireActivity().getString(R.string.key_app_version)] =
-                it.appVersion
+            it.appVersion
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_user)] =
-                it.serverUser
+            it.serverUser
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_domain)] =
-                it.serverUserDomain
+            it.serverUserDomain
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_password)] =
-                it.serverPassword
+            it.serverPassword
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_snapshot_path)] =
-                it.serverSnapshotPath
+            it.serverSnapshotPath
 
         prefs.defaultPrefs()[requireActivity().getString(R.string.key_master_password)] =
-                it.masterPassword
+            it.masterPassword
 
         prefs.customPrefs()[requireActivity().getString(R.string.key_time_zone)] =
-                it.timeZone
+            it.timeZone
         prefs.customPrefs()[requireActivity().getString(R.string.key_receive_notifications)] =
-                it.isReceivingNotifications()
+            it.isReceivingNotifications()
         prefs.customPrefs()[requireActivity().getString(R.string.key_notification_sound)] =
-                it.isNotificationSoundEnabled()
+            it.isNotificationSoundEnabled()
         prefs.customPrefs()[requireActivity().getString(R.string.key_store_name)] =
-                it.store.storeName
+            it.store.storeName
         prefs.customPrefs()[requireActivity().getString(R.string.key_store_number)] =
-                it.store.storeNumber
+            it.store.storeNumber
         prefs.customPrefs()[requireActivity().getString(R.string.key_registers)] =
-                it.store.registers.joinToString(",") { reg -> reg.registerNumber }
-        prefs.customPrefs()[requireActivity().getString(R.string.key_registers_columns)] = it.store.registersColumns
+            it.store.registers.joinToString(",") { reg -> reg.registerNumber }
+        prefs.customPrefs()[requireActivity().getString(R.string.key_registers_columns)] =
+            it.store.registersColumns
     }
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         loginBinding = DataBindingUtil
-                .inflate(inflater, R.layout.fragment_login, container, false)
+            .inflate(inflater, R.layout.fragment_login, container, false)
 
         return loginBinding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        startLoginResultReceiverService()
+
+        globalViewModel.setShouldReceiveLoginResult(true)
         loginBinding.clBase.setOnSwipeListener(onSwipeBottom = {
             requireContext().showInputDialog(
-                    prefs.defaultPrefs()["insert_security_code", getString(
-                            R.string.insert_security_code
-                    )] ?: getString(R.string.insert_security_code)
+                prefs.defaultPrefs()["insert_security_code", getString(
+                    R.string.insert_security_code
+                )] ?: getString(R.string.insert_security_code)
             ) {
                 if (it == prefs.defaultPrefs()[requireActivity().getString(R.string.key_master_password), SECURITY_CODE] ?: SECURITY_CODE) {
                     findNavController().navigate(LoginFragmentDirections.toSettingsFragment())
                 } else {
                     requireContext().toast(
-                            prefs.defaultPrefs()["error_wrong_code", getString(R.string.error_wrong_code)]
-                                    ?: getString(R.string.error_wrong_code)
+                        prefs.defaultPrefs()["error_wrong_code", getString(R.string.error_wrong_code)]
+                            ?: getString(R.string.error_wrong_code)
                     )
                 }
             }
         }, onSwipeLeft = {
             findNavController().navigate(
-                    NavigationMainContainerDirections.toAppOptionsFragment(
-                            arrayOf(AppOptionsFragment.AppOptions.APP_VERSION.name, AppOptionsFragment.AppOptions.KIOSK_MODE.name),
-                            null,
-                            null
-                    )
+                NavigationMainContainerDirections.toAppOptionsFragment(
+                    arrayOf(
+                        AppOptionsFragment.AppOptions.APP_VERSION.name,
+                        AppOptionsFragment.AppOptions.KIOSK_MODE.name
+                    ),
+                    null,
+                    null
+                )
             )
         })
         loginBinding.btLogin.setOnClickListener {
@@ -284,8 +330,8 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
             override fun onFinish() {
                 hideLoading()
                 requireContext().toast(
-                        prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
-                                ?: getString(R.string.message_timed_out)
+                    prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
+                        ?: getString(R.string.message_timed_out)
                 )
             }
 
@@ -294,12 +340,18 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         }
         setupTexts()
         loginBinding.etUser.setOnFocusChangeListener { v, hasFocus ->
-            if (hasFocus && loginBinding.etUser.text.isNullOrEmpty() && requireContext().getRememberedUsers(prefs).isNotEmpty()) {
+            if (hasFocus && loginBinding.etUser.text.isNullOrEmpty() && requireContext().getRememberedUsers(
+                    prefs
+                ).isNotEmpty()
+            ) {
                 showPopup(v)
             }
         }
         loginBinding.etUser.setOnClickListener {
-            if (loginBinding.etUser.text.isNullOrEmpty() && requireContext().getRememberedUsers(prefs).isNotEmpty()) {
+            if (loginBinding.etUser.text.isNullOrEmpty() && requireContext().getRememberedUsers(
+                    prefs
+                ).isNotEmpty()
+            ) {
                 showPopup(it)
             }
         }
@@ -307,6 +359,24 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         globalViewModel.wifiSignal.observe(viewLifecycleOwner, createWifiObserver())
         globalViewModel.setWifiSignal(requireContext().getWifiLevel())
         startBatteryTimer()
+
+        globalViewModel.shouldReceiveLoginResult.observe(viewLifecycleOwner, createLoginObserver())
+    }
+
+    private fun createLoginObserver(): Observer<Boolean> {
+        return Observer {
+            if (it) {
+                LoginResultReceiverService.enqueueWork(requireContext())
+                LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
+                    loginBroadcastReceiver,
+                    IntentFilter(LoginResultReceiverService.ACTION_RECEIVE_LOGIN)
+                )
+            } else {
+                LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(
+                    loginBroadcastReceiver
+                )
+            }
+        }
     }
 
     private fun createWifiObserver(): Observer<Int> {
@@ -333,46 +403,47 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
 
     private fun setupTexts() {
         loginBinding.etUser.hint =
-                prefs.defaultPrefs()["hint_user_id", getString(R.string.hint_user_id)]
-                        ?: getString(R.string.hint_user_id)
+            prefs.defaultPrefs()["hint_user_id", getString(R.string.hint_user_id)]
+                ?: getString(R.string.hint_user_id)
         loginBinding.btLogin.text =
-                prefs.defaultPrefs()["action_login", getString(R.string.action_login)]
-                        ?: getString(R.string.action_login)
+            prefs.defaultPrefs()["action_login", getString(R.string.action_login)]
+                ?: getString(R.string.action_login)
         loginBinding.etPassword.hint =
-                prefs.defaultPrefs()["hint_password", getString(R.string.hint_password)]
-                        ?: getString(R.string.hint_password)
+            prefs.defaultPrefs()["hint_password", getString(R.string.hint_password)]
+                ?: getString(R.string.hint_password)
     }
 
     private fun checkAlreadyLoggedIn() {
         if (prefs.customPrefs()[getString(R.string.key_logged_user), ""].isNullOrEmpty() || prefs.customPrefs()[getString(
-                        R.string.key_registers
-                ), ""].isNullOrEmpty()
+                R.string.key_registers
+            ), ""].isNullOrEmpty()
         ) {
             loginBinding.clBase.visibility = View.VISIBLE
             return
         }
         loginViewModel.sendFilterProcessOpenMessage()
         val receivesNotifications =
-                prefs.customPrefs()[getString(R.string.key_receive_notifications), true]
-                        ?: true
+            prefs.customPrefs()[getString(R.string.key_receive_notifications), true]
+                ?: true
         if (receivesNotifications) {
             startFilterReceiverService()
         }
 
         val store =
-                StoreResult(_storeName = prefs.customPrefs()[getString(R.string.key_store_name), ""]
-                        ?: "",
-                        _storeNumber = prefs.customPrefs()[getString(R.string.key_store_number), ""]
-                                ?: "",
-                        _registers = prefs.customPrefs()[getString(R.string.key_registers), ""]?.split(",")
-                                ?.map { RegisterResult(_registerNumber = it) } ?: listOf())
-        LocalBroadcastManager.getInstance(requireContext())
-                .unregisterReceiver(loginBroadcastReceiver)
+            StoreResult(_storeName = prefs.customPrefs()[getString(R.string.key_store_name), ""]
+                ?: "",
+                _storeNumber = prefs.customPrefs()[getString(R.string.key_store_number), ""]
+                    ?: "",
+                _registers = prefs.customPrefs()[getString(R.string.key_registers), ""]?.split(",")
+                    ?.map { RegisterResult(_registerNumber = it) } ?: listOf())
+        globalViewModel.setShouldReceiveLoginResult(false)
         findNavController().navigate(LoginFragmentDirections.toRegistersFragment(store = store))
     }
 
     private fun startLoginResultReceiverService() {
+
         LoginResultReceiverService.enqueueWork(requireContext())
+
     }
 
     private fun setupTextChangeListeners() {
@@ -406,23 +477,20 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     }
 
     private fun validateLogin() {
-        startLoginResultReceiverService()
-        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
-                loginBroadcastReceiver,
-                IntentFilter(LoginResultReceiverService.ACTION_RECEIVE_LOGIN)
-        )
+//        startLoginResultReceiverService()
+
         var valid = true
         if (loginBinding.etUser.text!!.isEmpty()) {
             valid = false
             loginBinding.tilUser.error =
-                    prefs.defaultPrefs()["error_empty_user", getString(R.string.error_empty_user)]
-                            ?: getString(R.string.error_empty_user)
+                prefs.defaultPrefs()["error_empty_user", getString(R.string.error_empty_user)]
+                    ?: getString(R.string.error_empty_user)
         }
         if (loginBinding.etPassword.text!!.isEmpty()) {
             valid = false
             loginBinding.tilPassword.error =
-                    prefs.defaultPrefs()["error_empty_password", getString(R.string.error_empty_password)]
-                            ?: getString(R.string.error_empty_password)
+                prefs.defaultPrefs()["error_empty_password", getString(R.string.error_empty_password)]
+                    ?: getString(R.string.error_empty_password)
         }
         if (valid) {
             login()
@@ -432,8 +500,8 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     private fun login() {
         showLoading()
         loginViewModel.login(
-                loginBinding.etUser.text!!.toString(),
-                loginBinding.etPassword.text!!.toString()
+            loginBinding.etUser.text!!.toString(),
+            loginBinding.etPassword.text!!.toString()
         )
 
         loginCountdownTimer?.start()
@@ -441,7 +509,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
 
     override fun onAttach(context: Context) {
         (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
-                ActivityModule(requireActivity())
+            ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
     }
@@ -476,21 +544,27 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     }
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
-        item?.title?.let {
-            if (it.isNotEmpty()) {
-                loginBinding.etUser.setText(it)
-                loginBinding.etPassword.requestFocus()
-                val imm = requireContext().getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager?
-                imm!!.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY)
-                return true
-            }
+        context?.let { context ->
+            item?.title?.let {
+                if (it.isNotEmpty()) {
+                    loginBinding.etUser.setText(it)
+                    loginBinding.etPassword.requestFocus()
+                    val imm = context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager?
+                    imm!!.toggleSoftInput(
+                        InputMethodManager.SHOW_FORCED,
+                        InputMethodManager.HIDE_IMPLICIT_ONLY
+                    )
+                    return true
+                }
 
+            }
         }
+
         return false
     }
 
     companion object {
-        const val LOGIN_MAX_WAIT_MILLIS = 5000L
+        const val LOGIN_MAX_WAIT_MILLIS = 6000L
         const val MENU_FIRST_ITEM = Menu.FIRST
         const val BATTERY_CHECK_INTERVAL_MINUTES = 10L
     }

@@ -56,26 +56,31 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     @Inject
     lateinit var appContext: Application
 
-    val globalViewModel: GlobalViewModel by viewModels { GlobalViewModelFactory(repository, appContext) }
+    val globalViewModel: GlobalViewModel by viewModels {
+        GlobalViewModelFactory(
+            repository,
+            appContext
+        )
+    }
     private var onApkDownloaded: () -> Unit = {}
     private lateinit var wifiManager: WifiManager
     private var filterReceiver: BroadcastReceiver = createFilterReceiver()
 
     private val requestPermissionLauncher =
-            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
-                Timber.d("permissions: write ${results[Manifest.permission.WRITE_EXTERNAL_STORAGE]}, read ${results[Manifest.permission.READ_EXTERNAL_STORAGE]}")
-                if (results[Manifest.permission.WRITE_EXTERNAL_STORAGE] != true ||
-                        results[Manifest.permission.READ_EXTERNAL_STORAGE] != true
-                ) {
-                    toast(
-                            preferences.defaultPrefs()["permission_not_granted", getString(R.string.permission_not_granted)]
-                                    ?: getString(R.string.permission_not_granted)
-                    )
-                } else {
-                    globalViewModel.saveSettingsFromFile()
-                }
-
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+            Timber.d("permissions: write ${results[Manifest.permission.WRITE_EXTERNAL_STORAGE]}, read ${results[Manifest.permission.READ_EXTERNAL_STORAGE]}")
+            if (results[Manifest.permission.WRITE_EXTERNAL_STORAGE] != true ||
+                results[Manifest.permission.READ_EXTERNAL_STORAGE] != true
+            ) {
+                toast(
+                    preferences.defaultPrefs()["permission_not_granted", getString(R.string.permission_not_granted)]
+                        ?: getString(R.string.permission_not_granted)
+                )
+            } else {
+                globalViewModel.saveSettingsFromFile()
             }
+
+        }
 
     private fun createWifiReceiver(): BroadcastReceiver {
         return object : BroadcastReceiver() {
@@ -100,7 +105,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                 if (bundle != null) {
                     if (intent.action == ReceiptReceiverService.ACTION_RECEIVE_RECEIPT) {
                         val result =
-                                bundle.getParcelable<ReceiptResponse>(ReceiptReceiverService.EXTRA_RECEIPT)
+                            bundle.getParcelable<ReceiptResponse>(ReceiptReceiverService.EXTRA_RECEIPT)
                         result?.let {
                             globalViewModel.addReceiptResult(result)
                         }
@@ -154,27 +159,27 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     private fun openAPK() {
         val apkFile = File(getAppDirectory(), PosCtrlRepository.APK_FILE_NAME)
         val intent = Intent(Intent.ACTION_VIEW)
-                .apply {
-                    val uri = FileProvider.getUriForFile(
-                            this@BaseActivity,
-                            "${applicationContext.packageName}.provider",
-                            apkFile
+            .apply {
+                val uri = FileProvider.getUriForFile(
+                    this@BaseActivity,
+                    "${applicationContext.packageName}.provider",
+                    apkFile
+                )
+                setDataAndType(uri, INTENT_TYPE_APK)
+                val resInfoList: List<ResolveInfo> =
+                    applicationContext.packageManager.queryIntentActivities(
+                        this,
+                        PackageManager.MATCH_DEFAULT_ONLY
                     )
-                    setDataAndType(uri, INTENT_TYPE_APK)
-                    val resInfoList: List<ResolveInfo> =
-                            applicationContext.packageManager.queryIntentActivities(
-                                    this,
-                                    PackageManager.MATCH_DEFAULT_ONLY
-                            )
-                    for (resolveInfo in resInfoList) {
-                        val packageName = resolveInfo.activityInfo.packageName
-                        applicationContext.grantUriPermission(
-                                packageName,
-                                uri,
-                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        )
-                    }
+                for (resolveInfo in resInfoList) {
+                    val packageName = resolveInfo.activityInfo.packageName
+                    applicationContext.grantUriPermission(
+                        packageName,
+                        uri,
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
                 }
+            }
         startActivityForResult(intent, RC_OPEN_APK)
     }
 
@@ -184,13 +189,13 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         initializeActivityComponent()
         activityComponent.inject(this)
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-                checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+            checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
         ) {
             requestPermissionLauncher.launch(
-                    arrayOf(
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.READ_EXTERNAL_STORAGE
-                    )
+                arrayOf(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                )
             )
         } else {
             globalViewModel.saveSettingsFromFile()
@@ -200,8 +205,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
         if (globalViewModel.isReceivingFilter.value != true) {
             LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                    filterReceiver,
-                    IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
+                filterReceiver,
+                IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
             )
             globalViewModel.setReceivingFilter(true)
         }
@@ -216,9 +221,9 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         } else {
             @Suppress("DEPRECATION")
             this.window.addFlags(
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
     }
@@ -226,8 +231,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     override fun onResume() {
         super.onResume()
         LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                logoutReceiver,
-                IntentFilter(ACTION_LOGOUT)
+            logoutReceiver,
+            IntentFilter(ACTION_LOGOUT)
         )
         startReceivingReceipt()
         startReceivingWifiUpdates()
@@ -241,15 +246,16 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     private fun startReceivingWifiUpdates() {
         val intentFilter = IntentFilter()
         intentFilter.addAction(ACTION_WIFI_CHANGE)
-        LocalBroadcastManager.getInstance(applicationContext).registerReceiver(wifiReceiver, intentFilter)
+        LocalBroadcastManager.getInstance(applicationContext)
+            .registerReceiver(wifiReceiver, intentFilter)
     }
 
     override fun startReceivingReceipt() {
         if (globalViewModel.isReceivingReceipt.value != true) {
             val intentFilter = IntentFilter(ReceiptReceiverService.ACTION_RECEIVE_RECEIPT)
             LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                    receiptReceiver,
-                    intentFilter
+                receiptReceiver,
+                intentFilter
             )
             globalViewModel.setReceivingReceipt(true)
         }
@@ -266,15 +272,15 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-                .activityComponent(ActivityModule(this))
+            .activityComponent(ActivityModule(this))
     }
 
     private fun handleError(resultError: ResultWrapper.Error): Boolean {
         return when (resultError.code) {
             ErrorCode.NO_DATA_CONNECTION.code -> {
                 toast(
-                        preferences.defaultPrefs()["no_data_connection", getString(R.string.no_data_connection)]
-                                ?: getString(R.string.no_data_connection)
+                    preferences.defaultPrefs()["no_data_connection", getString(R.string.no_data_connection)]
+                        ?: getString(R.string.no_data_connection)
                 )
                 true
             }
@@ -283,8 +289,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     }
 
     override fun createLoadingObserver(
-            successListener: (ResultWrapper<*>?) -> Unit,
-            errorListener: () -> Unit
+        successListener: (ResultWrapper<*>?) -> Unit,
+        errorListener: () -> Unit
     ): Observer<Event<ResultWrapper<*>>> {
         return Observer { result ->
             when (val value = result.getContentIfNotHandled()) {
@@ -297,12 +303,12 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                 is ResultWrapper.Error -> {
                     hideLoading()
                     val resultError =
-                            result.peekContent() as ResultWrapper.Error
+                        result.peekContent() as ResultWrapper.Error
                     val resultHandled = handleError(resultError)
                     if (!resultHandled) {
                         toast(
-                                message = (result.peekContent() as
-                                        ResultWrapper.Error).message.toString()
+                            message = (result.peekContent() as
+                                    ResultWrapper.Error).message.toString()
                         )
                     }
                     errorListener()
@@ -323,7 +329,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         hideLoading()
     }
 
-    override fun handleFilter() {
+    override fun handleFilterElseLogin() {
     }
 
     abstract fun handleLogout()
@@ -343,11 +349,11 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                 Timber.d("received filter 1")
                 if (bundle != null) {
                     val result =
-                            bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
+                        bundle.getParcelable<FilteredInfoResponse>(FilterReceiverService.EXTRA_FILTER)
                     result?.let {
                         globalViewModel.addFilter(result)
                     }
-                    handleFilter()
+                    handleFilterElseLogin()
                 }
             }
         }

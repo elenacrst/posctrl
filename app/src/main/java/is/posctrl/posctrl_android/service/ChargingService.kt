@@ -114,6 +114,7 @@ class ChargingReceiver : BroadcastReceiver() {
         Timber.d("charging - received broadcast")
         val preferencesSource = PreferencesSource(context.applicationContext)
         preferencesSource.customPrefs().clear()
+        // LoginResultReceiverService.enqueueWork(context)
         Timber.d("charging - cleared prefs")
         stopFilterReceiverService(context)
         stopReceiptReceiverService(context)

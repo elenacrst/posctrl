@@ -66,7 +66,7 @@ class MainActivity : BaseActivity() {
 
     private fun setupNavController() {
         navHostFragment =
-                supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
+            supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
@@ -76,13 +76,16 @@ class MainActivity : BaseActivity() {
                         navigateToFilter(first)
                     }
                 }
+                R.id.loginFragment -> {
+                    globalViewModel.setShouldReceiveLoginResult(true)
+                }
             }
         }
     }
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-                .activityComponent(ActivityModule(this))
+            .activityComponent(ActivityModule(this))
     }
 
     override fun showLoading() {
@@ -101,23 +104,28 @@ class MainActivity : BaseActivity() {
         startActivityForResult(intent, RC_FILTER)//todo use activity result api
     }
 
-    override fun handleFilter() {
+    override fun handleFilterElseLogin() {
         val filter = getFirstFilter()
         filter?.let {
             navigateToFilter(it)
+        } ?: run {
+            if (navController.currentDestination?.id == R.id.loginFragment) {
+                globalViewModel.setShouldReceiveLoginResult(true)
+            }
+
         }
     }
 
     override fun onResume() {
         super.onResume()
-        handleFilter()
+        handleFilterElseLogin()
     }
 
     override fun onBackPressed() {
         val kiosk = preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true]
         Timber.d("kiosk main: $kiosk")
         if ((navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
-                && kiosk == true
+            && kiosk == true
         ) {
             return
         }
@@ -127,7 +135,7 @@ class MainActivity : BaseActivity() {
     private fun setupKiosk() {
         if (preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
             val activityManager = applicationContext
-                    .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             activityManager.moveTaskToFront(taskId, 0)
         }
     }
@@ -144,6 +152,7 @@ class MainActivity : BaseActivity() {
         openAppIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
         navController.navigate(NavigationMainContainerDirections.toLoginFragment())
         startActivity(openAppIntent)
+        globalViewModel.setShouldReceiveLoginResult(true)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
@@ -162,10 +171,10 @@ class MainActivity : BaseActivity() {
 interface BaseFragmentHandler {
     fun showLoading()
     fun hideLoading()
-    fun handleFilter()
+    fun handleFilterElseLogin()
     fun createLoadingObserver(
-            successListener: (ResultWrapper<*>?) -> Unit = { },
-            errorListener: () -> Unit = { }
+        successListener: (ResultWrapper<*>?) -> Unit = { },
+        errorListener: () -> Unit = { }
     ): Observer<Event<ResultWrapper<*>>>
 
     fun onDoubleTap()
