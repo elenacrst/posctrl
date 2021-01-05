@@ -62,11 +62,12 @@ class MainActivity : BaseActivity() {
             installPackagesRequest.launch(InstallUnknownContract().createIntent(this, null))
         }
         globalViewModel.downloadApkEvent.observe(this, createDownloadObserver())
+
     }
 
     private fun setupNavController() {
         navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
+                supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
@@ -85,7 +86,7 @@ class MainActivity : BaseActivity() {
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-            .activityComponent(ActivityModule(this))
+                .activityComponent(ActivityModule(this))
     }
 
     override fun showLoading() {
@@ -105,6 +106,9 @@ class MainActivity : BaseActivity() {
     }
 
     override fun handleFilterElseLogin() {
+        if (startsOtherIntent) {
+            return
+        }
         val filter = getFirstFilter()
         filter?.let {
             navigateToFilter(it)
@@ -118,6 +122,7 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        startsOtherIntent = false
         handleFilterElseLogin()
     }
 
@@ -125,7 +130,7 @@ class MainActivity : BaseActivity() {
         val kiosk = preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true]
         Timber.d("kiosk main: $kiosk")
         if ((navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
-            && kiosk == true
+                && kiosk == true
         ) {
             return
         }
@@ -135,7 +140,7 @@ class MainActivity : BaseActivity() {
     private fun setupKiosk() {
         if (preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
             val activityManager = applicationContext
-                .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                    .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             activityManager.moveTaskToFront(taskId, 0)
         }
     }
@@ -157,8 +162,10 @@ class MainActivity : BaseActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
         super.onActivityResult(requestCode, resultCode, intent)
-        if (requestCode == RC_FILTER && resultCode == RESULT_LOGOUT) {
-            handleLogout()
+        if (requestCode == RC_FILTER) {
+            if (resultCode == RESULT_LOGOUT) {
+                handleLogout()
+            }
         }
     }
 
@@ -173,8 +180,8 @@ interface BaseFragmentHandler {
     fun hideLoading()
     fun handleFilterElseLogin()
     fun createLoadingObserver(
-        successListener: (ResultWrapper<*>?) -> Unit = { },
-        errorListener: () -> Unit = { }
+            successListener: (ResultWrapper<*>?) -> Unit = { },
+            errorListener: () -> Unit = { }
     ): Observer<Event<ResultWrapper<*>>>
 
     fun onDoubleTap()

@@ -43,23 +43,23 @@ class ChargingService : Service() {
         createNotificationChannel()
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
-            this, 0,
-            notificationIntent, 0
+                this, 0,
+                notificationIntent, 0
         )
         startForeground(
-            CHARGING_SERVICE, NotificationCompat.Builder(
+                CHARGING_SERVICE, NotificationCompat.Builder(
                 this,
                 CHARGING_CHANNEL_ID
-            ) // don't forget create a notification channel first
+        ) // don't forget create a notification channel first
                 .setOngoing(true)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(
-                    prefs.defaultPrefs()["title_notification_charging", getString(R.string.title_notification_charging)]
-                        ?: getString(R.string.title_notification_charging)
+                        prefs.defaultPrefs()["title_notification_charging", getString(R.string.title_notification_charging)]
+                                ?: getString(R.string.title_notification_charging)
                 )
                 .setContentText(
-                    prefs.defaultPrefs()["message_notification_charging", getString(R.string.message_notification_charging)]
-                        ?: getString(R.string.message_notification_charging)
+                        prefs.defaultPrefs()["message_notification_charging", getString(R.string.message_notification_charging)]
+                                ?: getString(R.string.message_notification_charging)
                 )
                 .setContentIntent(pendingIntent)
                 .build()
@@ -69,12 +69,12 @@ class ChargingService : Service() {
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
-                CHARGING_CHANNEL_ID,
-                "Charging service",
-                NotificationManager.IMPORTANCE_DEFAULT
+                    CHARGING_CHANNEL_ID,
+                    "Charging service",
+                    NotificationManager.IMPORTANCE_DEFAULT
             )
             val manager = getSystemService(
-                NotificationManager::class.java
+                    NotificationManager::class.java
             )
             manager.createNotificationChannel(serviceChannel)
         }
@@ -114,12 +114,11 @@ class ChargingReceiver : BroadcastReceiver() {
         Timber.d("charging - received broadcast")
         val preferencesSource = PreferencesSource(context.applicationContext)
         preferencesSource.customPrefs().clear()
-        // LoginResultReceiverService.enqueueWork(context)
         Timber.d("charging - cleared prefs")
         stopFilterReceiverService(context)
         stopReceiptReceiverService(context)
         val appOptionsViewModel =
-            AppOptionsViewModel(PosCtrlRepository(preferencesSource, context, XmlMapper()))
+                AppOptionsViewModel(PosCtrlRepository(preferencesSource, context, XmlMapper()))
         appOptionsViewModel.closeFilterNotifications()
         //todo might be useless to track app visibility
         val i = Intent(BaseActivity.ACTION_LOGOUT)

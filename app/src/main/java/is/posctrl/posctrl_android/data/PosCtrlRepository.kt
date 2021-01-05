@@ -390,7 +390,9 @@ class PosCtrlRepository @Inject constructor(
                                                 null
                                         )
                                         val inputStream = file.inputStream
-                                        val bitmap = BitmapFactory.decodeStream(inputStream)
+                                        val options = BitmapFactory.Options()
+                                        options.inSampleSize = 2
+                                        val bitmap = BitmapFactory.decodeStream(inputStream, null, options)
                                         bitmap?.let {
                                             bitmaps += it
                                         }

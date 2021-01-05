@@ -67,10 +67,12 @@ class FilterActivity : BaseActivity() {
 
         filterBinding.btYes.setOnClickListener {
             filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.ACCEPTED)
+            setResult(RESULT_OK)
             finish()
         }
         filterBinding.btNo.setOnClickListener {
             filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.REJECTED)
+            setResult(RESULT_OK)
             finish()
         }
         filterReactTimer = createFilterReactTimer()
@@ -112,6 +114,7 @@ class FilterActivity : BaseActivity() {
     ) {
         override fun onFinish() {
             filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.TIMED_OUT)
+            setResult(RESULT_OK)
             finish()
             toast(
                     prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
@@ -274,7 +277,11 @@ class FilterActivity : BaseActivity() {
 
     override fun onBackPressed() {
         filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.ACCEPTED)
-        super.onBackPressed()
+        setResult(RESULT_OK)
+        finish()
+    }
+
+    override fun handleFilterElseLogin() {
     }
 
     companion object {

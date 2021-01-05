@@ -49,6 +49,7 @@ class FilterReceiverService : Service() {
     lateinit var repository: PosCtrlRepository
 
     private var socket: DatagramSocket? = null
+    private var message: ByteArray = ByteArray(1024)
 
     @Suppress("BlockingMethodInNonBlockingContext")
     private suspend fun receiveUdp() {
@@ -66,8 +67,7 @@ class FilterReceiverService : Service() {
                 socket!!.soTimeout = 60 * 1000
                 Timber.d("waiting to receive filter via udp on port $serverPort")
                 try {
-                    val message = ByteArray(1024)
-                    p = DatagramPacket(message, message.size)
+                    p = DatagramPacket(message, 1000)
                     socket!!.receive(p)
                     val msg = String(message).substring(0, p.length)
                     Timber.d("received filter $msg ${msg.length}")
