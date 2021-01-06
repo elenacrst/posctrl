@@ -106,7 +106,7 @@ class MainActivity : BaseActivity() {
     }
 
     override fun handleFilterElseLogin() {
-        if (startsOtherIntent) {
+        if (startsOtherIntent || navController.currentDestination?.id == R.id.loginFragment) {
             return
         }
         val filter = getFirstFilter()
@@ -116,7 +116,6 @@ class MainActivity : BaseActivity() {
             if (navController.currentDestination?.id == R.id.loginFragment) {
                 globalViewModel.setShouldReceiveLoginResult(true)
             }
-
         }
     }
 
@@ -158,6 +157,7 @@ class MainActivity : BaseActivity() {
         navController.navigate(NavigationMainContainerDirections.toLoginFragment())
         startActivity(openAppIntent)
         globalViewModel.setShouldReceiveLoginResult(true)
+        globalViewModel.clearFilterMessages()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {

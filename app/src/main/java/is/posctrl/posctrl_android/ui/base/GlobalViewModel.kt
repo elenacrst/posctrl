@@ -15,13 +15,13 @@ import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
 class GlobalViewModel @Inject constructor(
-    private val repository: PosCtrlRepository,
-    private val appContext: Application
+        private val repository: PosCtrlRepository,
+        private val appContext: Application
 ) ://todo remove argument if not used
-    ViewModel() {
+        ViewModel() {
 
     private var _downloadApkEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-        MutableLiveData(Event(ResultWrapper.None))
+            MutableLiveData(Event(ResultWrapper.None))
     val downloadApkEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _downloadApkEvent
 
@@ -42,7 +42,7 @@ class GlobalViewModel @Inject constructor(
         get() = _isReceivingFilter
 
     private var _filterItemMessages: MutableLiveData<List<FilteredInfoResponse>> =
-        MutableLiveData(mutableListOf())
+            MutableLiveData(mutableListOf())
     val filterItemMessages: LiveData<List<FilteredInfoResponse>>
         get() = _filterItemMessages
 
@@ -124,5 +124,9 @@ class GlobalViewModel @Inject constructor(
 
     fun setShouldReceiveLoginResult(b: Boolean) {
         _shouldReceiveLoginResult.value = b
+    }
+
+    fun clearFilterMessages() {
+        _filterItemMessages.value = mutableListOf()
     }
 }

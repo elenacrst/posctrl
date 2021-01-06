@@ -9,6 +9,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,8 +30,11 @@ class FilterViewModel @Inject constructor(private val repository: PosCtrlReposit
     val filterAnswerEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _filterAnswerEvent//todo message
 
+    var downloadBitmapsJob: Job? = null
+
     fun downloadBitmaps(path: String, fileNames: List<String>) {
-        viewModelScope.launch {
+        downloadBitmapsJob?.cancel()
+        downloadBitmapsJob = viewModelScope.launch {
 
             _bitmapsEvent.value = Event(ResultWrapper.Loading)
             val result: ResultWrapper<*> = repository.downloadBitmaps(path, fileNames)

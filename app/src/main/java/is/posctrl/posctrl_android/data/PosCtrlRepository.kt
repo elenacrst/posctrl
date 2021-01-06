@@ -402,6 +402,7 @@ class PosCtrlRepository @Inject constructor(
                                     errors++
                                 }
                             }
+                            connection.close()
                         }
             }
         } catch (e: Exception) {
@@ -513,6 +514,7 @@ class PosCtrlRepository @Inject constructor(
                                 foundApk = false
                                 return@withContext ResultWrapper.Error(message = message)
                             }
+                            connection.close()
                         }
             }
         } catch (e: Exception) {
@@ -647,6 +649,7 @@ class PosCtrlRepository @Inject constructor(
                                 e.printStackTrace()
                                 return@withContext ResultWrapper.Error()
                             }
+                            connection.close()
                         }
             }
         } catch (e: Exception) {
