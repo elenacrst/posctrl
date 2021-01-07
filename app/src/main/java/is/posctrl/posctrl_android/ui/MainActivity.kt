@@ -45,6 +45,7 @@ class MainActivity : BaseActivity() {
     lateinit var preferencesSource: PreferencesSource
 
     private val installPackagesRequest = registerForActivityResult(InstallUnknownContract()) {}
+    private var isActivityVisible : Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,6 +64,16 @@ class MainActivity : BaseActivity() {
         }
         globalViewModel.downloadApkEvent.observe(this, createDownloadObserver())
 
+    }
+
+    override fun onStart() {
+        super.onStart()
+        isActivityVisible = true
+    }
+
+    override fun onStop() {
+        super.onStop()
+        isActivityVisible = false
     }
 
     private fun setupNavController() {
@@ -154,9 +165,10 @@ class MainActivity : BaseActivity() {
         val openAppIntent = Intent(this, MainActivity::class.java)
         openAppIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         openAppIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+        globalViewModel.setShouldReceiveLoginResult(true)
         navController.navigate(NavigationMainContainerDirections.toLoginFragment())
         startActivity(openAppIntent)
-        globalViewModel.setShouldReceiveLoginResult(true)
+
         globalViewModel.clearFilterMessages()
     }
 

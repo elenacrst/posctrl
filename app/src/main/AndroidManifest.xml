@@ -39,6 +39,7 @@
             android:name=".ui.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleInstance"
+            android:alwaysRetainTaskState="true"
             android:screenOrientation="sensorLandscape"
             android:windowSoftInputMode="stateHidden">
             <intent-filter>

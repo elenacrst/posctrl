@@ -34,7 +34,6 @@ class AppClosingService : Service() {
             stopSelf()
 //            preferencesSource.defaultPrefs()[getString(R.string.key_app_visible)] = false
         }
-
     }
 
     override fun onCreate() {

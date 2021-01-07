@@ -63,6 +63,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     private val globalViewModel: GlobalViewModel by activityViewModels()
 
     private var batteryCheckTimer: CountDownTimer = createBatteryCheckTimer()
+    private var popup: PopupMenu? = null
 
     private fun createBatteryCheckTimer() =
             object : CountDownTimer(TimeUnit.MINUTES.toMillis(BATTERY_CHECK_INTERVAL_MINUTES), 1000) {
@@ -94,6 +95,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     override fun onResume() {
         super.onResume()
         hideLoading()
+        globalViewModel.setShouldReceiveLoginResult(true)
     }
 
     private fun startBatteryTimer() {
@@ -362,12 +364,14 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     private fun createLoginObserver(): Observer<Boolean> {
         return Observer {
             if (it) {
-                LoginResultReceiverService.enqueueWork(requireContext())
+                Timber.d("login result receiver started")
+                startLoginResultReceiverService()
                 LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
                         loginBroadcastReceiver,
                         IntentFilter(LoginResultReceiverService.ACTION_RECEIVE_LOGIN)
                 )
             } else {
+                Timber.d("login result receiver stopped")
                 LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(
                         loginBroadcastReceiver
                 )
@@ -486,6 +490,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                 ActivityModule(requireActivity())
         ).inject(this)
         super.onAttach(context)
+        startLoginResultReceiverService()
     }
 
     private fun startFilterReceiverService() {
@@ -497,6 +502,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         stopLoginService()
         loginCountdownTimer?.cancel()
         batteryCheckTimer.cancel()
+        popup?.dismiss()
     }
 
     private fun stopLoginService() {
@@ -505,16 +511,21 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     }
 
     private fun showPopup(v: View) {
-        val popup = PopupMenu(requireContext(), v, Gravity.BOTTOM or Gravity.START)
-        val inflater: MenuInflater = popup.menuInflater
-        inflater.inflate(R.menu.suggested_users, popup.menu)
-        popup.setOnMenuItemClickListener(this)
+        popup = PopupMenu(requireContext(), v, Gravity.BOTTOM or Gravity.START)
+        val inflater: MenuInflater = popup!!.menuInflater
+        inflater.inflate(R.menu.suggested_users, popup!!.menu)
+        popup!!.setOnMenuItemClickListener(this)
 
         val users = requireContext().getRememberedUsers(prefs)
         for (i in users.indices) {
-            popup.menu.add(0, MENU_FIRST_ITEM + i, Menu.NONE, users[i].userId)
+            popup!!.menu.add(0, MENU_FIRST_ITEM + i, Menu.NONE, users[i].userId)
         }
-        popup.show()
+        popup!!.show()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        popup?.dismiss()
     }
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
