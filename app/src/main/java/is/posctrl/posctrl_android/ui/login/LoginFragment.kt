@@ -520,7 +520,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         for (i in users.indices) {
             popup!!.menu.add(0, MENU_FIRST_ITEM + i, Menu.NONE, users[i].userId)
         }
-        popup!!.show()
+        popup?.show()
     }
 
     override fun onPause() {

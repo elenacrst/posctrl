@@ -114,7 +114,7 @@ class PosCtrlRepository @Inject constructor(
                                 ?: appContext.getString(R.string.app_name),
                         userId = userId,
                         hostName = getDeviceIdentifier(),
-                        listeningPort = DEFAULT_LOGIN_LISTENING_PORT,//todo check if preference required/ settings item
+                        listeningPort = DEFAULT_LOGIN_LISTENING_PORT,
                         time = getLocalTimeString(),
                         appVersion = appContext.getAppVersion(),
                         password = password
@@ -290,52 +290,40 @@ class PosCtrlRepository @Inject constructor(
 
     @Suppress("BlockingMethodInNonBlockingContext")
     @Throws(Exception::class)
-    suspend fun sendFilterProcessALife() {
-        withContext(Dispatchers.Default) {
-            try {
-                val appVersion = appContext.getAppVersion()
-                val filterProcessBody = FilterProcessBody(
-                        appName = prefs.defaultPrefs()["app_name", appContext.getString(R.string.app_name)]
-                                ?: appContext.getString(R.string.app_name),
-                        appVersion = appVersion,
-                        userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
-                                ?: "",
-                        action = FilterAction.ALIFE.actionValue,
-                        hostName = getDeviceIdentifier(),
-                        listeningPort = prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
-                                ?: DEFAULT_FILTER_PORT,
-                        time = getLocalTimeString()
-                )
-                Timber.d("filter process body: $filterProcessBody")
-                val xmlMessage = xmlMapper.writeValueAsString(filterProcessBody)
-                val bytes = xmlMessage.toByteArray()
-                val broadcastIp = "255.255.255.255"
-                val port =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                                ?: DEFAULT_SERVER_PORT
-                val sendSocket = DatagramSocket(null)
-                sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port))
-                sendSocket.broadcast = true
-                val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size, InetAddress.getByName(broadcastIp),
-                        port
-                )
-                prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)] = true
-                while (true) {
-                    delay(ALIFE_FILTER_DELAY_SECONDS * 1000L)
-                    val sendAlife: Boolean =
-                            prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)]
-                                    ?: true
-                    if (!sendAlife) {
-                        return@withContext
-                    }
-                    sendSocket.send(sendPacket)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+    fun sendFilterProcessALife() {
+        try {
+            val appVersion = appContext.getAppVersion()
+            val filterProcessBody = FilterProcessBody(
+                    appName = prefs.defaultPrefs()["app_name", appContext.getString(R.string.app_name)]
+                            ?: appContext.getString(R.string.app_name),
+                    appVersion = appVersion,
+                    userId = prefs.customPrefs()[appContext.getString(R.string.key_logged_user)]
+                            ?: "",
+                    action = FilterAction.ALIFE.actionValue,
+                    hostName = getDeviceIdentifier(),
+                    listeningPort = prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
+                            ?: DEFAULT_FILTER_PORT,
+                    time = getLocalTimeString()
+            )
+            Timber.d("filter process body: $filterProcessBody")
+            val xmlMessage = xmlMapper.writeValueAsString(filterProcessBody)
+            val bytes = xmlMessage.toByteArray()
+            val broadcastIp = "255.255.255.255"
+            val port =
+                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
+                            ?: DEFAULT_SERVER_PORT
+            val sendSocket = DatagramSocket(null)
+            sendSocket.reuseAddress = true
+            sendSocket.bind(InetSocketAddress(port))
+            sendSocket.broadcast = true
+            val sendPacket = DatagramPacket(
+                    bytes,
+                    bytes.size, InetAddress.getByName(broadcastIp),
+                    port
+            )
+            sendSocket.send(sendPacket)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 

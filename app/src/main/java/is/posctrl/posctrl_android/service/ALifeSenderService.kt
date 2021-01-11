@@ -3,12 +3,9 @@ package `is`.posctrl.posctrl_android.service
 import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
-import `is`.posctrl.posctrl_android.data.PosCtrlRepository.Companion.DEFAULT_FILTER_PORT
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.local.set
-import `is`.posctrl.posctrl_android.data.model.FilterResults
-import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import android.annotation.SuppressLint
 import android.app.*
 import android.app.Notification.PRIORITY_HIGH
@@ -18,26 +15,15 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.content.ContextCompat.startForegroundService
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import timber.log.Timber
-import java.io.IOException
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 
-class FilterReceiverService : Service() {
+class ALifeSenderService : Service() {
 
     private var isServiceStarted = false
     private var wakeLock: PowerManager.WakeLock? = null
-
-    @Inject
-    lateinit var xmlMapper: XmlMapper
 
     @Inject
     lateinit var prefs: PreferencesSource
@@ -47,51 +33,6 @@ class FilterReceiverService : Service() {
 
     @Inject
     lateinit var repository: PosCtrlRepository
-
-    private var socket: DatagramSocket? = null
-    private var message: ByteArray = ByteArray(1024)
-
-    @Suppress("BlockingMethodInNonBlockingContext")
-    private suspend fun receiveUdp() {
-        var p: DatagramPacket
-        try {
-            while (true) {
-                val serverPort: Int =
-                        prefs.customPrefs()[appContext.getString(R.string.key_filter_port), DEFAULT_FILTER_PORT]
-                                ?: DEFAULT_FILTER_PORT
-                if (socket == null) {
-                    socket = DatagramSocket(serverPort)
-                    socket!!.broadcast = false
-                }
-                socket!!.reuseAddress = true
-                socket!!.soTimeout = 60 * 1000
-                Timber.d("waiting to receive filter via udp on port $serverPort")
-                try {
-                    p = DatagramPacket(message, 1000)
-                    socket!!.receive(p)
-                    val msg = String(message).substring(0, p.length)
-                    Timber.d("received filter $msg ${msg.length}")
-                    publishResults(msg)
-                    // publishResults("<FilteredInfo><ItemLineID>15862</ItemLineID><StoreNumber>22</StoreNumber><StoreName>Bónus Hraunbæ</StoreName><RegisterNumber>3</RegisterNumber><TxnNumber>7</TxnNumber><ItemID>73721</ItemID><ItemName>COTTAGE CHEESE 250G</ItemName><ItemSeqNumber>7</ItemSeqNumber><Quantity>1,00</Quantity><TotalPrice>1,10</TotalPrice><FilterName>Item Number</FilterName><FilterQuestion>Is this correct Item ?</FilterQuestion><SnapShot></SnapShot></FilteredInfo>")
-                } catch (e: SocketTimeoutException) {
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-            }
-        } catch (e: Exception) {
-            closeSocket()
-            e.printStackTrace()
-        }
-        closeSocket()
-    }
-
-    private suspend fun sendFilterResultReceived(itemLineId: Int) {
-        repository.sendFilterResultMessage(itemLineId, FilterResults.FILTER_INFO_RECEIVED)
-    }
-
-    private fun closeSocket() {
-        socket?.close()
-    }
 
     override fun onCreate() {
         super.onCreate()
@@ -112,10 +53,10 @@ class FilterReceiverService : Service() {
                     getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val channel = NotificationChannel(
                     notificationChannelId,
-                    "Filter notifications channel",
+                    "Send filter ALife channel",
                     NotificationManager.IMPORTANCE_HIGH
             ).let {
-                it.description = "Filter notifications service channel"
+                it.description = "Filter ALife sender service channel"
                 it
             }
             notificationManager.createNotificationChannel(channel)
@@ -128,36 +69,10 @@ class FilterReceiverService : Service() {
                 ) else Notification.Builder(this)
 
         return builder
-                .setContentTitle("Listening for filter notifications")
+                .setContentTitle("Sending filter ALife messages")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setPriority(PRIORITY_HIGH) // for under android 26 compatibility
                 .build()
-    }
-
-    @Suppress("BlockingMethodInNonBlockingContext")
-    private suspend fun publishResults(output: String) {
-        val result = xmlMapper.readValue(output, FilteredInfoResponse::class.java)
-
-        Timber.d("parsed filter $result")
-        val currentFilterString = getString(
-                R.string.filter_values,
-                result.storeNumber.toString(),
-                result.registerNumber.toString(),
-                result.txn.toString(),
-                result.itemSeqNumber.toString()
-        )
-        if (prefs.customPrefs()[getString(R.string.key_last_filter), ""] ?: "" != currentFilterString) {
-            sendFilterResultReceived(result.itemLineId!!)
-            val intent = Intent(ACTION_RECEIVE_FILTER)
-            intent.putExtra(EXTRA_FILTER, result)
-            LocalBroadcastManager.getInstance(appContext).sendBroadcast(intent)
-            prefs.customPrefs()[getString(R.string.key_last_filter)] = currentFilterString
-        }
-    }
-
-    override fun onDestroy() {
-        closeSocket()
-        super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -187,13 +102,21 @@ class FilterReceiverService : Service() {
         Timber.d("Starting the foreground service task")
         isServiceStarted = true
 
-        //start sending alife filter process message
-        GlobalScope.launch {
-            ALifeSenderService.enqueueWork(appContext)
-        }
 
         GlobalScope.launch(Dispatchers.Default) {
-            receiveUdp()
+            withContext(Dispatchers.IO) {
+                prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)] = true
+                while (true) {
+                    delay(PosCtrlRepository.ALIFE_FILTER_DELAY_SECONDS * 1000L)
+                    val sendAlife: Boolean =
+                            prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)]
+                                    ?: true
+                    if (!sendAlife) {
+                        stopService()
+                    }
+                    repository.sendFilterProcessALife()
+                }
+            }
         }
     }
 
@@ -215,11 +138,8 @@ class FilterReceiverService : Service() {
     }
 
     companion object {
-        const val ACTION_RECEIVE_FILTER = "is.posctrl.posctrl_android.RECEIVE_FILTER"
-        const val EXTRA_FILTER = "FILTER"
-
         fun enqueueWork(context: Context) {
-            Intent(context, FilterReceiverService::class.java).also {
+            Intent(context, ALifeSenderService::class.java).also {
                 it.action = Actions.START.name
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     Timber.d("Starting the service in >=26 Mode")
@@ -235,4 +155,5 @@ class FilterReceiverService : Service() {
     enum class Actions {
         START, STOP
     }
+
 }

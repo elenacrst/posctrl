@@ -24,6 +24,7 @@ interface PosCtrlComponent {
     fun inject(appClosingService: AppClosingService)
     fun inject(loginResultReceiverService: LoginResultReceiverService)
     fun inject(chargingService: ChargingService)
+    fun inject(aLifeSenderService: ALifeSenderService)
 }
 
 @Scope
