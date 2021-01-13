@@ -15,22 +15,22 @@ import javax.inject.Inject
 
 
 class FilterViewModel @Inject constructor(private val repository: PosCtrlRepository) :
-        ViewModel() {
+    ViewModel() {
 
-    private var _bitmaps = MutableLiveData<BitmapsResult>()
-    val bitmaps: LiveData<BitmapsResult>
-        get() = _bitmaps
+    private var _snapshotDownloadResult = MutableLiveData<BitmapsResult>()
+    val snapshotDownloadResult: LiveData<BitmapsResult>
+        get() = _snapshotDownloadResult
     private var _bitmapsEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-            MutableLiveData(Event(ResultWrapper.None))
+        MutableLiveData(Event(ResultWrapper.None))
     val bitmapsEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _bitmapsEvent
 
     private var _filterAnswerEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-            MutableLiveData(Event(ResultWrapper.None))
+        MutableLiveData(Event(ResultWrapper.None))
     val filterAnswerEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _filterAnswerEvent//todo message
 
-    var downloadBitmapsJob: Job? = null
+    private var downloadBitmapsJob: Job? = null
 
     fun downloadBitmaps(path: String, fileNames: List<String>) {
         downloadBitmapsJob?.cancel()
@@ -40,7 +40,7 @@ class FilterViewModel @Inject constructor(private val repository: PosCtrlReposit
             val result: ResultWrapper<*> = repository.downloadBitmaps(path, fileNames)
 
             if (result is ResultWrapper.Success) {
-                _bitmaps.value = result.data as BitmapsResult
+                _snapshotDownloadResult.value = result.data as BitmapsResult
             }
 
             _bitmapsEvent.value = Event(result)

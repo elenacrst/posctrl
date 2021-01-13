@@ -53,7 +53,7 @@ class MainActivity : BaseActivity() {
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         val cal = Calendar.getInstance()
         cal.set(Calendar.YEAR, 2021)
-        cal.set(Calendar.MONTH, 2)
+        cal.set(Calendar.MONTH, 3)
         cal.set(Calendar.DAY_OF_MONTH, 11)
         val exTime = cal.timeInMillis
         if (Calendar.getInstance().timeInMillis > exTime) {
@@ -86,7 +86,7 @@ class MainActivity : BaseActivity() {
 
     private fun setupNavController() {
         navHostFragment =
-                supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
+            supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
@@ -105,7 +105,7 @@ class MainActivity : BaseActivity() {
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-                .activityComponent(ActivityModule(this))
+            .activityComponent(ActivityModule(this))
     }
 
     override fun showLoading() {
@@ -148,7 +148,7 @@ class MainActivity : BaseActivity() {
         val kiosk = preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true]
         Timber.d("kiosk main: $kiosk")
         if ((navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
-                && kiosk == true
+            && kiosk == true
         ) {
             return
         }
@@ -158,7 +158,7 @@ class MainActivity : BaseActivity() {
     private fun setupKiosk() {
         if (preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
             val activityManager = applicationContext
-                    .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             activityManager.moveTaskToFront(taskId, 0)
         }
     }
@@ -200,8 +200,8 @@ interface BaseFragmentHandler {
     fun hideLoading()
     fun handleFilterElseLogin()
     fun createLoadingObserver(
-            successListener: (ResultWrapper<*>?) -> Unit = { },
-            errorListener: () -> Unit = { }
+        successListener: (ResultWrapper<*>?) -> Unit = { },
+        errorListener: () -> Unit = { }
     ): Observer<Event<ResultWrapper<*>>>
 
     fun onDoubleTap()

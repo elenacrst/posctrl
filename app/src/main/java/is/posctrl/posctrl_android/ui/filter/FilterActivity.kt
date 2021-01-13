@@ -82,43 +82,43 @@ class FilterActivity : BaseActivity() {
 
     private fun setupTexts() {
         filterBinding.tvItemLabel.text =
-                prefs.defaultPrefs()["label_item", getString(R.string.label_item)]
-                        ?: getString(R.string.label_item)
+            prefs.defaultPrefs()["label_item", getString(R.string.label_item)]
+                ?: getString(R.string.label_item)
         filterBinding.tvQuantityLabel.text =
-                prefs.defaultPrefs()["label_quantity", getString(R.string.label_quantity)]
-                        ?: getString(
-                                R.string.label_quantity
-                        )
+            prefs.defaultPrefs()["label_quantity", getString(R.string.label_quantity)]
+                ?: getString(
+                    R.string.label_quantity
+                )
         filterBinding.tvPriceLabel.text =
-                prefs.defaultPrefs()["label_price", getString(R.string.label_price)]
-                        ?: getString(R.string.label_price)
+            prefs.defaultPrefs()["label_price", getString(R.string.label_price)]
+                ?: getString(R.string.label_price)
         filterBinding.btYes.text =
-                prefs.defaultPrefs()["action_accept", getString(R.string.action_accept)]
-                        ?: getString(R.string.action_accept)
+            prefs.defaultPrefs()["action_accept", getString(R.string.action_accept)]
+                ?: getString(R.string.action_accept)
         filterBinding.btNo.text =
-                prefs.defaultPrefs()["action_reject", getString(R.string.action_reject)]
-                        ?: getString(R.string.action_reject)
+            prefs.defaultPrefs()["action_reject", getString(R.string.action_reject)]
+                ?: getString(R.string.action_reject)
     }
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-                .activityComponent(ActivityModule(this))
+            .activityComponent(ActivityModule(this))
     }
 
     private fun createFilterReactTimer() = object : CountDownTimer(
-            TimeUnit.SECONDS.toMillis(
-                    (prefs.customPrefs()[getString(R.string.key_filter_respond_time), DEFAULT_FILTER_RESPOND_TIME_SECONDS]
-                            ?: DEFAULT_FILTER_RESPOND_TIME_SECONDS).toLong()
-            ),
-            1000
+        TimeUnit.SECONDS.toMillis(
+            (prefs.customPrefs()[getString(R.string.key_filter_respond_time), DEFAULT_FILTER_RESPOND_TIME_SECONDS]
+                ?: DEFAULT_FILTER_RESPOND_TIME_SECONDS).toLong()
+        ),
+        1000
     ) {
         override fun onFinish() {
             filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.TIMED_OUT)
             setResult(RESULT_OK)
             finish()
             toast(
-                    prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
-                            ?: getString(R.string.message_timed_out)
+                prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
+                    ?: getString(R.string.message_timed_out)
             )
         }
 
@@ -134,7 +134,7 @@ class FilterActivity : BaseActivity() {
         }
         Timber.d("path $path")
         filterViewModel.downloadBitmaps(path!!,
-                it.pictures!!.map { picture -> picture.imageAddress!! }
+            it.pictures!!.map { picture -> picture.imageAddress!! }
         )
     }
 
@@ -181,14 +181,14 @@ class FilterActivity : BaseActivity() {
         if (vibrator?.hasVibrator() == true) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator?.vibrate(
-                        VibrationEffect.createWaveform(
-                                longArrayOf(
-                                        200L,
-                                        100L,
-                                        200L,
-                                        100L
-                                ), -1
-                        )
+                    VibrationEffect.createWaveform(
+                        longArrayOf(
+                            200L,
+                            100L,
+                            200L,
+                            100L
+                        ), -1
+                    )
                 )
             } else {
                 @Suppress("DEPRECATION")
@@ -201,14 +201,14 @@ class FilterActivity : BaseActivity() {
         if (vibrator?.hasVibrator() == true) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator?.vibrate(
-                        VibrationEffect.createWaveform(
-                                longArrayOf(
-                                        200L,
-                                        100L,
-                                        200L,
-                                        100L
-                                ), -1
-                        )
+                    VibrationEffect.createWaveform(
+                        longArrayOf(
+                            200L,
+                            100L,
+                            200L,
+                            100L
+                        ), -1
+                    )
                 )
             } else {
                 @Suppress("DEPRECATION")
@@ -220,24 +220,23 @@ class FilterActivity : BaseActivity() {
     private fun getBitmapsLoadingObserver(): Observer<Event<ResultWrapper<*>>> {
         return createLoadingObserver(successListener = {
             hideLoading()
-            if (!filterViewModel.bitmaps.value?.bitmaps.isNullOrEmpty()) {
-                picturesAdapter.setData(filterViewModel.bitmaps.value?.bitmaps?.toTypedArray())
+            if (!filterViewModel.snapshotDownloadResult.value?.bitmaps.isNullOrEmpty()) {
+                picturesAdapter.setData(filterViewModel.snapshotDownloadResult.value?.bitmaps?.toTypedArray())
             }
-            if (filterViewModel.bitmaps.value?.errors != 0) {
+            if (filterViewModel.snapshotDownloadResult.value?.errors != 0) {
                 toast(
-                        prefs.defaultPrefs()["error_partial_download", getString(R.string.error_partial_download)]
-                                ?: getString(R.string.error_partial_download)
+                    prefs.defaultPrefs()["error_partial_download", getString(R.string.error_partial_download)]
+                        ?: getString(R.string.error_partial_download)
                 )
             }
             filterReactTimer?.start()
         }, errorListener = {
-            if (!filterViewModel.bitmaps.value?.bitmaps.isNullOrEmpty()) {
-                picturesAdapter.setData(filterViewModel.bitmaps.value?.bitmaps?.toTypedArray())
+            if (!filterViewModel.snapshotDownloadResult.value?.bitmaps.isNullOrEmpty()) {
+                picturesAdapter.setData(filterViewModel.snapshotDownloadResult.value?.bitmaps?.toTypedArray())
             }
             filterReactTimer?.start()
         })
     }
-
 
     override fun showLoading() {
         filterBinding.pbLoading.visibility = View.VISIBLE
@@ -264,7 +263,7 @@ class FilterActivity : BaseActivity() {
     private fun setupKiosk() {
         if (prefs.defaultPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
             val activityManager = applicationContext
-                    .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             activityManager.moveTaskToFront(taskId, 0)
 
         }
