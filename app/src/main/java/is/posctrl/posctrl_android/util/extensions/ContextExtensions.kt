@@ -9,6 +9,7 @@ import `is`.posctrl.posctrl_android.data.model.RememberedUser
 import `is`.posctrl.posctrl_android.databinding.DialogConfirmBinding
 import `is`.posctrl.posctrl_android.databinding.DialogEtBinding
 import `is`.posctrl.posctrl_android.databinding.DialogLoadingBinding
+import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
@@ -18,13 +19,18 @@ import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import me.drakeet.support.toast.ToastCompat
 import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 
-fun Context.toast(message: String) =
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+fun Activity.toast(message: String) {
+    if (isFinishing || isDestroyed) {
+        return
+    }
+    ToastCompat.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+}
 
 fun Context.showInputDialog(title: String, positiveCallback: (input: String) -> Unit) {
     val prefs = PreferencesSource(applicationContext)

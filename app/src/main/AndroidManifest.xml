@@ -30,6 +30,7 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:largeHeap="true"
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
@@ -37,9 +38,7 @@
         tools:ignore="AllowBackup">
         <activity
             android:name=".ui.MainActivity"
-            android:alwaysRetainTaskState="true"
             android:label="@string/app_name"
-            android:launchMode="singleInstance"
             android:screenOrientation="sensorLandscape"
             android:windowSoftInputMode="stateHidden">
             <intent-filter>
@@ -50,15 +49,14 @@
                  <category android:name="android.intent.category.DEFAULT" />-->
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.filter.FilterActivity"
-            android:launchMode="singleInstance" />
 
         <service
             android:name=".service.ReceiptReceiverService"
+            android:enabled="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <service
             android:name=".service.FilterReceiverService"
+            android:enabled="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <meta-data
@@ -68,18 +66,22 @@
 
         <service
             android:name=".service.AppClosingService"
+            android:enabled="true"
             android:stopWithTask="false" />
 
         <service
             android:name=".service.LoginResultReceiverService"
+            android:enabled="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <service
             android:name=".service.ChargingService"
+            android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
             android:name=".service.ALifeSenderService"
+            android:enabled="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <receiver
@@ -89,16 +91,6 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name=".receiver.WifiReceiver"
-            android:directBootAware="true"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.net.wifi.SCAN_RESULTS" />
             </intent-filter>
         </receiver>
 

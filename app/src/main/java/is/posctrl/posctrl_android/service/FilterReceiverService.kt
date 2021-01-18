@@ -1,6 +1,5 @@
 package `is`.posctrl.posctrl_android.service
 
-import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository.Companion.DEFAULT_FILTER_PORT
@@ -10,15 +9,18 @@ import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.FilterResults
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import android.annotation.SuppressLint
-import android.app.*
+import android.app.Notification
 import android.app.Notification.PRIORITY_HIGH
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
-import android.os.PowerManager
 import androidx.core.content.ContextCompat.startForegroundService
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -28,28 +30,27 @@ import java.io.IOException
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.SocketTimeoutException
-import javax.inject.Inject
 
 
 class FilterReceiverService : Service() {
 
     private var isServiceStarted = false
-    private var wakeLock: PowerManager.WakeLock? = null
-
-    @Inject
     lateinit var xmlMapper: XmlMapper
-
-    @Inject
     lateinit var prefs: PreferencesSource
-
-    @Inject
-    lateinit var appContext: Application
-
-    @Inject
+    lateinit var appContext: Context
     lateinit var repository: PosCtrlRepository
 
     private var socket: DatagramSocket? = null
     private var message: ByteArray = ByteArray(1024)
+
+    private fun initialize() {
+        xmlMapper = XmlMapper(
+                JacksonXmlModule().apply { setDefaultUseWrapper(false) }
+        )
+        prefs = PreferencesSource(applicationContext)
+        appContext = applicationContext
+        repository = PosCtrlRepository(prefs, appContext, xmlMapper)
+    }
 
     @Suppress("BlockingMethodInNonBlockingContext")
     private suspend fun receiveUdp() {
@@ -95,10 +96,15 @@ class FilterReceiverService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        (applicationContext as PosCtrlApplication).appComponent.inject(this)
-        Timber.d("The service has been created")
-        val notification = createNotification()
-        startForeground(1, notification)
+        try {
+            initialize()
+            Timber.d("The service has been created")
+            val notification = createNotification()
+            startForeground(1, notification)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        LAUNCHER.onServiceCreated(this)
     }
 
     @Suppress("DEPRECATION")
@@ -135,10 +141,9 @@ class FilterReceiverService : Service() {
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
-    private suspend fun publishResults(output: String) {
-        val result = xmlMapper.readValue(output, FilteredInfoResponse::class.java)
-
-        Timber.d("parsed filter $result")
+    private suspend fun publishResults(msg: String) {
+        val result = xmlMapper.readValue(msg, FilteredInfoResponse::class.java)
+        // Timber.d("parsed filter $result")
         val currentFilterString = getString(
                 R.string.filter_values,
                 result.storeNumber.toString(),
@@ -166,11 +171,8 @@ class FilterReceiverService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
-            val action = intent.action
-            Timber.d("using an intent with action $action")
-            when (action) {
+            when (intent.action) {
                 Actions.START.name -> startService()
-                Actions.STOP.name -> stopService()
                 else -> Timber.d("This should never happen. No action in the received intent")
             }
         } else {
@@ -183,51 +185,46 @@ class FilterReceiverService : Service() {
 
     @SuppressLint("WakelockTimeout")
     private fun startService() {
-        if (isServiceStarted) return
-        Timber.d("Starting the foreground service task")
-        isServiceStarted = true
-
-        //start sending alife filter process message
-        GlobalScope.launch {
-            ALifeSenderService.enqueueWork(appContext)
-        }
-
-        GlobalScope.launch(Dispatchers.Default) {
-            receiveUdp()
-        }
-    }
-
-    private fun stopService() {
-        Timber.d("Stopping the foreground service")
         try {
-            wakeLock?.let {
-                if (it.isHeld) {
-                    it.release()
-                }
+            if (isServiceStarted) return
+            isServiceStarted = true
+
+            //start sending alife filter process message
+            GlobalScope.launch {
+                ALifeSenderService.enqueueWork(appContext, ALifeSenderService.Actions.START.name)
             }
-            stopForeground(true)
-            stopSelf()
+
+            GlobalScope.launch(Dispatchers.Default) {
+                receiveUdp()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
-            Timber.d("Service stopped without being started: ${e.message}")
         }
-        isServiceStarted = false
+
     }
 
     companion object {
         const val ACTION_RECEIVE_FILTER = "is.posctrl.posctrl_android.RECEIVE_FILTER"
         const val EXTRA_FILTER = "FILTER"
 
-        fun enqueueWork(context: Context) {
-            Intent(context, FilterReceiverService::class.java).also {
-                it.action = Actions.START.name
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    Timber.d("Starting the service in >=26 Mode")
-                    startForegroundService(context, it)
-                    return
+        private val LAUNCHER = ForegroundServiceLauncher(FilterReceiverService::class.java)
+
+        @JvmStatic
+        fun stop(context: Context) = LAUNCHER.stopService(context)
+
+        fun enqueueWork(context: Context, action: String) {
+            if (action == Actions.START.name) {
+                Intent(context, FilterReceiverService::class.java).also {
+                    it.action = Actions.START.name
+                    LAUNCHER.onStartService()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(context, it)
+                        return
+                    }
+                    context.startService(it)
                 }
-                Timber.d("Starting the service in < 26 Mode")
-                context.startService(it)
+            } else if (action == Actions.STOP.name) {
+                stop(context)
             }
         }
     }

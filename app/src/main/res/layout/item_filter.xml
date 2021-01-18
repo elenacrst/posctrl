@@ -7,20 +7,20 @@
 
     </data>
 
-    <com.google.android.material.card.MaterialCardView
+<!--    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
-        android:layout_height="280dp"
+        android:layout_height="200dp"
         android:layout_marginTop="@dimen/margin_extra_small"
         app:cardCornerRadius="@dimen/corner_radius_medium"
-        app:layout_constraintTop_toBottomOf="@id/tv_price_label">
+        app:layout_constraintTop_toBottomOf="@id/tv_price_label">-->
 
         <ImageView
+            android:layout_marginTop="@dimen/margin_extra_small"
             android:id="@+id/iv_snapshot"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
+            android:layout_height="wrap_content"
+            android:scaleType="centerInside"
+            android:adjustViewBounds="true"
             tools:ignore="ContentDescription"
             tools:src="@color/black" />
-
-    </com.google.android.material.card.MaterialCardView>
 </layout>

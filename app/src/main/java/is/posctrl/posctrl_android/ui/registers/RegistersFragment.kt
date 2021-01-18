@@ -16,6 +16,7 @@ import `is`.posctrl.posctrl_android.ui.login.LoginFragment
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsFragment
 import `is`.posctrl.posctrl_android.util.extensions.getWifiLevel
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
+import `is`.posctrl.posctrl_android.util.glide.load
 import android.content.Context
 import android.content.Intent
 import android.os.BatteryManager
@@ -48,6 +49,17 @@ class RegistersFragment : BaseFragment() {
 
     private val globalViewModel: GlobalViewModel by activityViewModels()
     private var batteryCheckTimer: CountDownTimer = createBatteryCheckTimer()
+    private var wifiCheckTimer: CountDownTimer = createWifiCheckTimer()
+
+    private fun createWifiCheckTimer() =
+            object : CountDownTimer(TimeUnit.SECONDS.toMillis(LoginFragment.WIFI_CHECK_INTERVAL_SECONDS), 1000) {
+                override fun onFinish() {
+                    startWifiTimer()
+                }
+
+                override fun onTick(millisUntilFinished: Long) {
+                }
+            }
 
     private fun createBatteryCheckTimer() =
             object : CountDownTimer(TimeUnit.MINUTES.toMillis(LoginFragment.BATTERY_CHECK_INTERVAL_MINUTES), 1000) {
@@ -58,6 +70,11 @@ class RegistersFragment : BaseFragment() {
                 override fun onTick(millisUntilFinished: Long) {
                 }
             }
+
+    private fun startWifiTimer() {
+        globalViewModel.setWifiSignal(requireContext().getWifiLevel())
+        wifiCheckTimer.start()
+    }
 
     override fun onResume() {
         super.onResume()
@@ -97,6 +114,7 @@ class RegistersFragment : BaseFragment() {
     override fun onDetach() {
         super.onDetach()
         batteryCheckTimer.cancel()
+        wifiCheckTimer.cancel()
     }
 
     override fun onCreateView(
@@ -169,25 +187,26 @@ class RegistersFragment : BaseFragment() {
         globalViewModel.wifiSignal.observe(viewLifecycleOwner, createWifiObserver())
         globalViewModel.setWifiSignal(requireContext().getWifiLevel())
         startBatteryTimer()
+        startWifiTimer()
     }
 
     private fun createWifiObserver(): Observer<Int> {
         return Observer {
             when (it) {
                 0 -> {
-                    registersBinding.ivWifi.setImageResource(R.drawable.ic_wifi_1)
+                    registersBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_1)
                 }
                 1 -> {
-                    registersBinding.ivWifi.setImageResource(R.drawable.ic_wifi_2)
+                    registersBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_2)
                 }
                 2 -> {
-                    registersBinding.ivWifi.setImageResource(R.drawable.ic_wifi_3)
+                    registersBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_3)
                 }
                 3 -> {
-                    registersBinding.ivWifi.setImageResource(R.drawable.ic_wifi_4)
+                    registersBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_4)
                 }
                 4 -> {
-                    registersBinding.ivWifi.setImageResource(R.drawable.ic_wifi_5)
+                    registersBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_5)
                 }
             }
         }

@@ -55,16 +55,13 @@ class LoginResultReceiverService : Service() {
                 }
                 socket!!.reuseAddress = true
                 socket!!.soTimeout = 60 * 1000
-                Timber.d("waiting to receive login result via udp on port $serverPort")
                 try {
                     val message = ByteArray(9000)
                     p = DatagramPacket(message, message.size)
                     socket!!.receive(p)
                     if (p.length < 9000) {
-                        Timber.d("received login result ${String(message).substring(0, p.length)}")
                         publishResults(String(message).substring(0, p.length))
                     } else {
-                        Timber.d("received login result ${String(message)}")
                         publishResults(String(message))
                     }
 
@@ -87,13 +84,12 @@ class LoginResultReceiverService : Service() {
     override fun onCreate() {
         super.onCreate()
         (applicationContext as PosCtrlApplication).appComponent.inject(this)
-        Timber.d("The service has been created")
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
     private fun publishResults(output: String) {
         val result = xmlMapper.readValue(output, LoginResult::class.java)
-        Timber.d("parsed login result $result")
+//        Timber.d("parsed login result $result")
         val intent = Intent(ACTION_RECEIVE_LOGIN)
         intent.putExtra(EXTRA_LOGIN, result)
         LocalBroadcastManager.getInstance(appContext).sendBroadcast(intent)
@@ -110,16 +106,14 @@ class LoginResultReceiverService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
-            val action = intent.action
-            Timber.d("using an intent with action $action")
-            when (action) {
+            when (intent.action) {
                 Actions.START.name -> startService()
                 Actions.STOP.name -> stopService()
                 else -> Timber.d("This should never happen. No action in the received intent")
             }
         } else {
             Timber.d(
-                "with a null intent. It has been probably restarted by the system."
+                    "with a null intent. It has been probably restarted by the system."
             )
         }
         return START_REDELIVER_INTENT
@@ -158,7 +152,6 @@ class LoginResultReceiverService : Service() {
         fun enqueueWork(context: Context) {
             Intent(context, LoginResultReceiverService::class.java).also {
                 it.action = Actions.START.name
-                Timber.d("Starting the service in < 26 Mode")
                 context.startService(it)
             }
         }

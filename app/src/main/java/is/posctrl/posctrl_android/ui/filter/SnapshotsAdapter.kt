@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 //todo check if inject in constructor requires provides method too for the other classes
 class SnapshotsAdapter @Inject constructor(val context: Context) :
-    RecyclerView.Adapter<SnapshotViewHolder>() {
+        RecyclerView.Adapter<SnapshotViewHolder>() {
 
     private var data = ArrayList<String>()
 
@@ -42,8 +42,8 @@ class SnapshotsAdapter @Inject constructor(val context: Context) :
     }
 }
 
-class SnapshotViewHolder(private val binding: ItemFilterBinding, private val context: Context) :
-    RecyclerView.ViewHolder(binding.root) {
+class SnapshotViewHolder(val binding: ItemFilterBinding, private val context: Context) :
+        RecyclerView.ViewHolder(binding.root) {
 
     fun bind(item: String) {
         binding.ivSnapshot.load(context, File(context.getAppDirectory(), item))

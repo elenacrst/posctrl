@@ -21,7 +21,6 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -82,7 +81,6 @@ class ChargingService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        Timber.d("started charging service")
         (applicationContext as PosCtrlApplication).appComponent.inject(this)
         startForeground()
 
@@ -96,7 +94,6 @@ class ChargingService : Service() {
     }
 
     override fun onDestroy() {
-        Timber.d("destroyed charging service")
         unregisterReceiver(chargeDetector)
         super.onDestroy()
 
@@ -111,10 +108,8 @@ class ChargingService : Service() {
 class ChargingReceiver : BroadcastReceiver() {
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
-        Timber.d("charging - received broadcast")
         val preferencesSource = PreferencesSource(context.applicationContext)
         preferencesSource.customPrefs().clear()
-        Timber.d("charging - cleared prefs")
         stopFilterReceiverService(context)
         stopReceiptReceiverService(context)
         val appOptionsViewModel =
@@ -126,8 +121,7 @@ class ChargingReceiver : BroadcastReceiver() {
     }
 
     private fun stopFilterReceiverService(context: Context) {
-        val intent = Intent(context, FilterReceiverService::class.java)
-        context.stopService(intent)
+        FilterReceiverService.enqueueWork(context, FilterReceiverService.Actions.STOP.name)
     }
 
     private fun stopReceiptReceiverService(context: Context) {

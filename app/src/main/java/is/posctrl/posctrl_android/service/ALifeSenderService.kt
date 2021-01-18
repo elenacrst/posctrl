@@ -1,6 +1,5 @@
 package `is`.posctrl.posctrl_android.service
 
-import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
@@ -13,33 +12,36 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
-import android.os.PowerManager
 import androidx.core.content.ContextCompat.startForegroundService
+import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
+import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import kotlinx.coroutines.*
 import timber.log.Timber
-import javax.inject.Inject
 
 
 class ALifeSenderService : Service() {
 
     private var isServiceStarted = false
-    private var wakeLock: PowerManager.WakeLock? = null
-
-    @Inject
     lateinit var prefs: PreferencesSource
-
-    @Inject
-    lateinit var appContext: Application
-
-    @Inject
+    lateinit var appContext: Context
     lateinit var repository: PosCtrlRepository
+
+    private fun initialize() {
+        prefs = PreferencesSource(applicationContext)
+        appContext = applicationContext
+        val xmlMapper = XmlMapper(
+                JacksonXmlModule().apply { setDefaultUseWrapper(false) }
+        )
+        repository = PosCtrlRepository(prefs, appContext, xmlMapper)
+    }
 
     override fun onCreate() {
         super.onCreate()
-        (applicationContext as PosCtrlApplication).appComponent.inject(this)
+        initialize()
         Timber.d("The service has been created")
         val notification = createNotification()
         startForeground(1, notification)
+        LAUNCHER.onServiceCreated(this)
     }
 
     @Suppress("DEPRECATION")
@@ -81,11 +83,8 @@ class ALifeSenderService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
-            val action = intent.action
-            Timber.d("using an intent with action $action")
-            when (action) {
+            when (intent.action) {
                 Actions.START.name -> startService()
-                Actions.STOP.name -> stopService()
                 else -> Timber.d("This should never happen. No action in the received intent")
             }
         } else {
@@ -112,7 +111,7 @@ class ALifeSenderService : Service() {
                             prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)]
                                     ?: true
                     if (!sendAlife) {
-                        stopService()
+                        LAUNCHER.stopService(appContext)
                     }
                     repository.sendFilterProcessALife()
                 }
@@ -120,34 +119,25 @@ class ALifeSenderService : Service() {
         }
     }
 
-    private fun stopService() {
-        Timber.d("Stopping the foreground service")
-        try {
-            wakeLock?.let {
-                if (it.isHeld) {
-                    it.release()
-                }
-            }
-            stopForeground(true)
-            stopSelf()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Timber.d("Service stopped without being started: ${e.message}")
-        }
-        isServiceStarted = false
-    }
-
     companion object {
-        fun enqueueWork(context: Context) {
-            Intent(context, ALifeSenderService::class.java).also {
-                it.action = Actions.START.name
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    Timber.d("Starting the service in >=26 Mode")
-                    startForegroundService(context, it)
-                    return
+        private val LAUNCHER = ForegroundServiceLauncher(ALifeSenderService::class.java)
+
+        @JvmStatic
+        fun stop(context: Context) = LAUNCHER.stopService(context)
+
+        fun enqueueWork(context: Context, action: String) {
+            if (action == FilterReceiverService.Actions.START.name) {
+                Intent(context, ALifeSenderService::class.java).also {
+                    it.action = Actions.START.name
+                    LAUNCHER.onStartService()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(context, it)
+                        return
+                    }
+                    context.startService(it)
                 }
-                Timber.d("Starting the service in < 26 Mode")
-                context.startService(it)
+            } else if (action == Actions.STOP.name) {
+                stop(context)
             }
         }
     }

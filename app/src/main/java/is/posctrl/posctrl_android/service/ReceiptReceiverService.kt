@@ -12,7 +12,6 @@ import android.content.Intent
 import androidx.core.app.JobIntentService
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import timber.log.Timber
 import java.io.IOException
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -46,12 +45,11 @@ class ReceiptReceiverService : JobIntentService() {
                 }
                 socket!!.reuseAddress = true
                 socket!!.soTimeout = 60 * 1000
-                Timber.d("waiting to receive data via udp")
                 try {
                     val message = ByteArray(512)
                     p = DatagramPacket(message, message.size)
                     socket!!.receive(p)
-                    Timber.d("received ${String(message).substring(0, p.length)}")
+//                    Timber.d("received ${String(message).substring(0, p.length)}")
                     publishResults(String(message).substring(0, p.length))
 
                 } catch (e: SocketTimeoutException) {
@@ -73,16 +71,10 @@ class ReceiptReceiverService : JobIntentService() {
     override fun onCreate() {
         super.onCreate()
         (applicationContext as PosCtrlApplication).appComponent.inject(this)
-        Timber.d("created udp receiver service")
     }
 
     override fun onHandleWork(intent: Intent) {
         receiveUdp()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Timber.d("destroyed udp receiver service")
     }
 
     private fun publishResults(output: String) {

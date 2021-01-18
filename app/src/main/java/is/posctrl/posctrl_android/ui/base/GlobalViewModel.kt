@@ -7,17 +7,14 @@ import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
 import `is`.posctrl.posctrl_android.util.Event
-import android.app.Application
 import androidx.lifecycle.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
 class GlobalViewModel @Inject constructor(
-        private val repository: PosCtrlRepository,
-        private val appContext: Application
-) ://todo remove argument if not used
+        private val repository: PosCtrlRepository
+) :
         ViewModel() {
 
     private var _downloadApkEvent: MutableLiveData<Event<ResultWrapper<*>>> =
@@ -50,6 +47,10 @@ class GlobalViewModel @Inject constructor(
     val shouldReceiveLoginResult: LiveData<Boolean>
         get() = _shouldReceiveLoginResult
 
+    private var _logout: MutableLiveData<Boolean> = MutableLiveData(false)
+    val logout: LiveData<Boolean>
+        get() = _logout
+
     fun downloadApk() {
         viewModelScope.launch {
             _downloadApkEvent.value = Event(ResultWrapper.Loading)
@@ -63,7 +64,7 @@ class GlobalViewModel @Inject constructor(
                 }
             }
             _downloadApkEvent.value = Event(result)
-            Timber.d("Download apk duration $time")
+//            Timber.d("Download apk duration $time")
         }
     }
 
@@ -73,7 +74,7 @@ class GlobalViewModel @Inject constructor(
             val time = measureTimeMillis {
                 repository.saveSettingsFromFile()
             }
-            Timber.d("Save settings from file duration $time")
+            //  Timber.d("Save settings from file duration $time")
         }
     }
 
@@ -94,7 +95,10 @@ class GlobalViewModel @Inject constructor(
     }
 
     fun setWifiSignal(level: Int) {
-        _wifiSignal.value = level
+        if (level != wifiSignal.value) {
+            _wifiSignal.value = level
+        }
+
     }
 
     fun setReceivingFilter(b: Boolean) {
@@ -102,17 +106,13 @@ class GlobalViewModel @Inject constructor(
     }
 
     fun addFilter(item: FilteredInfoResponse) {
-        val existing = filterItemMessages.value?.firstOrNull {
+        filterItemMessages.value?.firstOrNull {
             it.storeNumber == item.storeNumber && it.registerNumber == item.registerNumber && it.txn == item.txn && it.itemSeqNumber == item.itemSeqNumber
-        }
-        if (existing == null) {
-            val list = mutableListOf<FilteredInfoResponse>()
-            filterItemMessages.value?.let {
-                list.addAll(filterItemMessages.value!!)
-            }
-            list.add(item)
-            _filterItemMessages.value = list
-        }
+        }?.apply { return }
+        _filterItemMessages.value = (filterItemMessages.value
+                ?: mutableListOf<FilteredInfoResponse>()) + item
+
+
     }
 
     fun removeFirstFilter() {

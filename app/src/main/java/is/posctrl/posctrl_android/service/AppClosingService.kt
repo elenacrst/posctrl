@@ -1,12 +1,13 @@
 package `is`.posctrl.posctrl_android.service
 
-import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.model.FilterAction
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
+import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -32,18 +33,18 @@ class AppClosingService : Service() {
             stopFilterReceiverService()
 
             stopSelf()
-//            preferencesSource.defaultPrefs()[getString(R.string.key_app_visible)] = false
         }
     }
 
     override fun onCreate() {
         super.onCreate()
-        (applicationContext as PosCtrlApplication).appComponent.inject(this)
-        Timber.d("App closing service has been created")
+        preferencesSource = PreferencesSource(applicationContext)
+        repository = PosCtrlRepository(preferencesSource, applicationContext, XmlMapper(
+                JacksonXmlModule().apply { setDefaultUseWrapper(false) }
+        ))
     }
 
     private fun stopFilterReceiverService() {
-        val intent = Intent(this, FilterReceiverService::class.java)
-        stopService(intent)
+        FilterReceiverService.enqueueWork(this, FilterReceiverService.Actions.STOP.name)
     }
 }

@@ -39,7 +39,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
-import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -65,6 +64,18 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     private var batteryCheckTimer: CountDownTimer = createBatteryCheckTimer()
     private var popup: PopupMenu? = null
 
+    private var wifiCheckTimer: CountDownTimer = createWifiCheckTimer()
+
+    private fun createWifiCheckTimer() =
+            object : CountDownTimer(TimeUnit.SECONDS.toMillis(WIFI_CHECK_INTERVAL_SECONDS), 1000) {
+                override fun onFinish() {
+                    startWifiTimer()
+                }
+
+                override fun onTick(millisUntilFinished: Long) {
+                }
+            }
+
     private fun createBatteryCheckTimer() =
             object : CountDownTimer(TimeUnit.MINUTES.toMillis(BATTERY_CHECK_INTERVAL_MINUTES), 1000) {
                 override fun onFinish() {
@@ -75,11 +86,16 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                 }
             }
 
+    private fun startWifiTimer() {
+        globalViewModel.setWifiSignal(requireContext().getWifiLevel())
+        wifiCheckTimer.start()
+    }
+
     private fun createLoginReceiver(): BroadcastReceiver {
         return object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 val bundle = intent.extras
-                Timber.d("received login")
+//                Timber.d("received login")
                 if (bundle != null) {
                     loginCountdownTimer?.cancel()
                     if (activity != null && isVisible) {
@@ -102,7 +118,6 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         batteryCheckTimer.start()
         val bm = requireContext().getSystemService(BATTERY_SERVICE) as BatteryManager
         val batLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-        Timber.d("battery level is $batLevel")
         when (batLevel) {
             in 20..39 -> {
                 loginBinding.tvBattery.setCompoundDrawablesWithIntrinsicBounds(
@@ -168,7 +183,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         hideLoading()
         result?.let {
             if (it.errorMessage.isNotEmpty()) {
-                requireContext().toast(it.errorMessage)
+                requireActivity().toast(it.errorMessage)
             } else {
                 if (it.serverPath != prefs.defaultPrefs()[getString(R.string.key_login_server), ""]) {
                     prefs.defaultPrefs()[getString(R.string.key_login_server)] = it.serverPath
@@ -201,7 +216,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                 prefs.defaultPrefs()[item.id] = item.string
             }
         } ?: kotlin.run {
-            requireContext().toast(
+            requireActivity().toast(
                     prefs.defaultPrefs()["error_unknown", requireActivity().getString(R.string.error_unknown)]
                             ?: requireActivity().getString(R.string.error_unknown)
             )
@@ -294,7 +309,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                 if (it == prefs.defaultPrefs()[requireActivity().getString(R.string.key_master_password), SECURITY_CODE] ?: SECURITY_CODE) {
                     findNavController().navigate(LoginFragmentDirections.toSettingsFragment())
                 } else {
-                    requireContext().toast(
+                    requireActivity().toast(
                             prefs.defaultPrefs()["error_wrong_code", getString(R.string.error_wrong_code)]
                                     ?: getString(R.string.error_wrong_code)
                     )
@@ -327,7 +342,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         loginCountdownTimer = object : CountDownTimer(LOGIN_MAX_WAIT_MILLIS, 1000) {
             override fun onFinish() {
                 hideLoading()
-                requireContext().toast(
+                requireActivity().toast(
                         prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
                                 ?: getString(R.string.message_timed_out)
                 )
@@ -357,6 +372,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         globalViewModel.wifiSignal.observe(viewLifecycleOwner, createWifiObserver())
         globalViewModel.setWifiSignal(requireContext().getWifiLevel())
         startBatteryTimer()
+        startWifiTimer()
 
         globalViewModel.shouldReceiveLoginResult.observe(viewLifecycleOwner, createLoginObserver())
     }
@@ -364,14 +380,14 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     private fun createLoginObserver(): Observer<Boolean> {
         return Observer {
             if (it) {
-                Timber.d("login result receiver started")
+//                Timber.d("login result receiver started")
                 startLoginResultReceiverService()
                 LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
                         loginBroadcastReceiver,
                         IntentFilter(LoginResultReceiverService.ACTION_RECEIVE_LOGIN)
                 )
             } else {
-                Timber.d("login result receiver stopped")
+//                Timber.d("login result receiver stopped")
                 LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(
                         loginBroadcastReceiver
                 )
@@ -383,19 +399,20 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         return Observer {
             when (it) {
                 0 -> {
-                    loginBinding.ivWifi.setImageResource(R.drawable.ic_wifi_1)
+                    loginBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_1)
                 }
                 1 -> {
-                    loginBinding.ivWifi.setImageResource(R.drawable.ic_wifi_2)
+                    loginBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_2)
+
                 }
                 2 -> {
-                    loginBinding.ivWifi.setImageResource(R.drawable.ic_wifi_3)
+                    loginBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_3)
                 }
                 3 -> {
-                    loginBinding.ivWifi.setImageResource(R.drawable.ic_wifi_4)
+                    loginBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_4)
                 }
                 4 -> {
-                    loginBinding.ivWifi.setImageResource(R.drawable.ic_wifi_5)
+                    loginBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_5)
                 }
             }
         }
@@ -494,7 +511,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     }
 
     private fun startFilterReceiverService() {
-        FilterReceiverService.enqueueWork(requireContext())
+        FilterReceiverService.enqueueWork(requireContext(), FilterReceiverService.Actions.START.name)
     }
 
     override fun onDetach() {
@@ -503,6 +520,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         loginCountdownTimer?.cancel()
         batteryCheckTimer.cancel()
         popup?.dismiss()
+        wifiCheckTimer.cancel()
     }
 
     private fun stopLoginService() {
@@ -550,6 +568,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         const val LOGIN_MAX_WAIT_MILLIS = 6000L
         const val MENU_FIRST_ITEM = Menu.FIRST
         const val BATTERY_CHECK_INTERVAL_MINUTES = 10L
+        const val WIFI_CHECK_INTERVAL_SECONDS = 30L
     }
 }
 

@@ -12,11 +12,9 @@ import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
-import `is`.posctrl.posctrl_android.receiver.WifiReceiver.Companion.ACTION_WIFI_CHANGE
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.service.ReceiptReceiverService
 import `is`.posctrl.posctrl_android.ui.BaseFragmentHandler
-import `is`.posctrl.posctrl_android.ui.filter.FilterActivity
 import `is`.posctrl.posctrl_android.util.Event
 import `is`.posctrl.posctrl_android.util.extensions.getAppDirectory
 import `is`.posctrl.posctrl_android.util.extensions.getWifiLevel
@@ -37,6 +35,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import kotlinx.coroutines.*
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -46,7 +45,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     private lateinit var activityComponent: ActivityComponent
     private var logoutReceiver = createLogoutReceiver()
     private var receiptReceiver = createReceiptReceiver()
-    private var wifiReceiver = createWifiReceiver()
 
     @Inject
     lateinit var preferences: PreferencesSource
@@ -59,8 +57,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
     val globalViewModel: GlobalViewModel by viewModels {
         GlobalViewModelFactory(
-                repository,
-                appContext
+                repository
         )
     }
     private var onApkDownloaded: () -> Unit = {}
@@ -69,7 +66,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
     private val requestPermissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
-                Timber.d("permissions: write ${results[Manifest.permission.WRITE_EXTERNAL_STORAGE]}, read ${results[Manifest.permission.READ_EXTERNAL_STORAGE]}")
                 if (results[Manifest.permission.WRITE_EXTERNAL_STORAGE] != true ||
                         results[Manifest.permission.READ_EXTERNAL_STORAGE] != true
                 ) {
@@ -83,20 +79,21 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
             }
 
-    private fun createWifiReceiver(): BroadcastReceiver {
-        return object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
+    private fun notifyWifiState() {
+        val level = getWifiLevel()
+        globalViewModel.setWifiSignal(level)
+        @Suppress("DEPRECATION")
+        val req = GlobalScope.launch {
+            withContext(Dispatchers.Default) {
+                delay(20 * 1000)//wifi update scan
+            }
+        }
+        GlobalScope.launch {
+            withContext(Dispatchers.Main) {
+                req.join()
                 notifyWifiState()
             }
         }
-    }
-
-    private fun notifyWifiState() {
-        val level = getWifiLevel()
-        Timber.d("wifi info: level = $level/4")
-        globalViewModel.setWifiSignal(level)
-        @Suppress("DEPRECATION")
-        wifiManager.startScan()
     }
 
     private fun createReceiptReceiver(): BroadcastReceiver {
@@ -204,13 +201,10 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
         wifiManager = getSystemService(WIFI_SERVICE) as WifiManager
         notifyWifiState()
 
-        if (globalViewModel.isReceivingFilter.value != true) {
-            LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                    filterReceiver,
-                    IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
-            )
-            globalViewModel.setReceivingFilter(true)
-        }
+        LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
+                filterReceiver,
+                IntentFilter(FilterReceiverService.ACTION_RECEIVE_FILTER)
+        )
     }
 
     private fun allowScreenUnlock() {
@@ -236,19 +230,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                 IntentFilter(ACTION_LOGOUT)
         )
         startReceivingReceipt()
-        startReceivingWifiUpdates()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        LocalBroadcastManager.getInstance(applicationContext).unregisterReceiver(wifiReceiver)
-    }
-
-    private fun startReceivingWifiUpdates() {
-        val intentFilter = IntentFilter()
-        intentFilter.addAction(ACTION_WIFI_CHANGE)
-        LocalBroadcastManager.getInstance(applicationContext)
-                .registerReceiver(wifiReceiver, intentFilter)
     }
 
     override fun startReceivingReceipt() {
@@ -265,7 +246,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     private fun createLogoutReceiver(): BroadcastReceiver {
         return object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                Timber.d("received logout broadcast")
+//                Timber.d("received logout broadcast")
                 handleLogout()
             }
         }
@@ -315,7 +296,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                     errorListener()
                 }
                 else -> {
-                    Timber.d("Nothing to do here")
                 }
             }
         }
@@ -328,9 +308,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
     override fun onDestroy() {
         super.onDestroy()
         hideLoading()
-    }
-
-    override fun handleFilterElseLogin() {
     }
 
     abstract fun handleLogout()
@@ -354,9 +331,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                     result?.let {
                         globalViewModel.addFilter(result)
                         if (!globalViewModel.filterItemMessages.value.isNullOrEmpty()) {
-                            if (this@BaseActivity !is FilterActivity) {
-                                handleFilterElseLogin()
-                            }
+                            handleFilterElseLogin()
                         }
                     }
 

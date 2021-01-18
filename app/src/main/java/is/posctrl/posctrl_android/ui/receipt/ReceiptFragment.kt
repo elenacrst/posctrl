@@ -17,6 +17,7 @@ import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsViewModel
 import `is`.posctrl.posctrl_android.util.extensions.getWifiLevel
 import `is`.posctrl.posctrl_android.util.extensions.setOnSwipeListener
 import `is`.posctrl.posctrl_android.util.extensions.showConfirmDialog
+import `is`.posctrl.posctrl_android.util.glide.load
 import android.content.Context
 import android.graphics.Typeface
 import android.os.BatteryManager
@@ -58,6 +59,17 @@ class ReceiptFragment : BaseFragment() {
     private var shouldClearReceiptScreen: Boolean = false
 
     private var batteryCheckTimer: CountDownTimer = createBatteryCheckTimer()
+    private var wifiCheckTimer: CountDownTimer = createWifiCheckTimer()
+
+    private fun createWifiCheckTimer() =
+            object : CountDownTimer(TimeUnit.SECONDS.toMillis(LoginFragment.WIFI_CHECK_INTERVAL_SECONDS), 1000) {
+                override fun onFinish() {
+                    startWifiTimer()
+                }
+
+                override fun onTick(millisUntilFinished: Long) {
+                }
+            }
 
     private fun createBatteryCheckTimer() =
             object : CountDownTimer(TimeUnit.MINUTES.toMillis(LoginFragment.BATTERY_CHECK_INTERVAL_MINUTES), 1000) {
@@ -68,6 +80,11 @@ class ReceiptFragment : BaseFragment() {
                 override fun onTick(millisUntilFinished: Long) {
                 }
             }
+
+    private fun startWifiTimer() {
+        globalViewModel.setWifiSignal(requireContext().getWifiLevel())
+        wifiCheckTimer.start()
+    }
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -127,27 +144,27 @@ class ReceiptFragment : BaseFragment() {
         shouldClearReceiptScreen = true
 
         globalViewModel.wifiSignal.observe(viewLifecycleOwner, createWifiObserver())
-        globalViewModel.setWifiSignal(requireContext().getWifiLevel())
         startBatteryTimer()
+        startWifiTimer()
     }
 
     private fun createWifiObserver(): Observer<Int> {
         return Observer {
             when (it) {
                 0 -> {
-                    receiptBinding.ivWifi.setImageResource(R.drawable.ic_wifi_1)
+                    receiptBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_1)
                 }
                 1 -> {
-                    receiptBinding.ivWifi.setImageResource(R.drawable.ic_wifi_2)
+                    receiptBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_2)
                 }
                 2 -> {
-                    receiptBinding.ivWifi.setImageResource(R.drawable.ic_wifi_3)
+                    receiptBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_3)
                 }
                 3 -> {
-                    receiptBinding.ivWifi.setImageResource(R.drawable.ic_wifi_4)
+                    receiptBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_4)
                 }
                 4 -> {
-                    receiptBinding.ivWifi.setImageResource(R.drawable.ic_wifi_5)
+                    receiptBinding.ivWifi.load(requireContext(), R.drawable.ic_wifi_5)
                 }
             }
         }
@@ -320,6 +337,7 @@ class ReceiptFragment : BaseFragment() {
     override fun onDetach() {
         super.onDetach()
         batteryCheckTimer.cancel()
+        wifiCheckTimer.cancel()
     }
 }
 

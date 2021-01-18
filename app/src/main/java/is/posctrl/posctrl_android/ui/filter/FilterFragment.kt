@@ -8,26 +8,26 @@ import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.FilterResults
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.databinding.ActivityFilterBinding
-import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
-import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.ui.base.BaseActivity
-import `is`.posctrl.posctrl_android.ui.MainActivity
+import `is`.posctrl.posctrl_android.ui.base.BaseFragment
 import `is`.posctrl.posctrl_android.util.Event
-import `is`.posctrl.posctrl_android.util.extensions.toast
-import android.app.ActivityManager
+import `is`.posctrl.posctrl_android.util.extensions.*
 import android.content.Context
 import android.media.MediaPlayer
 import android.os.*
+import android.view.*
 import android.view.View
+import androidx.activity.OnBackPressedCallback
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
-class FilterActivity : BaseActivity() {
+class FilterFragment : BaseFragment() {
 
     private var vibrationPauseTimer: CountDownTimer? = null
     private var secondVibrationPauseTimer: CountDownTimer? = null
@@ -36,7 +36,6 @@ class FilterActivity : BaseActivity() {
     private var vibrator: Vibrator? = null
     private var mediaPlayer: MediaPlayer? = null
     private var filter: FilteredInfoResponse? = null
-    private lateinit var activityComponent: ActivityComponent
 
     @Inject
     lateinit var prefs: PreferencesSource
@@ -47,18 +46,45 @@ class FilterActivity : BaseActivity() {
     @Inject
     lateinit var picturesAdapter: SnapshotsAdapter
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        filterBinding = DataBindingUtil.setContentView(this, R.layout.activity_filter)
+    override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+    ): View {
+        filterBinding = DataBindingUtil
+                .inflate(inflater, R.layout.activity_filter, container, false)
+        val args = FilterFragmentArgs.fromBundle(
+                requireArguments()
+        )
+        filter = args.filter
+        return filterBinding.root
+    }
 
-        initializeActivityComponent()
-        activityComponent.inject(this)
+    override fun onAttach(context: Context) {
+        (context.applicationContext as PosCtrlApplication).appComponent.activityComponent(
+                ActivityModule(requireActivity())
+        ).inject(this)
+        super.onAttach(context)
+        val callback: OnBackPressedCallback = object : OnBackPressedCallback(
+                true // default to enabled
+        ) {
+            override fun handleOnBackPressed() {
+                filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.ACCEPTED)
+                findNavController().navigateUp()
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(
+                this,  // LifecycleOwner
+                callback
+        )
+    }
 
-        filter = intent.getParcelableExtra(FilterReceiverService.EXTRA_FILTER)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         filter?.let {
             downloadFilterSnapshots(it)
         }
-        filterViewModel.bitmapsEvent.observe(this, getBitmapsLoadingObserver())
+        filterViewModel.bitmapsEvent.observe(viewLifecycleOwner, getBitmapsLoadingObserver())
         filterBinding.rvSnapshots.adapter = picturesAdapter
         filterBinding.filter = filter
 
@@ -67,13 +93,11 @@ class FilterActivity : BaseActivity() {
 
         filterBinding.btYes.setOnClickListener {
             filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.ACCEPTED)
-            setResult(RESULT_OK)
-            finish()
+            findNavController().navigateUp()
         }
         filterBinding.btNo.setOnClickListener {
             filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.REJECTED)
-            setResult(RESULT_OK)
-            finish()
+            findNavController().navigateUp()
         }
         filterReactTimer = createFilterReactTimer()
 
@@ -82,43 +106,37 @@ class FilterActivity : BaseActivity() {
 
     private fun setupTexts() {
         filterBinding.tvItemLabel.text =
-            prefs.defaultPrefs()["label_item", getString(R.string.label_item)]
-                ?: getString(R.string.label_item)
+                prefs.defaultPrefs()["label_item", getString(R.string.label_item)]
+                        ?: getString(R.string.label_item)
         filterBinding.tvQuantityLabel.text =
-            prefs.defaultPrefs()["label_quantity", getString(R.string.label_quantity)]
-                ?: getString(
-                    R.string.label_quantity
-                )
+                prefs.defaultPrefs()["label_quantity", getString(R.string.label_quantity)]
+                        ?: getString(
+                                R.string.label_quantity
+                        )
         filterBinding.tvPriceLabel.text =
-            prefs.defaultPrefs()["label_price", getString(R.string.label_price)]
-                ?: getString(R.string.label_price)
+                prefs.defaultPrefs()["label_price", getString(R.string.label_price)]
+                        ?: getString(R.string.label_price)
         filterBinding.btYes.text =
-            prefs.defaultPrefs()["action_accept", getString(R.string.action_accept)]
-                ?: getString(R.string.action_accept)
+                prefs.defaultPrefs()["action_accept", getString(R.string.action_accept)]
+                        ?: getString(R.string.action_accept)
         filterBinding.btNo.text =
-            prefs.defaultPrefs()["action_reject", getString(R.string.action_reject)]
-                ?: getString(R.string.action_reject)
-    }
-
-    private fun initializeActivityComponent() {
-        activityComponent = (application as PosCtrlApplication).appComponent
-            .activityComponent(ActivityModule(this))
+                prefs.defaultPrefs()["action_reject", getString(R.string.action_reject)]
+                        ?: getString(R.string.action_reject)
     }
 
     private fun createFilterReactTimer() = object : CountDownTimer(
-        TimeUnit.SECONDS.toMillis(
-            (prefs.customPrefs()[getString(R.string.key_filter_respond_time), DEFAULT_FILTER_RESPOND_TIME_SECONDS]
-                ?: DEFAULT_FILTER_RESPOND_TIME_SECONDS).toLong()
-        ),
-        1000
+            TimeUnit.SECONDS.toMillis(
+                    (prefs.customPrefs()[getString(R.string.key_filter_respond_time), DEFAULT_FILTER_RESPOND_TIME_SECONDS]
+                            ?: DEFAULT_FILTER_RESPOND_TIME_SECONDS).toLong()
+            ),
+            1000
     ) {
         override fun onFinish() {
             filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.TIMED_OUT)
-            setResult(RESULT_OK)
-            finish()
-            toast(
-                prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
-                    ?: getString(R.string.message_timed_out)
+            findNavController().navigateUp()
+            requireActivity().toast(
+                    prefs.defaultPrefs()["message_timed_out", getString(R.string.message_timed_out)]
+                            ?: getString(R.string.message_timed_out)
             )
         }
 
@@ -134,12 +152,13 @@ class FilterActivity : BaseActivity() {
         }
         Timber.d("path $path")
         filterViewModel.downloadBitmaps(path!!,
-            it.pictures!!.map { picture -> picture.imageAddress!! }
+                it.pictures!!.map { picture -> picture.imageAddress!! }
         )
+
     }
 
     private fun initializeVibration() {
-        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        vibrator = requireContext().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         vibrationPauseTimer = object : CountDownTimer(TimeUnit.SECONDS.toMillis(5), 1000) {
             override fun onFinish() {
                 vibrator?.cancel()
@@ -171,7 +190,7 @@ class FilterActivity : BaseActivity() {
     }
 
     private fun initializeMediaPlayer() {
-        mediaPlayer = MediaPlayer.create(this, R.raw.dingaling)
+        mediaPlayer = MediaPlayer.create(requireContext(), R.raw.dingaling)
         if (prefs.customPrefs()[getString(R.string.key_notification_sound), true] == true) {
             mediaPlayer?.start()
         }
@@ -181,14 +200,14 @@ class FilterActivity : BaseActivity() {
         if (vibrator?.hasVibrator() == true) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator?.vibrate(
-                    VibrationEffect.createWaveform(
-                        longArrayOf(
-                            200L,
-                            100L,
-                            200L,
-                            100L
-                        ), -1
-                    )
+                        VibrationEffect.createWaveform(
+                                longArrayOf(
+                                        200L,
+                                        100L,
+                                        200L,
+                                        100L
+                                ), -1
+                        )
                 )
             } else {
                 @Suppress("DEPRECATION")
@@ -201,14 +220,14 @@ class FilterActivity : BaseActivity() {
         if (vibrator?.hasVibrator() == true) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator?.vibrate(
-                    VibrationEffect.createWaveform(
-                        longArrayOf(
-                            200L,
-                            100L,
-                            200L,
-                            100L
-                        ), -1
-                    )
+                        VibrationEffect.createWaveform(
+                                longArrayOf(
+                                        200L,
+                                        100L,
+                                        200L,
+                                        100L
+                                ), -1
+                        )
                 )
             } else {
                 @Suppress("DEPRECATION")
@@ -218,15 +237,15 @@ class FilterActivity : BaseActivity() {
     }
 
     private fun getBitmapsLoadingObserver(): Observer<Event<ResultWrapper<*>>> {
-        return createLoadingObserver(successListener = {
+        return (requireActivity() as BaseActivity).createLoadingObserver(successListener = {
             hideLoading()
             if (!filterViewModel.snapshotDownloadResult.value?.bitmaps.isNullOrEmpty()) {
                 picturesAdapter.setData(filterViewModel.snapshotDownloadResult.value?.bitmaps?.toTypedArray())
             }
             if (filterViewModel.snapshotDownloadResult.value?.errors != 0) {
-                toast(
-                    prefs.defaultPrefs()["error_partial_download", getString(R.string.error_partial_download)]
-                        ?: getString(R.string.error_partial_download)
+                requireActivity().toast(
+                        prefs.defaultPrefs()["error_partial_download", getString(R.string.error_partial_download)]
+                                ?: getString(R.string.error_partial_download)
                 )
             }
             filterReactTimer?.start()
@@ -238,52 +257,22 @@ class FilterActivity : BaseActivity() {
         })
     }
 
-    override fun showLoading() {
-        filterBinding.pbLoading.visibility = View.VISIBLE
-    }
-
-    override fun hideLoading() {
-        filterBinding.pbLoading.visibility = View.GONE
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        super.onDestroyView()
         vibrator?.cancel()
         mediaPlayer?.release()
         vibrationPauseTimer?.cancel()
         filterReactTimer?.cancel()
         secondVibrationPauseTimer?.cancel()
-    }
-
-    override fun handleLogout() {
-        setResult(MainActivity.RESULT_LOGOUT)
-        finish()
-    }
-
-    private fun setupKiosk() {
-        if (prefs.defaultPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
-            val activityManager = applicationContext
-                .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            activityManager.moveTaskToFront(taskId, 0)
-
-        }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        setupKiosk()
-    }
-
-    override fun onBackPressed() {
-        filterViewModel.sendFilterMessage(filter?.itemLineId ?: -1, FilterResults.ACCEPTED)
-        setResult(RESULT_OK)
-        finish()
-    }
-
-    override fun handleFilterElseLogin() {
+        vibrator = null
+        mediaPlayer = null
+        vibrationPauseTimer = null
+        filterReactTimer = null
+        secondVibrationPauseTimer = null
     }
 
     companion object {
         const val DEFAULT_FILTER_RESPOND_TIME_SECONDS = 5
     }
 }
+

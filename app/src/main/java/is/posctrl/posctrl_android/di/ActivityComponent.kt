@@ -2,7 +2,7 @@ package `is`.posctrl.posctrl_android.di
 
 import `is`.posctrl.posctrl_android.ui.base.BaseActivity
 import `is`.posctrl.posctrl_android.ui.MainActivity
-import `is`.posctrl.posctrl_android.ui.filter.FilterActivity
+import `is`.posctrl.posctrl_android.ui.filter.FilterFragment
 import `is`.posctrl.posctrl_android.ui.login.LoginFragment
 import `is`.posctrl.posctrl_android.ui.receipt.ReceiptFragment
 import `is`.posctrl.posctrl_android.ui.registers.RegistersFragment
@@ -18,9 +18,9 @@ annotation class ActivityScope
 
 @ActivityScope
 @Subcomponent(
-    modules = [
-        ActivityModule::class
-    ],
+        modules = [
+            ActivityModule::class
+        ],
 )
 interface ActivityComponent {
     fun inject(fragment: LoginFragment)
@@ -28,8 +28,8 @@ interface ActivityComponent {
     fun inject(appOptionsFragment: AppOptionsFragment)
     fun inject(receiptFragment: ReceiptFragment)
     fun inject(registerSelectionFragment: RegisterSelectionFragment)
-    fun inject(filterActivity: FilterActivity)
     fun inject(baseActivity: BaseActivity)
     fun inject(mainActivity: MainActivity)
     fun inject(settingsFragment: SettingsFragment)
+    fun inject(filterFragment: FilterFragment)
 }

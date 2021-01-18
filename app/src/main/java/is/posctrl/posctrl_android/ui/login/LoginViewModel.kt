@@ -14,18 +14,18 @@ import javax.inject.Inject
 import kotlin.system.measureTimeMillis
 
 class LoginViewModel @Inject constructor(private val repository: PosCtrlRepository) :
-    ViewModel() {
+        ViewModel() {
     @Inject
     lateinit var appContext: Application
 
     private var _sendFilterProcessEvent: MutableLiveData<Event<ResultWrapper<*>>> =
-        MutableLiveData(Event(ResultWrapper.None))
+            MutableLiveData(Event(ResultWrapper.None))
     val sendFilterProcessEvent: LiveData<Event<ResultWrapper<*>>>
         get() = _sendFilterProcessEvent
 
     fun login(
-        user: String = "",
-        password: String = ""
+            user: String = "",
+            password: String = ""
     ) {
         viewModelScope.launch {
             val time = measureTimeMillis {
@@ -36,7 +36,7 @@ class LoginViewModel @Inject constructor(private val repository: PosCtrlReposito
                     ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
                 }
             }
-            Timber.d("Send login duration $time")
+//            Timber.d("Send login duration $time")
         }
     }
 

@@ -11,9 +11,7 @@ import `is`.posctrl.posctrl_android.databinding.ActivityMainBinding
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.ChargingService
-import `is`.posctrl.posctrl_android.service.FilterReceiverService
 import `is`.posctrl.posctrl_android.ui.base.BaseActivity
-import `is`.posctrl.posctrl_android.ui.filter.FilterActivity
 import `is`.posctrl.posctrl_android.ui.login.LoginFragment
 import `is`.posctrl.posctrl_android.ui.registers.RegistersFragment
 import `is`.posctrl.posctrl_android.util.Event
@@ -29,7 +27,6 @@ import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import timber.log.Timber
-import java.util.*
 import javax.inject.Inject
 
 
@@ -50,15 +47,11 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Timber.d("created main")
+        /*val lp = window.attributes
+        lp.screenBrightness = 0.1f
+        window.attributes = lp*/
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        val cal = Calendar.getInstance()
-        cal.set(Calendar.YEAR, 2021)
-        cal.set(Calendar.MONTH, 3)
-        cal.set(Calendar.DAY_OF_MONTH, 11)
-        val exTime = cal.timeInMillis
-        if (Calendar.getInstance().timeInMillis > exTime) {
-            mainBinding.emptyView.visibility = View.VISIBLE
-        }
         mainBinding.lifecycleOwner = this
 
         setupNavController()
@@ -77,6 +70,7 @@ class MainActivity : BaseActivity() {
     override fun onStart() {
         super.onStart()
         isActivityVisible = true
+
     }
 
     override fun onStop() {
@@ -86,18 +80,26 @@ class MainActivity : BaseActivity() {
 
     private fun setupNavController() {
         navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
+                supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.registersFragment -> {
+                    startsOtherIntent = false
+                    Timber.d("registers nav")
                     val first = getFirstFilter()
                     if (first != null) {
                         navigateToFilter(first)
                     }
                 }
+                R.id.filterFragment -> {
+
+                }
                 R.id.loginFragment -> {
                     globalViewModel.setShouldReceiveLoginResult(true)
+                }
+                else -> {
+                    startsOtherIntent = false
                 }
             }
         }
@@ -105,7 +107,7 @@ class MainActivity : BaseActivity() {
 
     private fun initializeActivityComponent() {
         activityComponent = (application as PosCtrlApplication).appComponent
-            .activityComponent(ActivityModule(this))
+                .activityComponent(ActivityModule(this))
     }
 
     override fun showLoading() {
@@ -117,38 +119,29 @@ class MainActivity : BaseActivity() {
     }
 
     private fun navigateToFilter(filter: FilteredInfoResponse) {
+        Timber.d("navigate to filter")
         startsOtherIntent = true
-        val intent = Intent(this, FilterActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        intent.putExtra(FilterReceiverService.EXTRA_FILTER, filter)
-        startActivityForResult(intent, RC_FILTER)//todo use activity result api
+        navController.navigate(NavigationMainContainerDirections.toFilterFragment(filter))
     }
 
     override fun handleFilterElseLogin() {
-        if (startsOtherIntent || navController.currentDestination?.id == R.id.loginFragment) {
-            return
-        }
-        val filter = getFirstFilter()
-        filter?.let {
-            navigateToFilter(it)
-        } ?: run {
+        if (startsOtherIntent || navController.currentDestination?.id == R.id.loginFragment || navController.currentDestination?.id == R.id.filterFragment) {
             if (navController.currentDestination?.id == R.id.loginFragment) {
                 globalViewModel.setShouldReceiveLoginResult(true)
             }
+            return
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        startsOtherIntent = false
-        handleFilterElseLogin()
+        Timber.d("handle filter2 ")
+        val filter = getFirstFilter()
+        filter?.let {
+            navigateToFilter(it)
+        }
     }
 
     override fun onBackPressed() {
         val kiosk = preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true]
-        Timber.d("kiosk main: $kiosk")
         if ((navHostFragment.childFragmentManager.fragments[0] is LoginFragment || navHostFragment.childFragmentManager.fragments[0] is RegistersFragment)
-            && kiosk == true
+                && kiosk == true
         ) {
             return
         }
@@ -158,7 +151,7 @@ class MainActivity : BaseActivity() {
     private fun setupKiosk() {
         if (preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode), true] == true) {
             val activityManager = applicationContext
-                .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                    .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             activityManager.moveTaskToFront(taskId, 0)
         }
     }
@@ -179,20 +172,6 @@ class MainActivity : BaseActivity() {
 
         globalViewModel.clearFilterMessages()
     }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        super.onActivityResult(requestCode, resultCode, intent)
-        if (requestCode == RC_FILTER) {
-            if (resultCode == RESULT_LOGOUT) {
-                handleLogout()
-            }
-        }
-    }
-
-    companion object {
-        const val RC_FILTER = 1
-        const val RESULT_LOGOUT = 10
-    }
 }
 
 interface BaseFragmentHandler {
@@ -200,8 +179,8 @@ interface BaseFragmentHandler {
     fun hideLoading()
     fun handleFilterElseLogin()
     fun createLoadingObserver(
-        successListener: (ResultWrapper<*>?) -> Unit = { },
-        errorListener: () -> Unit = { }
+            successListener: (ResultWrapper<*>?) -> Unit = { },
+            errorListener: () -> Unit = { }
     ): Observer<Event<ResultWrapper<*>>>
 
     fun onDoubleTap()
