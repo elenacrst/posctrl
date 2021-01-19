@@ -112,8 +112,10 @@ class ALifeSenderService : Service() {
                                     ?: true
                     if (!sendAlife) {
                         LAUNCHER.stopService(appContext)
+                        break
+                    } else {
+                        repository.sendFilterProcessALife()
                     }
-                    repository.sendFilterProcessALife()
                 }
             }
         }

@@ -331,6 +331,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
                     result?.let {
                         globalViewModel.addFilter(result)
                         if (!globalViewModel.filterItemMessages.value.isNullOrEmpty()) {
+                            Timber.d("handle filter 1.4")
                             handleFilterElseLogin()
                         }
                     }

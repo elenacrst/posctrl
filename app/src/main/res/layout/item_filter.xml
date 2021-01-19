@@ -12,12 +12,12 @@
 
         <ImageView
             android:id="@+id/iv_snapshot"
-            android:layout_width="400dp"
-            android:layout_height="200dp"
+            android:layout_width="match_parent"
+            android:layout_height="280dp"
             android:layout_gravity="center"
             android:layout_marginTop="@dimen/margin_extra_small"
             android:adjustViewBounds="true"
-            android:scaleType="centerInside"
+            android:scaleType="centerCrop"
             tools:ignore="ContentDescription"
             tools:src="@color/black" />
     </FrameLayout>

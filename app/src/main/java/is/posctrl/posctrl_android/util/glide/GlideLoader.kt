@@ -5,6 +5,7 @@ import android.content.Context
 import android.widget.ImageView
 import androidx.annotation.DrawableRes
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.target.Target.SIZE_ORIGINAL
 import java.io.File
 
 
@@ -14,7 +15,7 @@ fun ImageView.load(context: Context, file: File) {
         GlideApp.with(applicationContext)
                 .load(File(file.path))
                 /*for tall images not to be distorted use these 2 lines*/
-                //  .override(SIZE_ORIGINAL, SIZE_ORIGINAL)
+                .override(SIZE_ORIGINAL, SIZE_ORIGINAL)
                 .dontTransform()
                 .placeholder(android.R.drawable.gallery_thumb)
                 .error(android.R.drawable.gallery_thumb)
