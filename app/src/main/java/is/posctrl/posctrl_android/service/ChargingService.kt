@@ -6,6 +6,7 @@ import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.clear
 import `is`.posctrl.posctrl_android.data.local.get
+import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.ui.base.BaseActivity
 import `is`.posctrl.posctrl_android.ui.MainActivity
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsViewModel
@@ -120,6 +121,7 @@ class ChargingReceiver : BroadcastReceiver() {
         val appOptionsViewModel =
                 AppOptionsViewModel(PosCtrlRepository(preferencesSource, context, XmlMapper()))
         appOptionsViewModel.closeFilterNotifications()
+        preferencesSource.defaultPrefs()[context.getString(R.string.key_restarted)] = false
         //todo might be useless to track app visibility
         val i = Intent(BaseActivity.ACTION_LOGOUT)
         LocalBroadcastManager.getInstance(context).sendBroadcast(i)

@@ -8,6 +8,8 @@ import `is`.posctrl.posctrl_android.data.local.clear
 import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.LoginResult
+import `is`.posctrl.posctrl_android.data.model.RegisterResult
+import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.FragmentLoginBinding
 import `is`.posctrl.posctrl_android.di.ActivityModule
 import `is`.posctrl.posctrl_android.service.FilterReceiverService
@@ -17,6 +19,7 @@ import `is`.posctrl.posctrl_android.ui.base.GlobalViewModel
 import `is`.posctrl.posctrl_android.ui.settings.appoptions.AppOptionsFragment
 import `is`.posctrl.posctrl_android.util.extensions.*
 import `is`.posctrl.posctrl_android.util.glide.load
+import `is`.posctrl.posctrl_android.util.scheduleRestart
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Context.BATTERY_SERVICE
@@ -177,9 +180,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                 }
                 stopLoginService()
                 globalViewModel.setShouldReceiveLoginResult(false)
-                if (it.isReceivingNotifications()) {
-                    startFilterReceiverService()
-                }
+
                 val versionNumber = it.appVersion.split(".")[0].toInt()
                 val subVersionNumber = it.appVersion.split(".")[1].toInt()
                 val currentVersionNumber = requireContext().getAppVersion().split(".")[0].toInt()
@@ -194,8 +195,12 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                     storeLoginResultData(it, true)
                     loginViewModel.sendFilterProcessOpenMessage()
                     findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it.store))
+                    if (it.isReceivingNotifications()) {
+                        startFilterReceiverService()
+                    }
                 }
                 addToRememberedUsers()
+                requireContext().scheduleRestart()
             }
             for (item in it.texts) {
                 prefs.defaultPrefs()[item.id] = item.string
@@ -232,6 +237,8 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
             prefs.customPrefs()[requireActivity().getString(R.string.key_logged_username)] =
                     it.username
         }
+
+        prefs.defaultPrefs()[getString(R.string.key_restart_hour)] = it.restartHour
 
         prefs.customPrefs()[requireActivity().getString(R.string.key_server_path)] =
                 it.serverPath
@@ -414,6 +421,22 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     }
 
     private fun checkAlreadyLoggedIn() {
+        val restarted = prefs.defaultPrefs()[requireContext().getString(R.string.key_restarted), false]
+                ?: false
+        if (restarted) {
+            prefs.defaultPrefs()[requireContext().getString(R.string.key_restarted)] = false
+            val storeName = prefs.customPrefs()[requireActivity().getString(R.string.key_store_name), ""]
+                    ?: ""
+            val storeNumber = prefs.customPrefs()[requireActivity().getString(R.string.key_store_number), ""]
+                    ?: ""
+            val registers = (prefs.customPrefs()[requireActivity().getString(R.string.key_registers), ""]
+                    ?: "").split(",").map { RegisterResult(it) }
+            val col = prefs.customPrefs()[requireActivity().getString(R.string.key_registers_columns), -1]
+                    ?: -1
+            startFilterReceiverService()
+            findNavController().navigate(LoginFragmentDirections.toRegistersFragment(StoreResult(storeNumber, storeName, registers, col)))
+            return
+        }
         if (!prefs.customPrefs()[getString(R.string.key_logged_user), ""].isNullOrEmpty() && !prefs.customPrefs()[getString(
                         R.string.key_registers
                 ), ""].isNullOrEmpty()) {

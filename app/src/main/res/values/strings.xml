@@ -108,4 +108,6 @@
     <string name="confirm_suspend_register">Please confirm</string>
     <string name="title_receipt_incomplete_values">Register %s</string>
     <string name="title_receipt_values">Register %1$s, Txn %2$d</string>
+    <string name="key_restart_hour">keyRestartHour</string>
+    <string name="key_restarted">keyRestarted</string>
 </resources>

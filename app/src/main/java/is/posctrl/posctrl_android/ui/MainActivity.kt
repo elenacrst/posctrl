@@ -6,6 +6,7 @@ import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.get
+import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
 import `is`.posctrl.posctrl_android.databinding.ActivityMainBinding
 import `is`.posctrl.posctrl_android.di.ActivityComponent
@@ -29,7 +30,6 @@ import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import timber.log.Timber
-import java.util.*
 import javax.inject.Inject
 
 
@@ -51,14 +51,7 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        val cal = Calendar.getInstance()
-        cal.set(Calendar.YEAR, 2021)
-        cal.set(Calendar.MONTH, 2)
-        cal.set(Calendar.DAY_OF_MONTH, 11)
-        val exTime = cal.timeInMillis
-        if (Calendar.getInstance().timeInMillis > exTime) {
-            mainBinding.emptyView.visibility = View.VISIBLE
-        }
+
         mainBinding.lifecycleOwner = this
 
         setupNavController()
@@ -66,6 +59,7 @@ class MainActivity : BaseActivity() {
         activityComponent.inject(this)
         startService(Intent(baseContext, ChargingService::class.java))
 
+        preferencesSource.defaultPrefs()[getString(R.string.key_kiosk_mode)] = true
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
             installPackagesRequest.launch(InstallUnknownContract().createIntent(this, null))

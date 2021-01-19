@@ -13,23 +13,24 @@ import kotlinx.android.parcel.Parcelize
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Parcelize
 data class LoginResult(
-    private var _errorMessage: String = "",
-    private var _username: String = "",
-    private var _serverPath: String = "",
-    private var _serverPort: Int = -1,
-    private var _filterRespondTime: Int = -1,
-    private var _appVersion: String = "",
-    private var _serverUser: String = "",
-    private var _serverUserDomain: String = "",
-    private var _serverPassword: String = "",
-    private var _serverSnapshotPath: String = "",
-    private var _masterPassword: String = "",
-    private var _timeZone: String = "",
-    private var _receiveNotification: Boolean = false,
-    private var _notificationSound: Boolean = false,
-    private var _store: StoreResult = StoreResult(),
-    private var _serverTime: String = "",
-    private var _texts: List<TextItem> = listOf()
+        private var _errorMessage: String = "",
+        private var _username: String = "",
+        private var _serverPath: String = "",
+        private var _serverPort: Int = -1,
+        private var _filterRespondTime: Int = -1,
+        private var _appVersion: String = "",
+        private var _serverUser: String = "",
+        private var _serverUserDomain: String = "",
+        private var _serverPassword: String = "",
+        private var _serverSnapshotPath: String = "",
+        private var _masterPassword: String = "",
+        private var _timeZone: String = "",
+        private var _receiveNotification: Int = 0,
+        private var _notificationSound: Boolean = false,
+        private var _store: StoreResult = StoreResult(),
+        private var _serverTime: String = "",
+        private var _restartHour: Int = 4,//todo change to 0 after testing
+        private var _texts: List<TextItem> = listOf()
 ) : Parcelable {
     @get:JacksonXmlProperty(localName = "ErrorMessage")
     var errorMessage: String
@@ -118,9 +119,9 @@ data class LoginResult(
     @get:JacksonXmlProperty(localName = "ReceiveNotification")
     var receiveNotification: Int
         set(value) {
-            _receiveNotification = value == 1
+            _receiveNotification = value
         }
-        get() = if (_receiveNotification) 1 else 0
+        get() = _receiveNotification
 
     @get:JacksonXmlProperty(localName = "NotificationSound")
     var notificationSound: Int
@@ -151,10 +152,17 @@ data class LoginResult(
         get() = _texts
 
     fun isReceivingNotifications(): Boolean {
-        return _receiveNotification
+        return (receiveNotification != 0)
     }
 
     fun isNotificationSoundEnabled(): Boolean {
         return _notificationSound
     }
+
+    @get:JacksonXmlProperty(localName = "RestartHour")
+    var restartHour: Int
+        set(value) {
+            _restartHour = value
+        }
+        get() = _restartHour
 }

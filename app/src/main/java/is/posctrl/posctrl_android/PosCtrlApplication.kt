@@ -1,7 +1,6 @@
 package `is`.posctrl.posctrl_android
 
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
-import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.di.AppModule
 import `is`.posctrl.posctrl_android.di.DaggerPosCtrlComponent
 import `is`.posctrl.posctrl_android.di.PosCtrlComponent
@@ -36,6 +35,6 @@ class PosCtrlApplication : Application() {//todo call close in app closing servi
         } catch (e: IllegalStateException) {
             e.printStackTrace()
         }
-        prefs.defaultPrefs()[getString(R.string.key_kiosk_mode)] = true
+        //  prefs.defaultPrefs()[getString(R.string.key_kiosk_mode)] = true
     }
 }
