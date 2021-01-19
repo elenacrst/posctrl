@@ -73,7 +73,8 @@ class PosCtrlRepository @Inject constructor(
 //                Timber.d("receipt info $receiptInfo")
                 val xmlMessage = xmlMapper.writeValueAsString(receiptInfo)
                 val bytes = xmlMessage.toByteArray()
-                val broadcastIp = "255.255.255.255"
+                val broadcastIp = prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), ""]
+                        ?: ""
                 val port =
                         prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                                 ?: DEFAULT_SERVER_PORT
@@ -172,7 +173,8 @@ class PosCtrlRepository @Inject constructor(
                 )
                 val xmlMessage = xmlMapper.writeValueAsString(receiptInfo)
                 val bytes = xmlMessage.toByteArray()
-                val broadcastIp = "255.255.255.255"
+                val broadcastIp = prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), ""]
+                        ?: ""
                 val port =
                         prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                                 ?: DEFAULT_SERVER_PORT
@@ -223,7 +225,8 @@ class PosCtrlRepository @Inject constructor(
                 )
                 val xmlMessage = xmlMapper.writeValueAsString(registerSuspendedBody)
                 val bytes = xmlMessage.toByteArray()
-                val broadcastIp = "255.255.255.255"
+                val broadcastIp = prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), ""]
+                        ?: ""
                 val port =
                         prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                                 ?: DEFAULT_SERVER_PORT
@@ -263,7 +266,8 @@ class PosCtrlRepository @Inject constructor(
                 Timber.d("filter process body: $filterProcessBody")
                 val xmlMessage = xmlMapper.writeValueAsString(filterProcessBody)
                 val bytes = xmlMessage.toByteArray()
-                val broadcastIp = "255.255.255.255"
+                val broadcastIp = prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), ""]
+                        ?: ""
                 val port =
                         prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                                 ?: DEFAULT_SERVER_PORT
@@ -306,7 +310,8 @@ class PosCtrlRepository @Inject constructor(
             )
 //            Timber.d("filter process body: $filterProcessBody")
             val bytes = xmlMapper.writeValueAsBytes(filterProcessBody)
-            val broadcastIp = "255.255.255.255"
+            val broadcastIp = prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), ""]
+                    ?: ""
             val port =
                     prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                             ?: DEFAULT_SERVER_PORT
@@ -431,7 +436,8 @@ class PosCtrlRepository @Inject constructor(
                 )
                 //   Timber.d("filter result body: $filterResult")
                 val bytes = xmlMapper.writeValueAsBytes(filterResult)
-                val broadcastIp = "255.255.255.255"
+                val broadcastIp = prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), ""]
+                        ?: ""
                 val port =
                         prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                                 ?: DEFAULT_SERVER_PORT

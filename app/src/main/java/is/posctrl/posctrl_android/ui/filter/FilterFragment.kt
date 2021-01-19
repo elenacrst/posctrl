@@ -43,8 +43,7 @@ class FilterFragment : BaseFragment() {
     @Inject
     lateinit var filterViewModel: FilterViewModel
 
-    @Inject
-    lateinit var picturesAdapter: SnapshotsAdapter
+    private lateinit var picturesAdapter: SnapshotsAdapter
 
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -81,6 +80,7 @@ class FilterFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        picturesAdapter = SnapshotsAdapter(requireContext())
         filter?.let {
             downloadFilterSnapshots(it)
         }
