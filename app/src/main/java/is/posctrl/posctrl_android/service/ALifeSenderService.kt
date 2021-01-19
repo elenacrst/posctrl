@@ -103,18 +103,31 @@ class ALifeSenderService : Service() {
         isServiceStarted = true
 
 
-        GlobalScope.launch(Dispatchers.Default) {
+
+        prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)] = true
+        sendAlife()
+
+
+    }
+
+    private fun sendAlife() {
+        val req = GlobalScope.launch(Dispatchers.Default) {
             withContext(Dispatchers.IO) {
-                prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)] = true
-                while (true) {
-                    delay(PosCtrlRepository.ALIFE_FILTER_DELAY_SECONDS * 1000L)
-                    val sendAlife: Boolean =
-                            prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)]
-                                    ?: true
-                    if (!sendAlife) {
-                        stopService()
-                    }
+
+                delay(PosCtrlRepository.ALIFE_FILTER_DELAY_SECONDS * 1000L)
+            }
+        }
+        GlobalScope.launch {
+            withContext(Dispatchers.IO) {
+                req.join()
+                val sendAlife: Boolean =
+                        prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)]
+                                ?: true
+                if (!sendAlife) {
+                    stopService()
+                } else {
                     repository.sendFilterProcessALife()
+                    sendAlife()
                 }
             }
         }
