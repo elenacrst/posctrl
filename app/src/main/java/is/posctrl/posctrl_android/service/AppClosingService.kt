@@ -8,8 +8,10 @@ import `is`.posctrl.posctrl_android.data.model.Process
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -28,13 +30,19 @@ class AppClosingService : Service() {
     override fun onTaskRemoved(rootIntent: Intent) {
         Timber.d("closed app")
 
-        GlobalScope.launch {
-            repository.sendFilterProcessMessage(FilterAction.CLOSE)
-            stopFilterReceiverService()
-
-            stopSelf()
-            repository.sendProgramProcess(Process.PROGRAM_END)
+        val req = GlobalScope.launch {
+            withContext(Dispatchers.Default) {
+                repository.sendFilterProcessMessage(FilterAction.CLOSE)
+                stopFilterReceiverService()
+                repository.sendProgramProcess(Process.PROGRAM_END)
+            }
 //            preferencesSource.defaultPrefs()[getString(R.string.key_app_visible)] = false
+        }
+        GlobalScope.launch {
+            withContext(Dispatchers.Default) {
+                req.join()
+                stopSelf()
+            }
         }
     }
 
