@@ -194,6 +194,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
                     }
                 } else {
                     storeLoginResultData(it, true)
+                    // globalViewModel.sendAppProcessMessage(Process.PROGRAM_START)
                     loginViewModel.sendFilterProcessOpenMessage()
                     findNavController().navigate(LoginFragmentDirections.toRegistersFragment(it.store))
                     if (it.isReceivingNotifications()) {
@@ -426,7 +427,7 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
         val restarted = prefs.defaultPrefs()[requireContext().getString(R.string.key_restarted), false]
                 ?: false
         if (restarted) {
-            globalViewModel.sendAppProcessMessage(Process.PROGRAM_START)
+            // globalViewModel.sendAppProcessMessage(Process.PROGRAM_START)
             prefs.defaultPrefs()[requireContext().getString(R.string.key_restarted)] = false
             val storeName = prefs.customPrefs()[requireActivity().getString(R.string.key_store_name), ""]
                     ?: ""

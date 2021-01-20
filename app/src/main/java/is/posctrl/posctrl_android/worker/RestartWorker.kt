@@ -27,16 +27,23 @@ class RestartWorker(private val ctx: Context, params: WorkerParameters) : Corout
         val restartAlreadySet = prefs.defaultPrefs()[ctx.getString(R.string.key_restarted), false]
                 ?: false
         if (!restartAlreadySet) {
-            withContext(Dispatchers.Default) {
-                val repository = PosCtrlRepository(prefs, ctx, XmlMapper(
-                        JacksonXmlModule().apply { setDefaultUseWrapper(false) }
-                ))
-                delay(60 * 1000)
-                repository.sendProgramProcess(`is`.posctrl.posctrl_android.data.model.Process.PROGRAM_END)
-                prefs.defaultPrefs()[ctx.getString(R.string.key_restarted)] = true
-                val mPendingIntent = PendingIntent.getActivity(ctx, mPendingIntentId, mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT)
-                (ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager)[AlarmManager.RTC, System.currentTimeMillis() + 700] = mPendingIntent
-                Process.killProcess(Process.myPid())
+            val req = GlobalScope.launch {
+                withContext(Dispatchers.Default) {
+                    delay(60 * 1000)
+                    prefs.defaultPrefs()[ctx.getString(R.string.key_restarted)] = true
+                }
+            }
+            GlobalScope.launch {
+                req.join()
+                withContext(Dispatchers.Default) {
+                    val repository = PosCtrlRepository(prefs, ctx, XmlMapper(
+                            JacksonXmlModule().apply { setDefaultUseWrapper(false) }
+                    ))
+                    repository.sendProgramProcess(`is`.posctrl.posctrl_android.data.model.Process.PROGRAM_END)
+                    val mPendingIntent = PendingIntent.getActivity(ctx, mPendingIntentId, mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT)
+                    (ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager)[AlarmManager.RTC, System.currentTimeMillis() + 200] = mPendingIntent
+                    Process.killProcess(Process.myPid())
+                }
             }
         }
         val data = Data.Builder().build()

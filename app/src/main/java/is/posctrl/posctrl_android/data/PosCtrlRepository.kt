@@ -23,9 +23,7 @@ import com.hierynomus.smbj.SMBClient
 import com.hierynomus.smbj.auth.AuthenticationContext
 import com.hierynomus.smbj.session.Session
 import com.hierynomus.smbj.share.DiskShare
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import timber.log.Timber
 import java.io.*
 import java.net.DatagramPacket
@@ -435,6 +433,7 @@ class PosCtrlRepository @Inject constructor(
                             connection.close()
                         }
             }
+
         } catch (e: Exception) {
             e.printStackTrace()
             val message =
@@ -516,6 +515,7 @@ class PosCtrlRepository @Inject constructor(
                     }
                 }
             }
+            sendProgramProcess(Process.PROGRAM_START)
         }
     }
 
@@ -572,6 +572,7 @@ class PosCtrlRepository @Inject constructor(
             e.printStackTrace()
             return ResultWrapper.Error()
         }
+
         return ResultWrapper.Success("")
     }
 

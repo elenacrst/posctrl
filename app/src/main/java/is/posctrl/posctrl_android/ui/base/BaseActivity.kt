@@ -9,6 +9,7 @@ import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.clear
 import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
+import `is`.posctrl.posctrl_android.data.model.Process
 import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
 import `is`.posctrl.posctrl_android.di.ActivityComponent
 import `is`.posctrl.posctrl_android.di.ActivityModule
@@ -118,6 +119,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseFragmentHandler {
 
     fun createDownloadObserver(): Observer<Event<ResultWrapper<*>>> {
         return createLoadingObserver(successListener = {
+            globalViewModel.sendAppProcessMessage(Process.PROGRAM_START)
             toast("successfully downloaded apk")
             openAPK()
             onApkDownloaded()

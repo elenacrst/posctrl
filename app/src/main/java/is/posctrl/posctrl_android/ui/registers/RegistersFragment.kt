@@ -179,7 +179,7 @@ class RegistersFragment : BaseFragment() {
         val restarted = prefs.defaultPrefs()[requireContext().getString(R.string.key_restarted), false]
                 ?: false
         if (restarted) {
-            globalViewModel.sendAppProcessMessage(Process.PROGRAM_START)
+            // globalViewModel.sendAppProcessMessage(Process.PROGRAM_START)
             prefs.defaultPrefs()[requireContext().getString(R.string.key_restarted)] = false
         }
     }
