@@ -6,6 +6,8 @@ import `is`.posctrl.posctrl_android.PosCtrlApplication
 import `is`.posctrl.posctrl_android.R
 import `is`.posctrl.posctrl_android.data.local.PreferencesSource
 import `is`.posctrl.posctrl_android.data.local.get
+import `is`.posctrl.posctrl_android.data.local.set
+import `is`.posctrl.posctrl_android.data.model.Process
 import `is`.posctrl.posctrl_android.data.model.RegisterResult
 import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.FragmentRegistersBinding
@@ -169,6 +171,17 @@ class RegistersFragment : BaseFragment() {
         globalViewModel.wifiSignal.observe(viewLifecycleOwner, createWifiObserver())
         globalViewModel.setWifiSignal(requireContext().getWifiLevel())
         startBatteryTimer()
+
+        checkRestart()
+    }
+
+    private fun checkRestart() {
+        val restarted = prefs.defaultPrefs()[requireContext().getString(R.string.key_restarted), false]
+                ?: false
+        if (restarted) {
+            globalViewModel.sendAppProcessMessage(Process.PROGRAM_START)
+            prefs.defaultPrefs()[requireContext().getString(R.string.key_restarted)] = false
+        }
     }
 
     private fun createWifiObserver(): Observer<Int> {

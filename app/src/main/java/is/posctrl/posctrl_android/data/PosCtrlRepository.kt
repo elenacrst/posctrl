@@ -69,22 +69,7 @@ class PosCtrlRepository @Inject constructor(
                         time = getLocalTimeString()
                 )
                 Timber.d("receipt info $receiptInfo")
-                val xmlMessage = xmlMapper.writeValueAsString(receiptInfo)
-                val bytes = xmlMessage.toByteArray()
-                val broadcastIp = "255.255.255.255"
-                val port =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                                ?: DEFAULT_SERVER_PORT
-                val sendSocket = DatagramSocket(null)
-                sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port))
-                sendSocket.broadcast = true
-                val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size,
-                        InetAddress.getByName(broadcastIp),
-                        port
-                )
+
                 if (action == ReceiptAction.CLOSE) {
                     prefs.customPrefs()[appContext.getString(
                             R.string.key_send_alife,
@@ -92,7 +77,7 @@ class PosCtrlRepository @Inject constructor(
                             registerNumber
                     )] = false
                 }
-                sendSocket.send(sendPacket)
+                sendDataOnSocket(receiptInfo)
             } catch (e: Exception) {
                 e.printStackTrace()
                 return@withContext ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
@@ -120,31 +105,35 @@ class PosCtrlRepository @Inject constructor(
                         password = password
                 )
                 Timber.d("login body $loginBody")
-                val xmlMessage = xmlMapper.writeValueAsString(loginBody)
-                val bytes = xmlMessage.toByteArray()
-                val ip =
-                        prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), ""]
-                                ?: ""
-                val port =
-                        prefs.defaultPrefs()[appContext.getString(R.string.key_login_port), "0"]
-                                ?: "0"
-                Timber.d("ip $ip, port $port")
-                val sendSocket = DatagramSocket(null)
-                sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port.toInt()))
-                val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size,
-                        InetAddress.getByName(ip),
-                        port.toInt()
-                )
-                sendSocket.send(sendPacket)
+                sendDataOnSocket(loginBody)
             } catch (e: Exception) {
                 e.printStackTrace()
                 return@withContext ResultWrapper.Error(code = ErrorCode.NO_DATA_CONNECTION.code)
             }
         }
         return ResultWrapper.Success("")
+    }
+
+    private fun sendDataOnSocket(body: Any) {
+        val xmlMessage = xmlMapper.writeValueAsString(body)
+        val bytes = xmlMessage.toByteArray()
+        val ip =
+                prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), ""]
+                        ?: ""
+        val port =
+                prefs.defaultPrefs()[appContext.getString(R.string.key_login_port), "0"]
+                        ?: "0"
+        Timber.d("ip $ip, port $port")
+        val sendSocket = DatagramSocket(null)
+        sendSocket.reuseAddress = true
+        sendSocket.bind(InetSocketAddress(port.toInt()))
+        val sendPacket = DatagramPacket(
+                bytes,
+                bytes.size,
+                InetAddress.getByName(ip),
+                port.toInt()
+        )
+        sendSocket.send(sendPacket)
     }
     //todo move get from prefs logic here instead of fragments/ view models
 
@@ -172,7 +161,8 @@ class PosCtrlRepository @Inject constructor(
                 Timber.d("receipt info $receiptInfo")
                 val xmlMessage = xmlMapper.writeValueAsString(receiptInfo)
                 val bytes = xmlMessage.toByteArray()
-                val broadcastIp = "255.255.255.255"
+                val ip = prefs.defaultPrefs()[appContext.getString(R.string.key_login_server), ""]
+                        ?: ""
                 val port =
                         prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
                                 ?: DEFAULT_SERVER_PORT
@@ -182,7 +172,7 @@ class PosCtrlRepository @Inject constructor(
                 sendSocket.broadcast = true
                 val sendPacket = DatagramPacket(
                         bytes,
-                        bytes.size, InetAddress.getByName(broadcastIp),
+                        bytes.size, InetAddress.getByName(ip),
                         port
                 )
                 prefs.customPrefs()[appContext.getString(
@@ -222,22 +212,7 @@ class PosCtrlRepository @Inject constructor(
                         registerNumber = registerNumber
                 )
                 Timber.d("register suspended body: $registerSuspendedBody")
-                val xmlMessage = xmlMapper.writeValueAsString(registerSuspendedBody)
-                val bytes = xmlMessage.toByteArray()
-                val broadcastIp = "255.255.255.255"
-                val port =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                                ?: DEFAULT_SERVER_PORT
-                val sendSocket = DatagramSocket(null)
-                sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port))
-                sendSocket.broadcast = true
-                val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size, InetAddress.getByName(broadcastIp),
-                        port
-                )
-                sendSocket.send(sendPacket)
+                sendDataOnSocket(registerSuspendedBody)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -262,26 +237,12 @@ class PosCtrlRepository @Inject constructor(
                         time = getLocalTimeString()
                 )
                 Timber.d("filter process body: $filterProcessBody")
-                val xmlMessage = xmlMapper.writeValueAsString(filterProcessBody)
-                val bytes = xmlMessage.toByteArray()
-                val broadcastIp = "255.255.255.255"
-                val port =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                                ?: DEFAULT_SERVER_PORT
-                val sendSocket = DatagramSocket(null)
-                sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port))
-                sendSocket.broadcast = true
-                val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size, InetAddress.getByName(broadcastIp),
-                        port
-                )
+
                 if (action == FilterAction.CLOSE) {
                     prefs.customPrefs()[appContext.getString(R.string.key_send_alife_filter)] =
                             false
                 }
-                sendSocket.send(sendPacket)
+                sendDataOnSocket(filterProcessBody)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -306,22 +267,7 @@ class PosCtrlRepository @Inject constructor(
                     time = getLocalTimeString()
             )
             Timber.d("filter process body: $filterProcessBody")
-            val xmlMessage = xmlMapper.writeValueAsString(filterProcessBody)
-            val bytes = xmlMessage.toByteArray()
-            val broadcastIp = "255.255.255.255"
-            val port =
-                    prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                            ?: DEFAULT_SERVER_PORT
-            val sendSocket = DatagramSocket(null)
-            sendSocket.reuseAddress = true
-            sendSocket.bind(InetSocketAddress(port))
-            sendSocket.broadcast = true
-            val sendPacket = DatagramPacket(
-                    bytes,
-                    bytes.size, InetAddress.getByName(broadcastIp),
-                    port
-            )
-            sendSocket.send(sendPacket)
+            sendDataOnSocket(filterProcessBody)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -427,22 +373,7 @@ class PosCtrlRepository @Inject constructor(
                         getLocalTimeString()
                 )
                 Timber.d("filter result body: $filterResult")
-                val xmlMessage = xmlMapper.writeValueAsString(filterResult)
-                val bytes = xmlMessage.toByteArray()
-                val broadcastIp = "255.255.255.255"
-                val port =
-                        prefs.customPrefs()[appContext.getString(R.string.key_server_port), DEFAULT_SERVER_PORT]
-                                ?: DEFAULT_SERVER_PORT
-                val sendSocket = DatagramSocket(null)
-                sendSocket.reuseAddress = true
-                sendSocket.bind(InetSocketAddress(port))
-                sendSocket.broadcast = true
-                val sendPacket = DatagramPacket(
-                        bytes,
-                        bytes.size, InetAddress.getByName(broadcastIp),
-                        port
-                )
-                sendSocket.send(sendPacket)
+                sendDataOnSocket(filterResult)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -472,7 +403,6 @@ class PosCtrlRepository @Inject constructor(
                             val session: Session = connection.authenticate(ac)
 
                             try {
-                                //val fileName = fullAddress.split("\\$sharedFolder\\").last()
                                 (session.connectShare(sharedFolder) as? DiskShare?)?.let { share ->
                                     val s: MutableSet<SMB2ShareAccess> = HashSet()
                                     s.add(SMB2ShareAccess.FILE_SHARE_READ)
@@ -611,7 +541,6 @@ class PosCtrlRepository @Inject constructor(
                             val session: Session = connection.authenticate(ac)
 
                             try {
-                                //val fileName = fullAddress.split("\\$sharedFolder\\").last()
                                 (session.connectShare(sharedFolder) as? DiskShare?)?.let { share ->
                                     val s: MutableSet<SMB2ShareAccess> = HashSet()
                                     s.add(SMB2ShareAccess.FILE_SHARE_READ)
@@ -631,7 +560,6 @@ class PosCtrlRepository @Inject constructor(
                                             saveSettingsFile(inputStream)
                                         }
                                     }
-
                                 }
                             } catch (e: Exception) {
                                 e.printStackTrace()
@@ -658,6 +586,27 @@ class PosCtrlRepository @Inject constructor(
             var bytesRead: Int
             while (inputStream.read(buffer).also { bytesRead = it } != -1) {
                 outStream.write(buffer, 0, bytesRead)
+            }
+        }
+    }
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    suspend fun sendProgramProcess(
+            process: Process
+    ) {
+        withContext(Dispatchers.Default) {
+            try {
+                val actionBody = ActionBody(
+                        appName = prefs.defaultPrefs()["app_name", appContext.getString(R.string.app_name)]
+                                ?: appContext.getString(R.string.app_name),
+                        appVersion = appContext.getAppVersion(),
+                        process = process.value,
+                        hostName = getDeviceIdentifier()
+                )
+                Timber.d("action body: $actionBody")
+                sendDataOnSocket(actionBody)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }

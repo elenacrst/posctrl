@@ -8,6 +8,7 @@ import `is`.posctrl.posctrl_android.data.local.clear
 import `is`.posctrl.posctrl_android.data.local.get
 import `is`.posctrl.posctrl_android.data.local.set
 import `is`.posctrl.posctrl_android.data.model.LoginResult
+import `is`.posctrl.posctrl_android.data.model.Process
 import `is`.posctrl.posctrl_android.data.model.RegisterResult
 import `is`.posctrl.posctrl_android.data.model.StoreResult
 import `is`.posctrl.posctrl_android.databinding.FragmentLoginBinding
@@ -421,9 +422,11 @@ class LoginFragment : BaseFragment(), PopupMenu.OnMenuItemClickListener {
     }
 
     private fun checkAlreadyLoggedIn() {
+        Timber.d("check login")
         val restarted = prefs.defaultPrefs()[requireContext().getString(R.string.key_restarted), false]
                 ?: false
         if (restarted) {
+            globalViewModel.sendAppProcessMessage(Process.PROGRAM_START)
             prefs.defaultPrefs()[requireContext().getString(R.string.key_restarted)] = false
             val storeName = prefs.customPrefs()[requireActivity().getString(R.string.key_store_name), ""]
                     ?: ""

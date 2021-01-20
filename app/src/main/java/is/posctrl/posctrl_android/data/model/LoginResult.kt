@@ -29,7 +29,7 @@ data class LoginResult(
         private var _notificationSound: Boolean = false,
         private var _store: StoreResult = StoreResult(),
         private var _serverTime: String = "",
-        private var _restartHour: Int = 4,//todo change to 0 after testing
+        private var _restartHour: Int = 23,//todo change to 0 after testing
         private var _texts: List<TextItem> = listOf()
 ) : Parcelable {
     @get:JacksonXmlProperty(localName = "ErrorMessage")

@@ -5,6 +5,7 @@ import `is`.posctrl.posctrl_android.data.NoNetworkConnectionException
 import `is`.posctrl.posctrl_android.data.PosCtrlRepository
 import `is`.posctrl.posctrl_android.data.ResultWrapper
 import `is`.posctrl.posctrl_android.data.model.FilteredInfoResponse
+import `is`.posctrl.posctrl_android.data.model.Process
 import `is`.posctrl.posctrl_android.data.model.ReceiptResponse
 import `is`.posctrl.posctrl_android.util.Event
 import android.app.Application
@@ -128,5 +129,13 @@ class GlobalViewModel @Inject constructor(
 
     fun clearFilterMessages() {
         _filterItemMessages.value = mutableListOf()
+    }
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    fun sendAppProcessMessage(process: Process) {
+        Timber.d("send process message")
+        viewModelScope.launch {
+            repository.sendProgramProcess(process)
+        }
     }
 }
